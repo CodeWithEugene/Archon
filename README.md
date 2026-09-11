@@ -1,3 +1,5 @@
+<div align="center">
+
 # ARCHON: Autonomous Open-Infrastructure Software Engineering & Sovereign AI Migration Engine
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -6,8 +8,24 @@
 [![Search: Tavily API](https://img.shields.io/badge/Grounding-Tavily_Search_API-FF6B6B)](https://tavily.com/)
 [![Platform: Devpost](https://img.shields.io/badge/Devpost-Global_AI_Hackathon-003E54?logo=devpost)](https://nebiusglobalaihackathon.devpost.com/)
 
-> **Grand Prize Contender** for the **[Nebius x NVIDIA Global AI Hackathon](https://nebiusglobalaihackathon.devpost.com/)**  
-> *"Build the next frontier of AI on open infrastructure."*
+<br />
+
+### **Grand Prize Contender** for the **[Nebius x NVIDIA Global AI Hackathon](https://nebiusglobalaihackathon.devpost.com/)**  
+*"Build the next frontier of AI on open infrastructure."*
+
+<br />
+
+<p align="center">
+  <a href="https://dev.nebius.com/" target="_blank">
+    <img src="https://dev.nebius.com/logo.svg" alt="Nebius Logo" height="38" />
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://www.nvidia.com/" target="_blank">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/2/21/Nvidia_logo.svg" alt="NVIDIA Logo" height="34" />
+  </a>
+</p>
+
+</div>
 
 ---
 
