@@ -1,185 +1,181 @@
-# ARCHON — Comprehensive Verification & Testing Suite (TESTING.md)
+# ARCHON — Testing Strategy
 
-> **Document Version:** 1.0.0  
-> **Testing Philosophy:** Zero-Trust, Closed-Loop Verification  
-> **Core Guarantee:** No code is ever presented to the user or submitted as a Pull Request unless it has achieved **100% test-suite green status** inside an isolated container sandbox.  
-
----
-
-## 1. The Verification Pyramid
-
-ARCHON enforces a four-tiered verification pyramid:
-
-```
-                  / \
-                 /   \
-                / E2E \       Tier 4: Golden Datasets (Full Migration & Self-Healing)
-               / Sandbox\
-              /-----------\
-             / Integration \   Tier 3: Live Nebius & Tavily API Handshakes
-            /---------------\
-           /   Unit Tests    \ Tier 2: Model Routers, AST Parsing, Diff Syntax
-          /-------------------\
-         / Static Type & Lint  \ Tier 1: Ruff, MyPy, TypeScript Strict Mode
-        /-----------------------\
-```
+> **Version:** 2.0.0 (revised after the September 11 audit)
+> **Principle:** a patch is shown as verified only when the originally failing tests pass and the originally passing tests still pass, inside a Token Factory Sandbox, on a fork nobody else touched.
 
 ---
 
-## 2. Test Specifications by Tier
+## 1. Layers
 
-### Tier 1: Static Analysis, Type Safety & Linting
-* **Python Backend (`1.platform/server`):**
-  - **Ruff:** Comprehensive linting adhering to strict PEP 8, flake8, and import sorting rules:
-    ```bash
-    ruff check .
-    ruff format --check .
-    ```
-  - **MyPy:** Strict static type analysis across all Pydantic schemas and async orchestration engines:
-    ```bash
-    mypy --strict app/
-    ```
-* **Frontend Cockpit (`1.platform/client`):**
-  - **ESLint & TypeScript:** Zero `any` types permitted in mission-critical data pathways:
-    ```bash
-    npm run lint
-    npx tsc --noEmit
-    ```
+| Layer | What it covers | Runs where | Cost |
+| :--- | :--- | :--- | :--- |
+| 1. Static | Ruff, mypy strict, ESLint, `tsc --noEmit` | CI, every push | Free |
+| 2. Unit | Router, prompt builders, patch JSON validation, pytest output parser, scoring, state machine | CI, every push, all external calls mocked | Free |
+| 3. Integration | Live Token Factory call, live Tavily call, live Sandboxes spawn and run | Manual and nightly, real keys | Cents |
+| 4. Golden | 10 SWE-bench Verified instances and 2 migration fixtures, end to end on Ultra | Manual, week 5, recorded | Dollars |
 
 ---
 
-### Tier 2: Unit Testing Suite
-
-#### 1. Cognitive Triad Router Tests (`tests/unit/test_router.py`)
-* `test_route_ultra_for_architecture_planning`: Confirms that tasks requiring multi-file dependency analysis dispatch to `nvidia/nemotron-3-ultra-550b`.
-* `test_route_super_for_tool_execution`: Confirms that function parameter extraction and structured JSON calls dispatch to `nvidia/nemotron-3-super-120b`.
-* `test_route_nano_for_log_compaction`: Confirms that raw terminal log filtering and syntax linting dispatch to `nvidia/nemotron-nano`.
-
-#### 2. AST Repository Indexer Tests (`tests/unit/test_indexer.py`)
-* `test_detect_openai_imports`: Verifies that Tree-sitter accurately identifies `from openai import OpenAI` across Python source trees.
-* `test_detect_anthropic_imports`: Verifies detection of `Anthropic()` client initializations.
-* `test_map_test_suite_runner`: Verifies automated detection of test runners (`pytest`, `unittest`, `npm test`, `jest`).
-
-#### 3. Tavily Grounder Tests (`tests/unit/test_tavily.py`)
-* `test_query_synthesis_from_stacktrace`: Verifies that raw stack traces are distilled into clean, keyword-dense search queries.
-* `test_tavily_response_parsing`: Confirms that raw JSON payloads from Tavily are parsed into clean markdown context snippets.
-
-#### 4. Sandbox Runner Tests (`tests/unit/test_sandbox.py`)
-* `test_sandbox_timeout_enforcement`: Asserts that commands running longer than 180 seconds are forcefully terminated with a `TimeoutError`.
-* `test_sandbox_memory_limit`: Verifies that processes attempting to allocate >4GB RAM are constrained without crashing the host.
-* `test_git_patch_application_and_rollback`: Tests that `git apply` applies cleanly, and `git reset --hard` restores pristine workspace state on failure.
-
----
-
-### Tier 3: Live Integration Testing Suite
-
-Integration tests verify live connections against external open infrastructure:
-
-#### 1. Nebius Token Factory Handshake (`tests/integration/test_nebius_live.py`)
-```python
-import os
-import pytest
-from openai import AsyncOpenAI
-
-@pytest.mark.asyncio
-async def test_nebius_token_factory_live_completion():
-    api_key = os.environ.get("NEBIUS_API_KEY")
-    assert api_key is not None, "NEBIUS_API_KEY must be set"
-
-    client = AsyncOpenAI(
-        base_url="https://api.tokenfactory.nebius.com/v1",
-        api_key=api_key
-    )
-
-    response = await client.chat.completions.create(
-        model="nvidia/nemotron-3-super-120b",
-        messages=[{"role": "user", "content": "Respond with: PING_OK"}],
-        max_tokens=10
-    )
-
-    assert "PING_OK" in response.choices[0].message.content
-```
-
-#### 2. Tavily Search API Handshake (`tests/integration/test_tavily_live.py`)
-```python
-import os
-import pytest
-from tavily import TavilyClient
-
-def test_tavily_live_search():
-    api_key = os.environ.get("TAVILY_API_KEY")
-    assert api_key is not None, "TAVILY_API_KEY must be set"
-
-    client = TavilyClient(api_key=api_key)
-    results = client.search(
-        query="Nebius Token Factory API documentation",
-        max_results=2
-    )
-
-    assert len(results["results"]) > 0
-    assert "tokenfactory" in str(results).lower() or "nebius" in str(results).lower()
-```
-
----
-
-### Tier 4: Golden Dataset End-to-End Scenarios
-
-The golden dataset consists of real-world repository challenges designed to stress-test Archon's capabilities:
-
-```mermaid
-flowchart TD
-    subgraph Golden_Suite_1 ["Scenario 1: Closed-to-Open AI Migration"]
-        Repo1["Target: PyTorch RAG Pipeline with OpenAI SDK"]
-        Archon1["Archon Action: Refactor to Nebius Token Factory + Nemotron"]
-        Verify1["Verification: 15/15 pytest fixtures green + 74% cost reduction"]
-    end
-
-    subgraph Golden_Suite_2 ["Scenario 2: Autonomous Bug Self-Healing"]
-        Repo2["Target: FastAPI Service broken by Pydantic v2 break"]
-        Archon2["Archon Action: Tavily Grounding + Nemotron 3 Ultra Patch"]
-        Verify2["Verification: Red build (exit 1) ➔ Green build (exit 0)"]
-    end
-
-    subgraph Golden_Suite_3 ["Scenario 3: Security & Sandboxing Guardrail"]
-        Repo3["Target: Untrusted code with unauthorized network egress"]
-        Archon3["Archon Action: OpenShell Sandbox Egress Filtering"]
-        Verify3["Verification: Exploit safely neutralized; container isolated"]
-    end
-
-    Repo1 --> Archon1 --> Verify1
-    Repo2 --> Archon2 --> Verify2
-    Repo3 --> Archon3 --> Verify3
-```
-
----
-
-## 3. Quantitative Evaluation Metrics & Scoring Criteria
-
-Every mission executed by Archon is evaluated on four measurable dimensions:
-
-| Metric | Target | Measurement Method |
-| :--- | :---: | :--- |
-| **Test Verification Rate** | **100%** | Sandbox exit code == 0 across all unit and integration test fixtures. |
-| **Convergence Efficiency** | **<= 3 Iterations** | Number of patch-and-test loops required before full test pass. |
-| **Token Cost Reduction** | **65% – 80%** | Calculated savings comparing closed proprietary list pricing to Nebius Token Factory pricing. |
-| **Time-To-First-Token (TTFT)** | **< 600ms** | Measured latency on streaming Nemotron 3 Super and Ultra inference calls. |
-| **Regression Count** | **0** | Verification that zero previously passing tests were broken by the patch. |
-
----
-
-## 4. How to Execute the Full Test Suite
+## 2. Static
 
 ```bash
-# 1. Activate virtual environment
+cd 1.platform/server && ruff check . && ruff format --check . && mypy --strict app/
+cd 1.platform/client && npm run lint && npx tsc --noEmit
+```
+
+---
+
+## 3. Unit tests (`1.platform/server/tests/unit`)
+
+All network clients are replaced with fakes. Nothing here needs a key.
+
+**`test_router.py`**
+- Patch generation routes to the Ultra ID; supervision and review to Super; log compaction to Nano.
+- `ARCHON_ULTRA_MODEL` override is honored in development.
+
+**`test_prompts.py`**
+- Tavily content and repository excerpts land inside the untrusted-context delimiters and never in the system message.
+- The previous attempt's output is included only when present.
+
+**`test_patch_schema.py`**
+- Valid engineer JSON parses. Missing `root_cause`, more than two candidates, or non-string patches are rejected.
+- A response with `files_to_read` and no candidates is accepted and flagged as a read request.
+
+**`test_pytest_parser.py`**
+- Parses `-q` and `-v` output into passed, failed, and errored test IDs. Handles `no tests ran` and collection errors.
+
+**`test_scoring.py`**
+- An attempt that breaks any pass-to-pass test is never selected over one that does not.
+- Ties on fail-to-pass count are broken by smaller patch.
+
+**`test_state_machine.py`**
+- Baseline exit 0 leads to `NOTHING_TO_FIX`.
+- Five failed iterations lead to `FAILED` with a report containing every attempt.
+- Exceeding the spend cap from any state leads to `ABORTED`.
+- Reviewer rejection returns to `REASONING` and increments the iteration.
+
+**`test_input_validation.py`**
+- `https://github.com/owner/repo` accepted. `file:///`, `http://`, and arbitrary hosts rejected. Unknown SWE-bench IDs rejected.
+
+**`test_pricing.py`**
+- `pricing.json` loads, every model in the routing table has a price, and the estimate function returns the expected number for a fixed token count and ratio.
+
+---
+
+## 4. Integration tests (`tests/integration`)
+
+Skipped automatically when the relevant key is absent.
+
+**Token Factory**
+
+```python
+import os, pytest
+from openai import AsyncOpenAI
+
+pytestmark = pytest.mark.skipif(not os.getenv("NEBIUS_API_KEY"), reason="no key")
+
+@pytest.mark.asyncio
+async def test_super_responds():
+    client = AsyncOpenAI(base_url=os.environ["NEBIUS_BASE_URL"], api_key=os.environ["NEBIUS_API_KEY"])
+    r = await client.chat.completions.create(
+        model="nvidia/nemotron-3-super-120b-a12b",
+        messages=[{"role": "user", "content": "Reply with exactly: PING_OK"}],
+        max_tokens=8,
+    )
+    assert "PING_OK" in (r.choices[0].message.content or "")
+
+@pytest.mark.asyncio
+async def test_models_endpoint_lists_nemotron_ids():
+    client = AsyncOpenAI(base_url=os.environ["NEBIUS_BASE_URL"], api_key=os.environ["NEBIUS_API_KEY"])
+    ids = {m.id for m in (await client.models.list()).data}
+    assert "nvidia/nemotron-3-ultra-550b-a55b" in ids
+    assert "nvidia/nemotron-3-super-120b-a12b" in ids
+```
+
+**Tavily**
+
+```python
+def test_tavily_search():
+    from tavily import TavilyClient
+    r = TavilyClient(api_key=os.environ["TAVILY_API_KEY"]).search(
+        query="pydantic v2 field_validator migration", search_depth="advanced", max_results=3)
+    assert r["results"]
+```
+
+**Sandboxes**
+
+```python
+@pytest.mark.asyncio
+async def test_sandbox_run_and_fork(sandbox_service):
+    base = await sandbox_service.spawn("python:3.12")
+    a = await base.run(shell="echo hello > /tmp/x && cat /tmp/x")
+    assert a.exit_code == 0 and "hello" in a.stdout
+    # fork: the parent image must not see the child's write
+    b = await base.run(shell="cat /tmp/x")
+    assert b.exit_code != 0
+
+@pytest.mark.asyncio
+async def test_sandbox_clone_install_pytest(sandbox_service):
+    baseline = await sandbox_service.baseline(
+        "https://github.com/psf/requests", "main", "pip install -e . pytest", "pytest tests/test_structures.py -q")
+    assert baseline.exit_code == 0
+```
+
+The last test is also the week-1 gate: it proves outbound network, package install, and test execution inside a sandbox.
+
+---
+
+## 5. Golden dataset (`tests/golden`)
+
+### 5.1 Bug healing: 10 SWE-bench Verified instances
+
+Chosen from the Sandboxes preloaded catalog. Selection criteria: Python, pytest, a single-file or two-file gold patch, and a fail-to-pass set of at most 10 tests. Instance IDs are listed in `tests/golden/instances.json` once selected.
+
+For each instance the harness records: the full SSE event log, every attempt's patch and test output, token usage per model, wall-clock time, and whether fail-to-pass and pass-to-pass criteria were met. Recordings live in `tests/golden/recordings/<instance>.jsonl` and power replay mode.
+
+Target: at least 5 of 10 resolved. Report the actual number honestly in the README and the video.
+
+### 5.2 Migration: 2 fixtures
+
+- `fixtures/openai_chat_service`: a small FastAPI app using `openai` chat completions with one tool call, and a pytest suite that mocks the client.
+- `fixtures/anthropic_summarizer`: a script using the Anthropic Messages API with streaming, and a pytest suite that mocks the client.
+
+Each fixture has a recorded set of 8 prompts and reference outputs. The parity harness runs the migrated code against Nemotron and reports a similarity score. The UI states that the mocked tests passing does not by itself prove behavioral parity.
+
+### 5.3 What is deliberately not tested
+
+- Sandbox resource limits. Nebius enforces them and does not publish the values. Testing them would test Nebius, not ARCHON.
+- Network egress filtering inside sandboxes. Same reason.
+- Time-to-first-token. Not under our control and not a product requirement.
+
+---
+
+## 6. Metrics reported per mission
+
+| Metric | Source |
+| :--- | :--- |
+| Fail-to-pass tests fixed | Executor test parse on the selected attempt |
+| Pass-to-pass tests broken | Same, must be 0 for `VERIFIED` |
+| Iterations used | State machine |
+| Tokens and cost per model | `ModelUsage` rows |
+| Wall-clock time | Mission timestamps |
+| Tavily queries and result counts | `tavily` events |
+| Migration cost estimate | `pricing.json` with the table's last-updated date shown |
+
+---
+
+## 7. Running everything
+
+```bash
 cd 1.platform/server
-source venv/bin/activate
+source .venv/bin/activate
 
-# 2. Run all unit tests
-pytest tests/unit -v
+pytest tests/unit -q
 
-# 3. Run integration tests with live Nebius & Tavily credentials
-NEBIUS_API_KEY="your_key" TAVILY_API_KEY="your_key" pytest tests/integration -v
+NEBIUS_API_KEY=... NEBIUS_BASE_URL=https://api.tokenfactory.nebius.com/v1/ \
+NEBIUS_SANDBOX_URL=https://api.tokenfactory.nebius.com/sandboxes TAVILY_API_KEY=... \
+pytest tests/integration -q
 
-# 4. Run full Golden Dataset E2E verification
-pytest tests/e2e/test_golden_scenarios.py -v --run-sandbox
+# Golden set. Uses Ultra. Records to tests/golden/recordings/.
+python -m tests.golden.run --instances tests/golden/instances.json --record
 ```

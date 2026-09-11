@@ -1,192 +1,168 @@
-# ARCHON — Agent Architecture, Roles & Protocols (AGENTS.md)
+# ARCHON — Agent Roles and Protocols
 
-> **Document Version:** 1.0.0  
-> **Platform:** ARCHON Autonomous Agentic Engineering Framework  
-> **Model Backbone:** NVIDIA Nemotron Family on Nebius Token Factory  
-> **Orchestration Pattern:** Hierarchical Supervisor with Specialized Sub-Agents  
-> **Communication Protocol:** Typed Asynchronous JSON Event Bus  
+> **Version:** 2.0.0 (revised after the September 11 audit)
+> **Models:** NVIDIA Nemotron 3 on Nebius Token Factory
+> **Pattern:** one supervisor, three model-backed roles, one deterministic executor
 
 ---
 
-## 1. Multi-Agent Hierarchy & System Topology
+## 1. Topology
 
-ARCHON operates as a **hierarchical multi-agent network**. Rather than forcing a single model to perform every task, ARCHON delegates responsibilities to dedicated agent personas specialized in static analysis, root-cause investigation, web research, sandbox execution, and code synthesis:
+The earlier seven-agent design was cut to what the loop actually needs. The supervisor runs on Super because orchestration and tool calling is what Super is built for. Ultra is called exactly once per iteration, for the hard part.
 
 ```mermaid
 flowchart TD
-    User([User / Web Cockpit]) <--> Supervisor[ArchonSupervisor\nNemotron 3 Ultra 550B]
-    
-    Supervisor --> Indexer[AST & Repo Indexer\nNemotron Nano / Tree-sitter]
-    Supervisor --> TavilyAgent[TavilyResearchAgent\nNemotron 3 Super 120B]
-    Supervisor --> DiagnosticAgent[DiagnosticSpecialist\nNemotron 3 Ultra 550B]
-    Supervisor --> MigrationAgent[MigrationSpecialist\nNemotron 3 Ultra 550B]
-    Supervisor --> PatchAgent[PatchEngineer\nNemotron 3 Ultra 550B]
-    Supervisor --> SandboxAgent[SandboxOperator\nNemotron Nano / Docker Runner]
-    Supervisor --> CriticAgent[ReviewerCritic\nNemotron 3 Super 120B]
+    User([Cockpit]) --> Supervisor["Supervisor<br/>nemotron-3-super-120b-a12b"]
+    Supervisor --> Researcher["Researcher<br/>nemotron-3-super-120b-a12b + Tavily"]
+    Supervisor --> Engineer["Engineer<br/>nemotron-3-ultra-550b-a55b"]
+    Supervisor --> Executor["Executor<br/>deterministic, contree-sdk"]
+    Supervisor --> Reviewer["Reviewer<br/>nemotron-3-super-120b-a12b"]
+    Executor --> Compactor["Log compactor<br/>nemotron-3-nano-30b-a3b"]
 
-    TavilyAgent -.->|Live Grounded Context| DiagnosticAgent
-    TavilyAgent -.->|Migration Docs| MigrationAgent
-    DiagnosticAgent -.->|Root Cause Report| PatchAgent
-    MigrationAgent -.->|Refactor Spec| PatchAgent
-    PatchAgent -->|Unified Diff| SandboxAgent
-    SandboxAgent -->|Execution Results| CriticAgent
-    CriticAgent -->|Pass / Fail Verdict| Supervisor
+    Researcher -.->|grounded context| Engineer
+    Engineer -->|candidate patches| Executor
+    Executor -->|test results per fork| Supervisor
+    Compactor -.->|compact logs| Engineer
+    Reviewer -->|approve / reject| Supervisor
 ```
 
 ---
 
-## 2. Agent Personas & Specifications
+## 2. Roles
 
-### 2.1 `ArchonSupervisor` (The Mission Commander)
-* **Role:** High-level mission planner, state machine governor, and user interaction coordinator.
-* **Underlying Model:** `nvidia/nemotron-3-ultra-550b` (on Nebius Token Factory).
-* **Key Responsibilities:**
-  - Ingests the mission goal from the user (Migration, Bug Healing, or Modernization).
-  - Decomposes the mission into an execution plan with discrete milestones.
-  - Dispatches sub-agents in topological order.
-  - Monitors the convergence loop and manages iteration budgets (max 5 retries).
-* **Tool Access:** `dispatch_agent`, `evaluate_mission_status`, `emit_stream_thought`.
-* **System Instruction:**
-  ```text
-  You are ArchonSupervisor, the lead autonomous engineering orchestrator operating on Nebius Token Factory and NVIDIA Nemotron.
-  Your goal is to lead the automated resolution of software engineering tasks with 100% test verification.
-  Coordinate your specialized sub-agents, monitor sandbox exit codes, ensure all patches are minimal and regression-free, and never deliver unverified code.
-  ```
+### 2.1 Supervisor
 
----
+- **Model:** `nvidia/nemotron-3-super-120b-a12b`
+- **Owns:** the mission state machine, iteration and spend budgets, the decision to stop.
+- **Does not:** write code or read the repository directly.
+- **Tools:** `run_baseline`, `request_grounding`, `request_patches`, `try_candidates`, `request_review`, `emit_thought`, `finish`.
+- **System prompt:**
 
-### 2.2 `MigrationSpecialist` (The Sovereign AI Stack Migrator)
-* **Role:** Scans, identifies, and rewires proprietary AI model dependencies (OpenAI, Anthropic, AWS Bedrock) to native Nebius Token Factory endpoints.
-* **Underlying Model:** `nvidia/nemotron-3-ultra-550b`.
-* **Key Responsibilities:**
-  - Parses AST to detect client instantiations (e.g. `OpenAI()`, `Anthropic()`).
-  - Rewires base URLs to `https://api.tokenfactory.nebius.com/v1` and injects `NEBIUS_API_KEY`.
-  - Maps proprietary models to optimal NVIDIA Nemotron counterparts:
-    * `gpt-4o` / `claude-3-5-sonnet` ➔ `nvidia/nemotron-3-ultra-550b`
-    * `gpt-4o-mini` / `claude-3-haiku` ➔ `nvidia/nemotron-3-super-120b`
-  - Rewrites JSON function-calling definitions, tool-use calls, and streaming event listeners.
-* **Tool Access:** `ast_grep`, `read_source_file`, `query_nebius_catalog`.
+```text
+You are the ARCHON supervisor. You coordinate a software repair mission.
+You never write code. You decide which step runs next based on the mission state and the most recent results.
+Rules:
+- Run the baseline first. If it passes, finish with NOTHING_TO_FIX.
+- Request grounding before the first patch attempt.
+- Request at most 2 candidate patches per iteration and at most 5 iterations.
+- Accept a patch only if the reviewer approves and every originally passing test still passes.
+- Stop immediately when told the spend cap was reached and finish with a summary of what was tried.
+Emit one short thought before each step so the user can follow along.
+```
 
----
+### 2.2 Researcher
 
-### 2.3 `DiagnosticSpecialist` (The Root-Cause Investigator)
-* **Role:** Analyzes failing CI/CD logs, terminal stack traces, and test errors to deduce the exact underlying architectural flaw.
-* **Underlying Model:** `nvidia/nemotron-3-ultra-550b`.
-* **Key Responsibilities:**
-  - Extracts the exact error signature (exception class, filename, line number, stack trace).
-  - Correlates the error against the repository dependency graph.
-  - Formulates search queries for `TavilyResearchAgent` to fetch upstream documentation or community bug reports.
-  - Generates a structured Root Cause Report (RCR) containing reproduction steps and required code changes.
-* **Tool Access:** `read_sandbox_stderr`, `inspect_code_context`, `request_tavily_search`.
+- **Model:** `nvidia/nemotron-3-super-120b-a12b`
+- **Owns:** turning an error signature into Tavily queries and turning results into a short grounded brief.
+- **Tools:** `tavily_search(query, search_depth="advanced", max_results=5)`, `tavily_extract(url)`.
+- **Behavior:** two to three queries per iteration: the exact exception text plus library name, the library's changelog or migration guide for the suspected version, and the exact test failure phrase. Results are returned as a brief with source URLs. Marketing pages are dropped.
+- **System prompt:**
 
----
+```text
+You are the ARCHON researcher. Given a failing test output and the libraries involved, write 2 or 3 precise web search queries, call tavily_search for each, and return a brief.
+The brief must contain: the likely breaking change with its version, the replacement API or pattern, and the source URLs.
+Prefer official documentation, changelogs, and GitHub issues. Ignore marketing content.
+If results are inconclusive, say so plainly. Do not invent APIs.
+```
 
-### 2.4 `TavilyResearchAgent` (The Real-Time Grounder)
-* **Role:** Queries the live web to obtain 2026 documentation, library migration matrices, CVE fixes, and upstream GitHub issue resolutions.
-* **Underlying Model:** `nvidia/nemotron-3-super-120b`.
-* **Key Responsibilities:**
-  - Synthesizes technical queries from error signatures and library names.
-  - Invokes the Tavily Search API (`search_depth="advanced"`, domain filters for GitHub, StackOverflow, official docs).
-  - Cleans and summarizes raw web scrape results into actionable code snippets.
-* **Tool Access:** `tavily_search`, `tavily_extract_url`.
-* **System Instruction:**
-  ```text
-  You are TavilyResearchAgent. You ground Archon in real-time technical documentation and verified bug resolutions using Tavily Search.
-  Filter out marketing content and return concise, verified code syntax and migration matrices.
-  ```
+### 2.3 Engineer
 
----
-
-### 2.5 `PatchEngineer` (The Code Refactorer & Synthesizer)
-* **Role:** Authors clean, surgical, syntactically valid unified diffs to fix bugs or complete migrations.
-* **Underlying Model:** `nvidia/nemotron-3-ultra-550b`.
-* **Key Responsibilities:**
-  - Takes the Root Cause Report or Migration Spec and authors precise file diffs.
-  - Preserves coding style, type annotations, and existing comments.
-  - Adds regression test cases to the test suite to prevent recurrence.
-* **Tool Access:** `create_unified_diff`, `validate_ast_syntax`.
-* **Output Format:** Strict JSON array of file patches:
-  ```json
-  [
-    {
-      "path": "src/services/ai_client.py",
-      "action": "MODIFY",
-      "diff": "--- a/src/services/ai_client.py\n+++ b/src/services/ai_client.py\n@@ -12,4 +12,6 @@\n-from openai import OpenAI\n+import os\n+from openai import OpenAI\n-client = OpenAI()\n+client = OpenAI(base_url=\"https://api.tokenfactory.nebius.com/v1\", api_key=os.getenv(\"NEBIUS_API_KEY\"))"
-    }
-  ]
-  ```
-
----
-
-### 2.6 `SandboxOperator` (The Execution Engine)
-* **Role:** Manages the lifecycle of ephemeral container sandboxes, executes shell commands, runs test suites, and streams terminal output.
-* **Underlying Model:** `nvidia/nemotron-nano` (or direct deterministic Python runtime).
-* **Key Responsibilities:**
-  - Clones repository into the isolated container.
-  - Applies git diffs generated by `PatchEngineer`.
-  - Executes test suites (`pytest`, `npm test`, `cargo test`, etc.).
-  - Captures and streams stdout and stderr to the frontend xterm.js terminal.
-* **Tool Access:** `exec_in_sandbox`, `apply_git_patch`, `revert_git_patch`, `stream_stdout`.
-
----
-
-### 2.7 `ReviewerCritic` (The Quality Gatekeeper)
-* **Role:** Independent quality and security auditor verifying that patches are complete, secure, and regression-free.
-* **Underlying Model:** `nvidia/nemotron-3-super-120b`.
-* **Key Responsibilities:**
-  - Evaluates whether sandbox exit code was `0` and all tests passed.
-  - Audits the patch for unintended security vulnerabilities (e.g. leaked secrets, unsafe deserialization, prompt injection).
-  - Emits the final `VERIFIED_GREEN` certification or triggers a rollback.
-* **Tool Access:** `audit_diff_security`, `certify_patch`.
-
----
-
-## 3. Inter-Agent Communication Protocol
-
-Agents communicate via typed JSON payloads across an asynchronous internal event bus:
+- **Model:** `nvidia/nemotron-3-ultra-550b-a55b`
+- **Owns:** root-cause analysis and candidate patches.
+- **Inputs:** failing test names and compacted output, source excerpts the executor fetched with `rg` and `sed -n`, the researcher's brief inside an untrusted-context block, and the previous iteration's best attempt with its output.
+- **Output:** strict JSON, validated by Pydantic, rejected and retried once on parse failure.
 
 ```json
 {
-  "event_id": "evt-773a-4421",
-  "mission_id": "m-891f7a2c",
-  "source_agent": "DiagnosticSpecialist",
-  "target_agent": "TavilyResearchAgent",
-  "action": "SEARCH_GROUNDING_REQUEST",
+  "root_cause": "one paragraph",
+  "files_to_read": ["optional: paths the engineer wants before committing to a patch"],
+  "candidates": [
+    { "rationale": "one sentence", "patch": "unified diff" },
+    { "rationale": "one sentence", "patch": "unified diff" }
+  ]
+}
+```
+
+If `files_to_read` is non-empty and `candidates` is empty, the executor fetches those files and the engineer is called again within the same iteration. At most two such reads per iteration.
+
+- **System prompt:**
+
+```text
+You are the ARCHON engineer. You fix failing tests with the smallest correct change.
+You receive: failing test output, source excerpts, a research brief marked UNTRUSTED, and the previous attempt if any.
+Rules:
+- Explain the root cause in one paragraph before proposing changes.
+- Propose up to 2 candidate patches as unified diffs against the paths shown. Candidates should differ in approach, not in formatting.
+- Never delete or weaken tests. Never modify files you have not seen.
+- Do not invent function names or arguments. If the research brief conflicts with the source you were shown, trust the source and say so.
+- If you need to see more files, return them in files_to_read and leave candidates empty.
+Output only the JSON object described in the schema.
+```
+
+For `MIGRATION` missions the same role receives a different task block: the located client constructions and model literals, the target base URL, and the model mapping table from `pricing.json`.
+
+### 2.4 Executor
+
+- **Model:** none. Deterministic Python using `contree-sdk`.
+- **Owns:** every interaction with Token Factory Sandboxes.
+- **Operations:** spawn from base image or SWE-bench preloaded image, clone and install, checkpoint, run tests on the baseline, fork per candidate, `git apply --check`, `git apply`, run tests, stream output, parse pytest results, fetch source excerpts with `rg` and `sed -n`.
+- **Never:** runs anything on the ARCHON server.
+
+### 2.5 Reviewer
+
+- **Model:** `nvidia/nemotron-3-super-120b-a12b`
+- **Owns:** the last check before a patch is shown as verified.
+- **Inputs:** the selected patch, the test results, and the root-cause note.
+- **Checks:** no test files deleted or assertions weakened, no changes outside the repository, no credential-like strings, changes are plausibly related to the root cause, patch is not disproportionately large.
+- **Output:** `{"verdict": "APPROVE" | "REJECT", "reasons": ["..."]}`. A reject sends the mission back to the engineer with the reasons attached.
+
+### 2.6 Log compactor
+
+- **Model:** `nvidia/nemotron-3-nano-30b-a3b` (confirm ID with `GET /v1/models`)
+- **Owns:** shrinking long test output to the failing tests, their tracebacks, and the summary line, and extracting pass and fail counts for runners other than pytest.
+- **Skipped:** when the raw output is under 4,000 tokens or the runner is pytest with `-q`, which the executor parses directly.
+
+---
+
+## 3. Messages between roles
+
+All roles communicate through the supervisor as typed Pydantic models. There is no free-form agent-to-agent chat. Every message is also persisted as an `Event` row and, where user-visible, emitted on the SSE channel.
+
+```json
+{
+  "mission_id": "m_8f2c",
+  "iteration": 2,
+  "from": "executor",
+  "to": "supervisor",
+  "kind": "ATTEMPT_RESULT",
   "payload": {
-    "query": "Pydantic v2 migration validator error ModelMetaclass is not iterable",
-    "target_library": "pydantic",
-    "failing_file": "app/schemas/user.py"
-  },
-  "timestamp": "2026-09-11T16:45:00Z"
+    "attempt_id": "a_04",
+    "exit_code": 0,
+    "fail_to_pass": 3,
+    "pass_to_pass_broken": 0,
+    "patch_lines": 18,
+    "result_image": "img_7a1..."
+  }
 }
 ```
 
 ---
 
-## 4. Shared State & Memory Architecture
+## 4. Memory
 
-```mermaid
-graph LR
-    subgraph Memory_Spaces [ARCHON Memory Hierarchy]
-        ShortTerm[1. Working Scratchpad\nActive Task Context & Current Iteration]
-        SemanticStore[2. Repository Vector Index\nTree-sitter AST & Embeddings]
-        EpisodicLog[3. Episodic Execution Trace\nSandbox Logs, Tool Calls & Prior Diffs]
-    end
-
-    Agents[ARCHON Sub-Agents] <--> ShortTerm
-    Agents <--> SemanticStore
-    Agents <--> EpisodicLog
-```
-
-1. **Working Scratchpad (In-Memory Async State):** Stores the current mission goals, active diffs, and immediate tool execution results.
-2. **Repository Vector Index (Nebius Embeddings):** Contains dense semantic vector representations of all repository functions, classes, and markdown documentation for sub-second retrieval.
-3. **Episodic Execution Trace:** Retains chronological logs of all previous attempts, failed patches, and compiler outputs within the current mission, preventing the agent from repeating past errors.
+There is no vector index and no cross-mission memory. Within a mission, the supervisor holds: the baseline image ID, the list of attempts with scores, the researcher's brief, and the compacted output of the best attempt so far. That is what the engineer sees on the next iteration. It fits comfortably in context and it is auditable.
 
 ---
 
-## 5. Failure Recovery & Self-Correction Protocols
+## 5. Failure handling
 
-When a sandbox test run fails after a patch is applied:
-1. **Automatic Workspace Rollback:** `SandboxOperator` executes `git reset --hard HEAD` to revert the broken patch.
-2. **Diagnostic Feedback Injection:** The new stderr and test failure logs are formatted and returned to `DiagnosticSpecialist` alongside a note explaining why the previous attempt failed.
-3. **Iteration Counter Increment:** The supervisor increments the attempt counter. If `iteration > 5`, Archon halts and generates a comprehensive failure analysis report explaining what blocked convergence, preserving user trust.
+| Situation | Behavior |
+| :--- | :--- |
+| Candidate fails `git apply --check` | Discard, count against the iteration, tell the engineer why on the next call. |
+| No candidate passes | Best attempt by score seeds the next iteration. |
+| Iteration 5 fails | Mission `FAILED` with a report: root-cause notes per iteration, every patch tried, every test result. |
+| Reviewer rejects | Back to the engineer with reasons. Counts as an iteration. |
+| Spend cap reached | `ABORTED` with the same report format. |
+| Tavily error or timeout | Continue without grounding. Record it in the trace. |
+| Sandbox operation exceeds 15 minutes | Cancel the operation, mark the attempt failed with `TIMEOUT`. |
+| Ultra unavailable | Retry with backoff three times, then fall back to Super for that iteration and label it in the trace. |

@@ -1,0 +1,35 @@
+# Secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Local tooling state
+.claude-flow/
+.claude/
+.codegraph/
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+npm-debug.log*
+
+# Build & coverage
+dist/
+build/
+coverage/
+.coverage

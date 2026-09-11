@@ -1,327 +1,370 @@
-# ARCHON — System Architecture & Technical Design (DESIGN.md)
+# ARCHON — Technical Design
 
-> **System:** ARCHON (Autonomous Open-Infrastructure Software Engineering & Sovereign AI Migration Engine)  
-> **Status:** Production Architecture Blueprint  
-> **Backend:** FastAPI (Python 3.11+) | Asynchronous State Machine | Tree-sitter  
-> **Frontend:** Next.js 15 (App Router) | React 19 | Tailwind CSS | Monaco Editor | xterm.js  
-> **Inference:** Nebius Token Factory (`https://api.tokenfactory.nebius.com/v1`) | NVIDIA Nemotron Triad  
-> **Grounding:** Tavily Search API (`https://api.tavily.com/search`)  
-> **Sandboxing:** Nebius Token Factory Sandboxes / Docker Ephemeral Micro-Containers  
+> **Version:** 2.0.0 (revised after the September 11 audit)
+> **Status:** Draft. Sections marked *verify* depend on Sandboxes SDK behavior to be confirmed in week 1.
+> **Server:** FastAPI, Python 3.12, `openai` SDK, `contree-sdk`, `tavily-python`, SQLite
+> **Client:** Next.js 16, React 19, Tailwind CSS v4, Zustand, `@monaco-editor/react`, `@xterm/xterm`
+> **Inference:** Nebius Token Factory, `https://api.tokenfactory.nebius.com/v1/`
+> **Execution:** Nebius Token Factory Sandboxes, `https://api.tokenfactory.nebius.com/sandboxes`
+> **Grounding:** Tavily Search API
 
 ---
 
-## 1. High-Level Architectural Overview
+## 1. Overview
 
-ARCHON is designed as a **decoupled, event-driven agentic engineering system**. It bridges the gap between high-level reasoning and physical execution by enforcing a strict separation between:
-1. **The Cognitive Layer:** Multi-tier reasoning powered by the **NVIDIA Nemotron Triad** on **Nebius Token Factory**.
-2. **The Grounding Layer:** Live web intelligence fetched on demand via the **Tavily Search API**.
-3. **The Execution Layer:** Isolated, ephemeral micro-containers (**Nebius Token Factory Sandboxes**) where code is compiled, executed, and tested.
-4. **The Presentation Cockpit:** A reactive web interface built with **Next.js 15**, streaming live agent reasoning traces (SSE) and container terminal output (xterm.js).
+ARCHON has four parts:
+
+1. **Cockpit.** A Next.js app that submits missions and renders three live streams: agent reasoning, sandbox terminal output, and the resulting diff.
+2. **Orchestrator.** A FastAPI service that owns the mission state machine, routes model calls, talks to Sandboxes, and broadcasts events over Server-Sent Events.
+3. **Nebius Token Factory.** Inference for all three Nemotron tiers, and Sandboxes for all code execution.
+4. **Tavily.** Web grounding called from inside the loop.
 
 ```mermaid
-flowchart TD
-    subgraph UI_Layer ["Presentation Cockpit (Next.js 15 / React 19)"]
-        Dashboard["Mission Control Deck"]
-        StreamView["Live Cognitive Trace (SSE)"]
-        TerminalComp["xterm.js Sandbox Stream"]
-        DiffEditor["Monaco Side-by-Side Diff Inspector"]
+flowchart LR
+    subgraph Cockpit ["Cockpit (Next.js 16)"]
+        Form["Mission form"]
+        Stream["Reasoning stream"]
+        Term["Terminal"]
+        Diff["Diff viewer"]
     end
 
-    subgraph API_Gateway ["API & Orchestration Gateway (FastAPI)"]
-        REST_API["REST Endpoints (/api/v1/mission)"]
-        SSE_Broadcaster["Event Stream Broadcaster (Async SSE)"]
-        StateStore["In-Memory & SQLite Mission State Store"]
+    subgraph Orchestrator ["Orchestrator (FastAPI)"]
+        API["REST + SSE"]
+        FSM["Mission state machine"]
+        Router["Model router"]
+        SBX["Sandbox service"]
+        DB["SQLite"]
     end
 
-    subgraph Agent_Core ["ARCHON Agent Core"]
-        Supervisor["ArchonSupervisor (Nemotron 3 Ultra)"]
-        Migrator["MigrationSpecialist"]
-        Healer["Diagnostic & HealerSpecialist"]
-        AST_Indexer["Tree-Sitter AST Code Indexer"]
+    subgraph TF ["Nebius Token Factory"]
+        Inference["Inference API<br/>Nemotron 3 Ultra / Super / Nano"]
+        Sandboxes["Sandboxes<br/>microVM images, fork, run"]
     end
 
-    subgraph External_Services ["External Open Infrastructure"]
-        TF_Inference["Nebius Token Factory\n(Nemotron 3 Ultra, Super MoE, Nano)"]
-        Tavily_Search["Tavily Search API\n(Live Docs & Upstream Resolutions)"]
-        Sandbox_Manager["Nebius Token Factory Sandbox Manager\n(Isolated Docker / Container Runtimes)"]
-    end
+    Tavily["Tavily Search API"]
 
-    UI_Layer <--> API_Gateway
-    API_Gateway <--> Agent_Core
-    Agent_Core <--> TF_Inference
-    Agent_Core <--> Tavily_Search
-    Agent_Core <--> Sandbox_Manager
+    Form --> API --> FSM
+    FSM --> Router --> Inference
+    FSM --> SBX --> Sandboxes
+    FSM --> Tavily
+    FSM --> DB
+    API --> Stream
+    API --> Term
+    API --> Diff
 ```
 
 ---
 
-## 2. Technology Stack & Component Selection
+## 2. Technology choices
 
-### 2.1 Backend Core (`1.platform/server`)
-* **Framework:** **FastAPI** (Python 3.11+) — Asynchronous, ultra-low overhead, native OpenAPI documentation, and native support for Server-Sent Events (SSE).
-* **AI Client:** **OpenAI Python SDK** (Async) — Configured with `base_url="https://api.tokenfactory.nebius.com/v1"` and `api_key=os.environ["NEBIUS_API_KEY"]` to communicate natively with Nebius Token Factory.
-* **Grounding Client:** **Tavily Python SDK** (`tavily-python`) — Direct integration with Tavily Search API.
-* **Code Parsing & AST:** **Tree-sitter** (`tree-sitter-languages`, `tree-sitter-python`, `tree-sitter-javascript`) — High-speed, language-agnostic AST parsing for static analysis of model imports and dependency graphs.
-* **Sandbox Orchestrator:** Python `asyncio.subprocess` wrapper managing isolated ephemeral containers or local Docker microVMs, with strict resource quotas (CPU limits, memory caps, network filtering).
+### 2.1 Server (`1.platform/server`)
 
-### 2.2 Frontend Cockpit (`1.platform/client`)
-* **Framework:** **Next.js 15** with App Router, React 19, and Server Components.
-* **Styling:** **Tailwind CSS v4** with a dark, high-contrast engineering aesthetic.
-* **Code Diffing:** **@monaco-editor/react** — High-performance VS Code Monaco Diff Editor rendering unified and side-by-side git diffs with full syntax highlighting.
-* **Terminal Emulation:** **@xterm/xterm** and `@xterm/addon-fit` — Full ANSI-color terminal emulator streaming live container stdout/stderr.
-* **State & Data Fetching:** **Zustand** for local mission state; **EventSource** for consuming Server-Sent Events.
+| Concern | Choice | Why |
+| :--- | :--- | :--- |
+| Framework | FastAPI on Python 3.12 | Async, typed, native SSE via `StreamingResponse`. |
+| Inference client | `openai` SDK (`AsyncOpenAI`) with `base_url` set to Token Factory | Token Factory is OpenAI-compatible. No extra dependency. |
+| Sandboxes client | `contree-sdk` plus `contree_client.httpx.ContreeAsyncClient` | The official Python SDK for Token Factory Sandboxes. Gives spawn, run, checkpoint, fork, file read and write. |
+| Grounding client | `tavily-python` | Official client. |
+| Code search inside the sandbox | `rg` and `sed -n` executed in the sandbox | No indexer to build or maintain. Tree-sitter was dropped; `tree-sitter-languages` is unmaintained and the loop does not need an AST. |
+| Persistence | SQLite via `aiosqlite` | Missions, events, token usage, recordings. Zero ops. |
+| Settings | `pydantic-settings` | Typed environment variables, fails fast on missing keys. |
+
+### 2.2 Client (`1.platform/client`)
+
+| Concern | Choice |
+| :--- | :--- |
+| Framework | Next.js 16 App Router, React 19 |
+| Styling | Tailwind CSS v4, dark theme |
+| State | Zustand store fed by a single `EventSource` |
+| Terminal | `@xterm/xterm` with `@xterm/addon-fit` |
+| Diff | `@monaco-editor/react` `DiffEditor`, one instance per changed file |
 
 ---
 
-## 3. Data Models & Schemas
+## 3. Sandboxes integration
 
-The system state is structured around strictly typed Pydantic models:
+This section replaces the earlier Docker and gVisor design. ARCHON does not run containers. It calls the Sandboxes API and Nebius runs the VMs.
+
+### 3.1 Concepts (from the Sandboxes docs)
+
+- An **image** is an immutable filesystem snapshot. Running a command against an image produces a *new* image. The original is untouched.
+- **Fork** is free: any image can be the parent of many runs. This replaces `git reset --hard` entirely.
+- **Runs** are async operations. You poll or stream their event log until they reach a terminal state.
+- Results expose `exit_code`, `stdout`, `stderr`, and the `uuid` of the produced image.
+- Published beta limits: 50 concurrent operations, 180-day checkpoint retention.
+- Preloaded environments exist for SWE-bench Verified, SWE-rebench, and SWE-rebench-V2.
+
+### 3.2 Client sketch
+
+*Verify import paths and the exact spawn API against the SDK reference in week 1. The shape below follows the getting-started page.*
+
+```python
+from contree_client.httpx import ContreeAsyncClient
+from contree_sdk import Contree  # verify
+
+class SandboxService:
+    def __init__(self, settings: Settings) -> None:
+        api = ContreeAsyncClient(settings.nebius_api_key, base_url=settings.nebius_sandbox_url)
+        self.sdk = Contree(api)
+
+    async def baseline(self, repo_url: str, ref: str, install: str, test: str) -> Baseline:
+        image = await self.sdk.images.use("python:3.12", strict=True)
+        r = await image.run(shell=f"git clone --depth 50 {repo_url} /w && cd /w && git checkout {ref} && {install}")
+        if r.exit_code != 0:
+            raise SandboxError("install failed", r)
+        installed = await self.sdk.images.get(r.uuid)          # checkpoint
+        t = await installed.run(shell=f"cd /w && {test}")
+        return Baseline(image_uuid=installed.uuid, exit_code=t.exit_code, stdout=t.stdout, stderr=t.stderr)
+
+    async def try_patch(self, base_uuid: str, patch: str, test: str) -> Attempt:
+        base = await self.sdk.images.get(base_uuid)             # fork point
+        await base.files.write("/tmp/archon.patch", patch)       # verify files API
+        r = await base.run(shell=f"cd /w && git apply --check /tmp/archon.patch && git apply /tmp/archon.patch && {test}")
+        return Attempt(image_uuid=r.uuid, exit_code=r.exit_code, stdout=r.stdout, stderr=r.stderr)
+```
+
+Two candidates in the same iteration call `try_patch` concurrently against the same `base_uuid`. Neither can see the other. The loser is simply never referenced again.
+
+### 3.3 Streaming terminal output
+
+The API exposes an operation event log over Server-Sent Events. The sandbox service subscribes to it and re-emits each line as a `terminal` event on the mission's SSE channel, tagged with the attempt ID so the cockpit can show parallel forks in tabs.
+
+### 3.4 Open questions for week 1
+
+- Outbound network from the sandbox for `git clone` and `pip install`. If unavailable, upload a tarball through the files API.
+- Per-run wall-clock and memory ceilings. Not published. Assume generous but set our own 15-minute cancel.
+- Whether `images.use` on public base images like `python:3.12` resolves without a prior import.
+
+---
+
+## 4. Data model
 
 ```mermaid
 classDiagram
     class Mission {
-        +string id
-        +string repo_url
+        +str id
         +MissionType type
+        +str repo_url
+        +str git_ref
+        +str test_command
+        +str swe_instance_id
         +MissionStatus status
+        +int iteration
+        +float spend_usd
         +datetime created_at
-        +dict config
     }
-
-    class CognitiveTrace {
-        +string id
-        +string mission_id
-        +string model_used
-        +string stage
-        +string thought_content
-        +list tool_calls
-        +float latency_ms
-        +datetime timestamp
+    class Event {
+        +str id
+        +str mission_id
+        +EventKind kind
+        +str attempt_id
+        +dict payload
+        +datetime ts
     }
-
-    class SandboxExecution {
-        +string execution_id
-        +string command
+    class Attempt {
+        +str id
+        +str mission_id
+        +int iteration
+        +str parent_image
+        +str result_image
+        +str patch
         +int exit_code
-        +string stdout
-        +string stderr
-        +float duration_seconds
+        +int fail_to_pass
+        +int pass_to_pass_broken
+        +int patch_lines
+        +bool selected
     }
-
-    class DiffPatch {
-        +string file_path
-        +string original_content
-        +string modified_content
-        +string unified_diff
-        +bool syntax_valid
+    class ModelUsage {
+        +str mission_id
+        +str model
+        +int prompt_tokens
+        +int completion_tokens
+        +float cost_usd
     }
-
-    class BenchmarkMetric {
-        +float estimated_closed_cost_usd
-        +float estimated_nebius_cost_usd
-        +float cost_reduction_pct
-        +int tests_passed
-        +int tests_failed
-    }
-
-    Mission "1" *-- "many" CognitiveTrace
-    Mission "1" *-- "many" SandboxExecution
-    Mission "1" *-- "many" DiffPatch
-    Mission "1" *-- "1" BenchmarkMetric
+    Mission "1" *-- "many" Event
+    Mission "1" *-- "many" Attempt
+    Mission "1" *-- "many" ModelUsage
 ```
 
-### JSON Schema: Mission State
+Enums:
+
+```python
+class MissionType(StrEnum):
+    BUG_HEALING = "BUG_HEALING"
+    MIGRATION = "MIGRATION"
+
+class MissionStatus(StrEnum):
+    PENDING = "PENDING"
+    PROVISIONING = "PROVISIONING"
+    REPRODUCING = "REPRODUCING"
+    GROUNDING = "GROUNDING"
+    REASONING = "REASONING"
+    TESTING = "TESTING"
+    REVIEWING = "REVIEWING"
+    VERIFIED = "VERIFIED"
+    NOTHING_TO_FIX = "NOTHING_TO_FIX"
+    FAILED = "FAILED"
+    ABORTED = "ABORTED"
+```
+
+---
+
+## 5. API
+
+### 5.1 REST
+
+`POST /api/v1/missions`
+
 ```json
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "MissionState",
-  "type": "object",
-  "properties": {
-    "mission_id": { "type": "string" },
-    "repo_path": { "type": "string" },
-    "mission_type": { "enum": ["MIGRATION", "BUG_HEALING", "DEPENDENCY_UPGRADE"] },
-    "current_status": { "enum": ["PENDING", "INGESTING", "REPRODUCING", "GROUNDING", "REASONING", "PATCHING", "TESTING", "VERIFIED", "FAILED"] },
-    "active_model": { "type": "string" },
-    "iteration_count": { "type": "integer" },
-    "max_iterations": { "type": "integer", "default": 5 },
-    "diffs": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "file_path": { "type": "string" },
-          "diff": { "type": "string" }
-        }
-      }
-    },
-    "metrics": {
-      "type": "object",
-      "properties": {
-        "cost_savings_pct": { "type": "number" },
-        "tests_passed": { "type": "integer" },
-        "tests_total": { "type": "integer" }
-      }
-    }
-  },
-  "required": ["mission_id", "mission_type", "current_status"]
+  "type": "BUG_HEALING",
+  "repo_url": "https://github.com/owner/repo",
+  "git_ref": "main",
+  "test_command": "pytest tests/ -x -q",
+  "swe_instance_id": null,
+  "hint": "optional pasted stack trace"
 }
 ```
 
----
+Response `202`:
 
-## 4. API Specification & Communication Protocols
+```json
+{ "id": "m_8f2c", "status": "PENDING", "stream": "/api/v1/missions/m_8f2c/events" }
+```
 
-### 4.1 REST Endpoints
+`GET /api/v1/missions/{id}` returns the mission, attempts, and usage.
+`GET /api/v1/missions/{id}/patch` returns the selected patch as `text/x-patch`.
+`POST /api/v1/missions/{id}/abort` stops the mission and cancels running sandbox operations.
+`GET /api/v1/replays` lists recorded golden-dataset missions. `POST /api/v1/replays/{id}/play` starts a replay that streams through the same events endpoint.
 
-#### `POST /api/v1/mission/create`
-Initiates a new autonomous engineering mission.
-* **Request:**
-  ```json
-  {
-    "repo_url": "https://github.com/acme-org/rag-service.git",
-    "mission_type": "MIGRATION", // or "BUG_HEALING", "MODERNIZATION"
-    "issue_description": "Migrate from OpenAI gpt-4o to Nebius Token Factory Nemotron 3 Ultra",
-    "test_command": "pytest tests/"
-  }
-  ```
-* **Response:**
-  ```json
-  {
-    "mission_id": "m-891f7a2c",
-    "status": "INGESTING",
-    "stream_url": "/api/v1/mission/m-891f7a2c/stream"
-  }
-  ```
+Live-mode requests must carry `Authorization: Bearer <ARCHON_DEMO_TOKEN>`. Replays do not.
 
-#### `GET /api/v1/mission/{mission_id}/diff`
-Returns the verified unified git diff and side-by-side patch data for the Monaco Editor.
+### 5.2 Server-Sent Events
 
-#### `POST /api/v1/mission/{mission_id}/dispatch-pr`
-Dispatches a verified Pull Request directly to GitHub using the user's provided personal access token.
-
-### 4.2 Server-Sent Events (SSE) Streaming Protocol
-`GET /api/v1/mission/{mission_id}/stream` streams real-time state events over HTTP:
+`GET /api/v1/missions/{id}/events`
 
 ```
+event: status
+data: {"status":"REPRODUCING","iteration":0}
+
 event: thought
-data: {"stage": "PLANNING", "model": "nvidia/nemotron-3-ultra-550b", "content": "Analyzing repository AST. Identified 4 modules with direct OpenAI client dependencies."}
+data: {"stage":"REASONING","model":"nvidia/nemotron-3-ultra-550b-a55b","text":"The failing test imports ... which was removed in 2.0. ..."}
 
-event: tavily_search
-data: {"query": "Nebius Token Factory OpenAI compatible API streaming migration", "results_count": 5}
+event: tavily
+data: {"query":"pydantic 2 field_validator replaces validator","results":5,"ms":812}
 
-event: terminal_output
-data: {"stream": "stderr", "line": "pytest tests/test_rag.py\n================ FAILURES ================\n"}
+event: terminal
+data: {"attempt":"a_01","stream":"stdout","line":"FAILED tests/test_user.py::test_schema - TypeError ..."}
 
-event: test_result
-data: {"passed": 14, "failed": 1, "status": "FAILING"}
+event: tests
+data: {"attempt":"a_01","exit_code":1,"fail_to_pass":0,"pass_to_pass_broken":0,"total":15}
 
-event: patch_applied
-data: {"file": "src/client.py", "lines_added": 8, "lines_removed": 4}
+event: patch
+data: {"attempt":"a_02","files":[{"path":"app/schemas/user.py","added":6,"removed":4}]}
 
-event: verified
-data: {"tests_passed": 15, "tests_failed": 0, "cost_reduction_pct": 73.4, "status": "COMPLETED"}
+event: usage
+data: {"model":"nvidia/nemotron-3-ultra-550b-a55b","prompt_tokens":61234,"completion_tokens":2210,"cost_usd":0.068}
+
+event: done
+data: {"status":"VERIFIED","selected_attempt":"a_02","iterations":2,"spend_usd":0.41}
 ```
 
 ---
 
-## 5. Cognitive Triad Routing Logic & Prompt Architecture
-
-### 5.1 The Multi-Tier Model Strategy
-To achieve the optimal balance between reasoning accuracy and inference efficiency, ARCHON implements dynamic model dispatching:
-
-```mermaid
-graph TD
-    Request[Incoming Agent Task] --> Classifier{Task Classifier}
-    
-    Classifier -->|High Complexity: Architecture, Multi-File Patch, Root Cause| Ultra[Nemotron 3 Ultra 550B]
-    Classifier -->|Medium Complexity: Tool Calling, Schema Translation, Test Parsing| Super[Nemotron 3 Super 120B MoE]
-    Classifier -->|Low Complexity: Log Compaction, Syntax Check, Commit Message| Nano[Nemotron Nano / 70B]
-    
-    Ultra --> NebiusTF[Nebius Token Factory Inference Engine]
-    Super --> NebiusTF
-    Nano --> NebiusTF
-```
-
-### 5.2 System Prompts & Output Contracts
-
-#### Master Architect Prompt (`Nemotron 3 Ultra 550B`)
-```text
-You are ARCHON MASTER ARCHITECT, a world-class autonomous software engineer operating on open infrastructure (Nebius Token Factory).
-
-YOUR OBJECTIVES:
-1. Deduce the exact root cause of repository failures across multi-file dependencies.
-2. Refactor proprietary LLM dependencies (OpenAI/Anthropic) to Nebius Token Factory (https://api.tokenfactory.nebius.com/v1) and NVIDIA Nemotron models.
-3. Formulate minimal, surgical, regression-free unified diffs.
-
-INPUTS PROVIDED:
-- Target Repository AST & File Map
-- Failing Sandbox Execution Log (Stdout / Stderr)
-- Grounded Real-Time Web Intelligence from Tavily Search
-
-RULES:
-- Never guess line numbers or invent nonexistent API arguments.
-- Always output clean, syntactically valid JSON containing an array of unified file diffs.
-- Adhere strictly to the requested open-source target architecture.
-```
-
----
-
-## 6. The Closed-Loop Self-Healing State Machine
-
-The core intelligence of Archon resides in its self-correcting state machine:
+## 6. Mission state machine
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Ingesting : Mission Initialized
-    Ingesting --> Reproducing : AST & Dependencies Parsed
-    Reproducing --> Grounding : Failure Reproduced in Sandbox (Exit != 0)
-    Reproducing --> Verified : Existing Tests Already Green (No-Op)
-    Grounding --> Reasoning : Tavily Search Completed
-    Reasoning --> Patching : Nemotron 3 Ultra Generated Patch
-    Patching --> Testing : Patch Applied in Sandbox
-    Testing --> Verified : Test Suite Passes (Exit == 0)
-    Testing --> Reasoning : Test Suite Fails (Iteration < Max)
-    Testing --> Failed : Iteration Limit Reached (Max = 5)
-    Verified --> [*] : PR Generated & Metrics Computed
-    Failed --> [*] : Failure Report Emitted
+    [*] --> PENDING
+    PENDING --> PROVISIONING : sandbox spawn
+    PROVISIONING --> REPRODUCING : install ok
+    PROVISIONING --> FAILED : install failed
+    REPRODUCING --> NOTHING_TO_FIX : baseline exit 0
+    REPRODUCING --> GROUNDING : baseline exit != 0
+    GROUNDING --> REASONING : tavily done or skipped
+    REASONING --> TESTING : N candidate patches
+    TESTING --> REVIEWING : some candidate passes
+    TESTING --> REASONING : none pass, iteration < 5
+    TESTING --> FAILED : none pass, iteration == 5
+    REVIEWING --> VERIFIED : reviewer approves
+    REVIEWING --> REASONING : reviewer rejects
+    VERIFIED --> [*]
+    FAILED --> [*]
+    NOTHING_TO_FIX --> [*]
+    PENDING --> ABORTED : user abort or spend cap
+    PROVISIONING --> ABORTED
+    REPRODUCING --> ABORTED
+    GROUNDING --> ABORTED
+    REASONING --> ABORTED
+    TESTING --> ABORTED
+    REVIEWING --> ABORTED
+    ABORTED --> [*]
 ```
 
-### Convergence & Rollback Invariant
-* If an applied patch increases the number of failing test cases, the state machine rolls back the git workspace inside the sandbox to the previous iteration before requesting a refined diff from Nemotron 3 Ultra.
-* This guarantees that code never degrades across iterations.
+### Candidate scoring
+
+Each attempt is scored as a tuple, compared lexicographically:
+
+1. `pass_to_pass_broken == 0` (hard requirement)
+2. `fail_to_pass` count, higher is better
+3. `patch_lines`, lower is better
+
+The best attempt's test output seeds the next iteration if nothing passed. Because every attempt is a fork of the same baseline image, there is no rollback step.
+
+### Spend cap
+
+`ModelUsage` rows are summed after every model call. If the total exceeds `ARCHON_MAX_MISSION_USD`, the mission moves to `ABORTED` with a report of what was tried.
 
 ---
 
-## 7. Sandbox & Security Architecture
+## 7. Model routing
 
-ARCHON executes untrusted code safely by strictly adhering to the **NVIDIA OpenShell** isolation guidelines:
+| Task | Model | Notes |
+| :--- | :--- | :--- |
+| Root-cause note and candidate patches | `nvidia/nemotron-3-ultra-550b-a55b` | The only place Ultra is used. Called once per iteration. |
+| Mission supervision, tool-call formatting, Tavily query synthesis, patch review | `nvidia/nemotron-3-super-120b-a12b` | NVIDIA positions Super for multi-agent orchestration and tool use. |
+| Test-log compaction, pass/fail extraction for non-pytest runners, commit-message style summaries | `nvidia/nemotron-3-nano-30b-a3b` | Confirm the exact ID with `GET /v1/models`. |
 
+Development runs set `ARCHON_ULTRA_MODEL` to the Super ID so the loop can be exercised cheaply.
+
+### Prompt contract for the patch call
+
+Inputs, each in its own delimited block: failing test names and output, relevant source excerpts fetched with `rg` and `sed -n` inside the sandbox, the Tavily context marked as untrusted, and the previous iteration's best attempt with its test output.
+
+Output, strict JSON validated by Pydantic:
+
+```json
+{
+  "root_cause": "one paragraph",
+  "candidates": [
+    { "rationale": "one sentence", "patch": "unified diff text" },
+    { "rationale": "one sentence", "patch": "unified diff text" }
+  ]
+}
 ```
-+-------------------------------------------------------------+
-| HOST OS (Linux / macOS)                                     |
-|                                                             |
-|  +-------------------------------------------------------+  |
-|  | NEBIUS TOKEN FACTORY SANDBOX CONTAINER (Docker/gVisor)|  |
-|  |                                                       |  |
-|  |  * Non-Root Execution User (uid: 1000)                |  |
-|  |  * Memory Limit: 4096 MB                              |  |
-|  |  * CPU Limit: 2.0 Cores                               |  |
-|  |  * Ephemeral Tmpfs Storage (Discarded on teardown)    |  |
-|  |  * Outbound Egress Filter: Block private RFC1918 IPs  |  |
-|  |  * Read-Only Host Filesystem Mounting                 |  |
-|  |  * Execution Timeout: 180s per command                |  |
-|  +-------------------------------------------------------+  |
-+-------------------------------------------------------------+
-```
+
+Patches are checked with `git apply --check` in the sandbox before tests run. A candidate that fails the check is discarded and counted against the iteration.
 
 ---
 
-## 8. Monaco Diff & Developer Cockpit Layout
+## 8. Security
 
-The frontend cockpit is organized into four synchronized viewports:
+- The server never executes repository code. All execution is inside Nebius-hosted VMs.
+- Mission input is validated: `https://github.com/` URLs only, or a SWE-bench Verified instance ID from the known list. Filesystem paths are rejected.
+- Tavily and repository content are always placed in delimited untrusted blocks, never in the system prompt.
+- Model tool calls and patch JSON are schema-validated. Anything that does not parse is discarded.
+- The reviewer step rejects patches that delete tests, touch files outside the repository, or contain strings that look like credentials.
+- No GitHub tokens are accepted or stored. Output is a downloadable patch.
+- Public demo defaults to replay mode. Live mode requires a bearer token and honors the spend cap.
 
-1. **Top Bar:** Repository context, active Nebius Token Factory connection status, active NVIDIA Nemotron model badge, and mission action triggers.
-2. **Left Panel (Cognitive Stream):** Chronological, streaming log of agent reasoning, Tavily web searches, and model routing decisions.
-3. **Right Top Panel (Sandbox Terminal):** Real-time ANSI xterm.js terminal displaying container spin-up, package installs, and `pytest` / `npm test` stdout.
-4. **Right Bottom Panel (Monaco Diff Inspector):** VS Code-grade side-by-side diff viewer showing exact additions and deletions across all affected files.
-5. **Bottom Impact Bar:** Calculated token economics, speedup benchmarks, and the **"Create GitHub Pull Request"** CTA.
+---
+
+## 9. Cockpit layout
+
+1. **Header:** mission type, repository, status pill, iteration counter, spend so far.
+2. **Left column, reasoning stream:** chronological `thought`, `tavily`, and `status` events with the model badge on each.
+3. **Right top, terminal:** xterm.js, one tab per attempt in the current iteration.
+4. **Right bottom, diff:** Monaco `DiffEditor` per changed file for the selected attempt, with the `tests` badge.
+5. **Footer:** tokens and cost per model, "Download patch", and the `git apply` snippet.
+
+Replay missions render identically. The only difference is a "Replay" label in the header.

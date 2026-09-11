@@ -212,8 +212,11 @@ Nebius Token Factory is a high-performance, managed inference platform providing
   - `POST /v1/rerank`: Semantic document reranking for advanced RAG pipelines.
   - `GET /v1/models`: Dynamic listing of active open-source model checkpoints.
   - `/v1/fine-tuning/jobs`: Managed serverless model fine-tuning with checkpoint export.
-* **Token Factory Sandboxes:**
-  - Secure, isolated ephemeral container execution environments designed for coding agents to compile, execute, test, and analyze untrusted code safely.
+* **Token Factory Sandboxes** (beta, free while in beta):
+  - VM-isolated execution environments for agent-written code. Immutable images; every run produces a new image, and any image can be forked, so parallel attempts and rollback are native.
+  - Preloaded environments for SWE-bench Verified, SWE-rebench, and SWE-rebench-V2.
+  - Access via the `contree-sdk` Python package, the `contree` CLI, or the `contree-mcp` MCP server. API at `https://api.tokenfactory.nebius.com/sandboxes`.
+  - Published beta limits: 50 concurrent operations, 180-day checkpoint retention. Docs: https://docs.tokenfactory.nebius.com/sandboxes/overview
 
 ### Python Quickstart for Nebius Token Factory
 ```python
@@ -227,7 +230,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="nvidia/nemotron-3-ultra-550b",
+    model="nvidia/nemotron-3-ultra-550b-a55b",
     messages=[
         {"role": "system", "content": "You are an autonomous engineering agent."},
         {"role": "user", "content": "Design an optimal system architecture for real-time video RAG."}
@@ -241,6 +244,16 @@ for chunk in response:
     content = chunk.choices[0].delta.content or ""
     print(content, end="", flush=True)
 ```
+
+**Nemotron model IDs on Token Factory** (confirm with `GET /v1/models?verbose=true`, which also returns context length and price):
+
+| Model | ID |
+| :--- | :--- |
+| Nemotron 3 Ultra 550B-A55B | `nvidia/nemotron-3-ultra-550b-a55b` |
+| Nemotron 3 Super 120B-A12B | `nvidia/nemotron-3-super-120b-a12b` |
+| Nemotron 3 Nano 30B-A3B | `nvidia/nemotron-3-nano-30b-a3b` (verify) |
+
+A regional endpoint also appears in official samples: `https://api.tokenfactory.us-central1.nebius.com/v1/`.
 
 ### Nebius AI Cloud Services
 * **Nebius Serverless Endpoints:** Containerized microservices that auto-scale from zero to handle HTTP/gRPC requests with sub-second spin-up and per-millisecond billing.
@@ -275,12 +288,11 @@ The user has applied for the **Nebius AI Builder Program** ([https://dev.nebius.
 
 ## 9. NVIDIA Open-Source Technologies Deep Dive
 
-### 1. NVIDIA Nemotron Model Family
-* **Nemotron 3 Ultra (550B):** Frontier reasoning powerhouse designed for complex multi-step reasoning, mathematical proofing, architecture design, and deep research agents.
-* **Nemotron 3 Super (120B MoE):** High-throughput mixture-of-experts model optimized for multi-agent coordination, orchestration, tool use, and structured function calling.
-* **Nemotron Nano & Omni:** Ultra-low latency, parameter-efficient models designed for real-time edge processing, high-frequency agent tool routing, and multi-modal sensory ingestion.
-* **Llama-3.1-Nemotron-70B-Instruct:** NVIDIA-aligned frontier instruct model with industry-leading benchmark performance in instruction following, chat, and automated code generation.
-
+### 1. NVIDIA Nemotron 3 Model Family
+* **Nemotron 3 Ultra (550B total, 55B active):** released June 4, 2026. Hybrid Mamba-Transformer mixture-of-experts, 1M-token context, open weights. Positioned for long-running agents, deep research, and coding.
+* **Nemotron 3 Super (120B total, 12B active):** released March 11, 2026. Hybrid MoE positioned for multi-agent orchestration, tool use, and structured function calling. 1M-token context.
+* **Nemotron 3 Nano (30B total, 3B active) and Nano Omni:** compact MoE for low-latency routing, classification, and log parsing. Omni adds multimodal input.
+* All three are served on Nebius Token Factory. Older Llama-Nemotron models (for example Llama-3.1-Nemotron-70B) predate the Nemotron 3 family and should not be used for new work.
 ### 2. Personal AI & Secure Agent Sandboxing
 * **NVIDIA OpenShell:**
   - An "agent-first" security runtime that enforces kernel-level sandboxing around autonomous AI agents.
@@ -340,6 +352,8 @@ Nebius and Tavily are co-hosting in-person *Builders & Brews: Hack Edition* meet
 10. 🇸🇪 Stockholm (Fri, Sep 18)    20. 🇺🇸 Los Angeles (Tue, Oct 13)
 ```
 
+Note: none of the 20 cities is in Africa. The City Winner Award requires affiliation with a listed city, so it may not be reachable for this team. Decide the affiliation field before submission rather than assuming the prize.
+
 ---
 
 ## 12. Strategic Blueprint: How to Build a Winning Project
@@ -383,7 +397,7 @@ flowchart LR
 1. **Hybrid Model Routing (Cost & Speed Optimization):**
    Use a two-tier LLM architecture: route standard user prompts and tool selection through lightweight, blazing-fast models (Nemotron 3 Super / Nano), and dynamically escalate complex planning, synthesis, or code generation to **Nemotron 3 Ultra (550B)**. This demonstrates sophisticated architectural design to judges.
 2. **Deterministic Sandboxed Execution:**
-   Incorporate **Nebius Token Factory Sandboxes** or **NVIDIA OpenShell** for real code generation and execution, verifying all agent outputs in a secure virtual environment.
+   Incorporate **Nebius Token Factory Sandboxes** (Track 1) or **NVIDIA OpenShell** (Track 3) for real code generation and execution, verifying all agent outputs in a secure virtual environment.
 3. **Live Web Grounding via Tavily:**
    Integrate Tavily search directly into the agent's toolbelt to eliminate hallucination, fetch up-to-date documentation, and automatically qualify for the **$3,000 Best Use of Tavily Prize**.
 4. **Production Polish Over Toy Demos:**

@@ -1,221 +1,151 @@
-# Comprehensive Prior Art & Competitive Landscape Analysis
+# Prior Art and Competitive Landscape
 
-> **Document Version:** 1.0.0  
-> **Platform:** ARCHON (Autonomous Open-Infrastructure Software Engineering & Sovereign AI Migration Engine)  
-> **Purpose:** Exhaustive competitive teardown of prior art, market predecessors, open-source projects, and enterprise tools across autonomous software engineering, code modernization, and LLM portability.  
-
----
-
-## 1. Executive Landscape Overview
-
-In formulating the architecture and strategic positioning of **ARCHON**, we conducted an exhaustive investigation into existing commercial platforms, academic research benchmarks, and open-source projects operating across the software engineering AI ecosystem.
-
-Our analysis revealed a profound market fracture:
-1. **Autonomous coding agents** (e.g., Cognition Devin, OpenHands, SWE-agent, Factory.ai) focus almost exclusively on resolving isolated bug tickets or feature requests using closed, proprietary US cloud models (Claude 3.5 Sonnet, GPT-4o), locking enterprises into immense operational expenses and severe data sovereignty risks.
-2. **Code modernization engines** (e.g., Moderne/OpenRewrite, Grit.io, Amazon Q Code Transformation) rely either on rigid, deterministic compiler recipes (which cannot adapt to unstructured generative AI prompts or non-deterministic function-calling schemas) or are hyper-specialized on legacy enterprise Java migrations within closed hyperscaler clouds (AWS).
-3. **LLM gateways and routers** (e.g., LiteLLM, Portkey) act merely as middleware proxy servers—they do **not** refactor codebase source files, do not rewrite test suites, and introduce unnecessary network latency hops and single-points-of-failure into production pipelines.
-
-**No existing platform has unified autonomous code refactoring, sovereign open-infrastructure migration (Nebius Token Factory + NVIDIA Nemotron), real-time web grounding (Tavily), and closed-loop sandbox verification into an integrated developer platform.**
-
-```
-       HIGH ▲
-            │                                             ★ ARCHON
-            │                                 (Sovereign Open Cloud +
-            │                                  Full Sandbox Verification)
-  SOVEREIGN │
-  & OPEN    │  • OpenHands / SWE-agent
-  STACK     │    (Open source, but uses
-            │     closed APIs by default)
-            │
-            │  • LiteLLM (Proxy only,
-            │     no code refactoring)
-────────────┼─────────────────────────────────────────────────────────────►
-  PROPRIETARY│                                  • Cognition Devin
-  & CLOSED  │                                    (Closed SaaS, high cost,
-  CLOUD     │                                     proprietary models)
-            │  • Moderne / OpenRewrite
-            │    (Deterministic Java recipes,   • Amazon Q Developer
-            │     no generative reasoning)       (Locked into AWS ecosystem)
-       LOW  ▼
-            └─────────────────────────────────────────────────────────────
-              PASSIVE / PROXY / RULES          AUTONOMOUS VERIFIED EXECUTION
-```
+> **Version:** 2.0.0 (revised after the September 11 audit)
+> **Purpose:** what already exists in autonomous software repair, code migration, LLM routing, and agent sandboxing, and where ARCHON is different. Claims about competitors are sourced where possible and stated as of September 2026.
 
 ---
 
-## 2. Taxonomy of Existing Solutions
+## 1. Summary
 
-We analyzed over 20 prominent tools and categorized them into five operational domains:
+Autonomous repair agents are now mainstream: Devin, OpenHands, SWE-agent and mini-swe-agent, Claude Code, Codex CLI, and Factory all run a plan-edit-test loop. Code migration is also a mature commercial category; Cognition markets Devin specifically for large migrations and Amazon Q Developer transforms Java, .NET, mainframe, and VMware workloads. LLM gateways such as LiteLLM and Portkey make provider switching a configuration change at the network layer.
+
+What we did not find is a repair agent that:
+
+1. runs its whole loop on an open model hosted on open infrastructure, with Nemotron 3 Ultra doing the patching;
+2. uses **Nebius Token Factory Sandboxes** with **fork-per-candidate** execution rather than one container plus git rollback;
+3. grounds each iteration with a live web search that is visible in the trace;
+4. treats migration to an open provider as a first-class mission with a parity caveat instead of a base-URL swap.
+
+That combination, not any single piece, is the position ARCHON takes.
+
+---
+
+## 2. Landscape
 
 ```mermaid
 graph TD
-    Market[Software Modernization & Agentic AI Market] --> Cat1[Category 1: Autonomous SWE Agents]
-    Market --> Cat2[Category 2: Code Modernization & Refactoring]
-    Market --> Cat3[Category 3: LLM Gateways & Routing Proxies]
-    Market --> Cat4[Category 4: Agent Sandboxes & Runtimes]
-    Market --> Cat5[Category 5: Real-Time Web Grounding]
+    Market["Agentic software engineering"] --> A["Autonomous repair agents"]
+    Market --> B["Code migration and modernization"]
+    Market --> C["LLM gateways and routers"]
+    Market --> D["Agent sandboxes"]
+    Market --> E["Web grounding APIs"]
 
-    Cat1 --> Devin[Cognition Devin]
-    Cat1 --> OpenHands[OpenHands / OpenDevin]
-    Cat1 --> SWEAgent[SWE-agent Princeton]
-    Cat1 --> Factory[Factory.ai Droids]
-    Cat1 --> Sweep[Sweep.dev / Codegen]
+    A --> Devin["Cognition Devin"]
+    A --> OpenHands["OpenHands"]
+    A --> SWE["SWE-agent / mini-swe-agent"]
+    A --> CC["Claude Code / Codex CLI"]
+    A --> Factory["Factory"]
 
-    Cat2 --> Moderne[Moderne / OpenRewrite]
-    Cat2 --> Grit[Grit.io / GritQL]
-    Cat2 --> AmazonQ[Amazon Q Developer Transform]
+    B --> DevinM["Devin migrations"]
+    B --> AmazonQ["Amazon Q Developer transform"]
+    B --> Moderne["Moderne / OpenRewrite"]
+    B --> Grit["Grit / GritQL"]
 
-    Cat3 --> LiteLLM[LiteLLM]
-    Cat3 --> Portkey[Portkey.ai]
-    Cat3 --> RouteLLM[RouteLLM / Martian]
+    C --> LiteLLM["LiteLLM"]
+    C --> Portkey["Portkey"]
+    C --> RouteLLM["RouteLLM / Martian"]
 
-    Cat4 --> E2B[E2B Sandboxes]
-    Cat4 --> Daytona[Daytona Workspaces]
-    Cat4 --> OpenShell[NVIDIA OpenShell]
+    D --> TFS["Nebius Token Factory Sandboxes"]
+    D --> E2B["E2B"]
+    D --> Daytona["Daytona"]
+    D --> OpenShell["NVIDIA OpenShell"]
 
-    Cat5 --> Tavily[Tavily Search API]
-    Cat5 --> Perplexity[Perplexity Sonar API]
-    Cat5 --> Exa[Exa.ai]
+    E --> Tavily["Tavily"]
+    E --> Exa["Exa"]
+    E --> Sonar["Perplexity Sonar"]
 ```
 
 ---
 
-## 3. Deep-Dive Comparative Analysis Matrix
+## 3. Comparison
 
-| Feature / Dimension | Cognition Devin | OpenHands (OpenDevin) | Amazon Q Developer | LiteLLM / Portkey | Moderne (OpenRewrite) | **ARCHON (Our Platform)** |
+| | Devin | OpenHands | mini-swe-agent | Claude Code / Codex CLI | LiteLLM / Portkey | **ARCHON** |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Primary Architecture** | Autonomous Agent | Open-Source Agent | IDE Cloud Agent | API Gateway Proxy | Compiler AST Engine | **Autonomous Open-Cloud Engine** |
-| **Model Infrastructure** | Closed (Claude/GPT-4o) | Variable (Defaults Closed) | Closed (AWS Bedrock) | N/A (Pass-Through) | Deterministic Rules | **Open: Nebius Token Factory** |
-| **Frontier Reasoning Model** | Closed 3rd-party | Closed 3rd-party | Amazon Titan / Claude | Model-Agnostic | None (Deterministic) | **NVIDIA Nemotron 3 Ultra (550B)** |
-| **Multi-Tier Model Routing** | Unknown / Monolithic | Manual config | No | Yes (Routing Rules) | No | **Yes: Nemotron Triad (Ultra/Super/Nano)** |
-| **Closed-to-Open AI Migration** | No | No | No | No (Proxy only) | No | **Yes: Native Automated Refactoring** |
-| **Source Code Rewriting** | Yes | Yes | Yes (Java only) | **No (Zero code edits)** | Yes (Java/Gradle) | **Yes: Python, TypeScript, Full AST** |
-| **Execution Sandbox** | Proprietary SaaS VM | Docker / Local | AWS Cloud VM | None | Local Compiler | **Nebius Token Factory Sandbox** |
-| **Closed-Loop Test Verification** | Yes | Yes | Partial | None | Yes (Maven/Gradle) | **Yes: Iterative Rollback Loop** |
-| **Real-Time Web Grounding** | Generic Browser | Basic curl/browser | AWS Docs only | None | None | **Native Tavily Search API ($3k target)** |
-| **Data Sovereignty Compliance** | Low (US Cloud SaaS) | Medium (Self-Host) | Low (AWS Lock-In) | Medium | High (Local Run) | **100% Sovereign (Nebius EU / Open GPU)** |
-| **Pricing Model** | $500+/mo Enterprise | Open Source | $19/user/mo AWS | Free / SaaS | Enterprise Contract | **Open Source + Transparent Token Cost** |
+| Runs a plan-edit-test loop | Yes | Yes | Yes | Yes | No | Yes |
+| Default model | Closed | Configurable, closed by default | Configurable | Closed | Pass-through | **Nemotron 3 on Nebius** |
+| Execution isolation | Vendor VM | Docker, local, or remote runtimes incl. Sandboxes integration | Docker or Sandboxes integration | Local by default | None | **Token Factory Sandboxes, VM-isolated** |
+| Multiple candidates on forked environments | Not documented | No | No | No | N/A | **Yes, fork per candidate** |
+| Live web grounding inside the loop | Browser tool | Browser tool | No | Web search tool | No | **Tavily, shown in trace** |
+| Rewrites source for provider migration | Yes, as a general task | Yes, as a general task | Possible | Possible | **No, config only** | **Yes, as a mission type with parity caveat** |
+| Product UI with live terminal and diff | Yes | Yes | CLI | CLI / IDE | Dashboard | **Yes** |
+| Open source | No | Yes | Yes | Partly | Yes | **Yes, Apache 2.0** |
 
 ---
 
-## 4. Teardown of Key Predecessors & Their Structural Flaws
+## 4. Notes on each category
 
-### 4.1 Autonomous SWE Agents
+### 4.1 Autonomous repair agents
 
-#### 1. Cognition Devin
-* **What it achieved:** Demonstrated that an autonomous agent equipped with a shell, code editor, and browser could solve real-world SWE-bench issues.
-* **Structural Limitations:**
-  - **Closed Proprietary Monolith:** Hosted entirely within Cognition’s closed SaaS environment. Code and internal telemetry must leave enterprise boundaries.
-  - **Exorbitant Operating Costs:** Relies heavily on high-cost proprietary model inference (estimated at $5.00 to $15.00 per task run).
-  - **No Sovereignty or Open Stack Focus:** Devin has no automated facility for liberating codebases from proprietary API lock-in; in fact, its architecture reinforces reliance on closed cloud ecosystems.
+**Cognition Devin.** The first widely used autonomous engineer. Closed product on closed models. Cognition's own 2025 review reports large efficiency gains on repetitive migration work, including a Java version migration and a multi-million-line ETL migration at Nubank, using a forward-deployed engineering model. Devin is strong exactly where ARCHON's migration mode operates, which is why ARCHON does not claim that space as empty. The difference is open model, open infrastructure, and a visible verification trace.
 
-#### 2. OpenHands (formerly OpenDevin) & SWE-agent (Princeton/Stanford)
-* **What they achieved:** Created open-source benchmark runners and agent architectures allowing developers to experiment with software engineering loops.
-* **Structural Limitations:**
-  - **Lack of Whole-Product Experience:** Designed primarily as developer frameworks and CLI research tools rather than polished developer cockpits with real-time streaming, visual diffing, and cost analytics.
-  - **Monolithic LLM Dependency:** In practice, OpenHands and SWE-agent achieve competitive SWE-bench scores **only** when powered by Claude 3.5 Sonnet or GPT-4o. When tested on un-optimized open-source models, their performance collapses due to a lack of multi-tier cognitive routing and prompt tuning.
-  - **No Built-in Live Grounding:** They rely on basic web scraping or static documentation, suffering from severe hallucinations when handling 2026 dependency updates.
+**OpenHands and SWE-agent.** Open-source frameworks with strong SWE-bench results. Both are model-agnostic and both now have integrations that can target Token Factory Sandboxes. Their documented results are mostly on closed frontier models. Neither runs multiple candidate patches on forked environments by default; the standard loop is one trajectory per instance.
 
-#### 3. Factory.ai ("Droids") & Sweep.dev
-* **Factory.ai:** Built specialized agents ("Code Droid", "Review Droid", "Migration Droid") for enterprise workflows. However, Factory.ai is an invite-only enterprise product that requires extensive human configuration, focuses on internal Jira/Linear tickets, and does not provide an open-infrastructure migration engine.
-* **Sweep.dev:** Attempted a GitHub-native junior developer bot. It struggled with multi-file architectural reasoning because it lacked frontier reasoning depth and comprehensive sandbox regression loops, ultimately leading to high user rejection rates for complex PRs.
+**Claude Code and Codex CLI.** Terminal agents from the closed-model vendors. Excellent loops, closed models, local execution by default.
 
----
+**Factory.** Enterprise agent platform with specialized "droids". Invite-based, closed.
 
-### 4.2 Automated Code Modernization & Migration Tools
+### 4.2 Code migration
 
-#### 1. Amazon Q Developer Code Transformation
-* **What it achieved:** Automated the migration of legacy Java 8 and 11 codebases to Java 17/21, demonstrating massive engineering time savings across thousands of Amazon internal services.
-* **Structural Limitations:**
-  - **Extreme Ecosystem Lock-in:** Exclusively operates inside AWS and is tightly coupled with Amazon Bedrock.
-  - **Narrow Language Scope:** Strictly focused on enterprise Java and mainframe modernization. It is completely incapable of understanding modern AI agent stacks, Python async runtimes, LangChain/LlamaIndex pipelines, or TypeScript frameworks.
-  - **Zero Open-Source Model Support:** Cannot migrate code to open infrastructure.
+**Amazon Q Developer transformation.** Started with Java upgrades and now covers .NET, mainframe, and VMware. Tied to AWS and Bedrock. Not applicable to moving an application off a closed LLM provider.
 
-#### 2. Moderne (OpenRewrite Ecosystem)
-* **What it achieved:** Pioneered compiler-accurate, deterministic code refactoring at scale using Lossless Semantic Trees (LSTs).
-* **Structural Limitations:**
-  - **Rigid Determinism:** OpenRewrite relies on pre-authored, imperative Java "recipes". If a recipe does not explicitly exist for a specific framework change, OpenRewrite cannot execute it.
-  - **Incapable of Generative Translation:** It cannot handle non-deterministic prompt templates, natural language system instructions, or dynamic JSON schema transformations required when migrating from OpenAI to NVIDIA Nemotron.
+**Moderne / OpenRewrite.** Deterministic, recipe-based refactoring on lossless semantic trees. Very reliable for the transformations that have recipes. Does not reason about novel breakages or prompt semantics.
 
-#### 3. Grit.io (Acquired by Honeycomb in 2025)
-* **What it achieved:** Developed **GritQL**, a declarative query language built on Tree-sitter for pattern-matching code migrations.
-* **Structural Limitations:**
-  - Requires developers to manually write complex GritQL pattern-matching queries.
-  - Lacks frontier generative reasoning to diagnose novel, multi-file bugs or handle ambiguous runtime stack traces.
+**Grit.** Tree-sitter-based declarative code migration language. Requires writing queries per migration.
+
+### 4.3 LLM gateways
+
+**LiteLLM and Portkey** standardize provider APIs behind a proxy. This is the fastest way to point an application at Nebius Token Factory and it is what many teams should do first. It does not change the source, so the codebase keeps its closed-provider client code, mocked tests, and model-name literals. It also adds a network hop and an operational dependency. ARCHON's migration mode produces the source change instead, and it says explicitly that the repository's mocked tests do not prove parity.
+
+**RouteLLM and Martian** route individual requests between models by predicted difficulty. Complementary, not competing.
+
+### 4.4 Sandboxes
+
+**Nebius Token Factory Sandboxes.** VM-isolated, immutable images, fork from any checkpoint, preloaded SWE-bench Verified and SWE-rebench environments, Python SDK plus CLI plus MCP server. In beta. This is the product ARCHON is built on.
+
+**E2B and Daytona.** Commercial agent sandboxes with similar spawn-and-run APIs. Fewer built-in code-research environments.
+
+**NVIDIA OpenShell.** Kernel-level policy sandbox for local agents, part of the Personal AI track tooling. Not relevant to a hosted repair service.
+
+### 4.5 Web grounding
+
+**Tavily** is a search API designed for agents, with depth control and content extraction. **Exa** and **Perplexity Sonar** are alternatives. Tavily is the one with a hackathon award attached, and its Python client is simple enough that grounding is a few lines.
 
 ---
 
-### 4.3 LLM Gateways, Routers & Translation Proxies
+## 5. Where ARCHON stands
 
-#### 1. LiteLLM & Portkey.ai
-* **What they achieved:** Standardized API requests to over 100+ LLMs using the OpenAI input/output specification, allowing developers to route traffic via an intermediate server.
-* **Structural Limitations & Why They Do NOT Solve the Problem:**
-  - **The "Proxy Illusion":** LiteLLM and Portkey are network middlewares. **They do not touch, refactor, or modernize your actual repository code.**
-  - **Production Overhead & Latency:** Deploying an external gateway introduces an extra network hop (adding 50ms–200ms to every LLM request), introduces an additional infrastructure failure point, and requires ongoing DevOps maintenance.
-  - **Codebase Rot:** The application code remains polluted with legacy OpenAI-specific client calls and proprietary prompt semantics. If the proxy fails or changes, the codebase is completely broken.
-  - **No Verification:** Gateways cannot run unit tests, cannot verify function-calling parity, and cannot detect when model behavior diverges from expected application logic.
-
-#### 2. RouteLLM & Martian
-* **What they achieved:** Intelligent binary routing between cheap and expensive models based on query complexity.
-* **Structural Limitations:** Limited to routing runtime queries; incapable of analyzing repository code, fixing bugs, or executing CI/CD repair loops.
-
----
-
-## 5. The Unsolved Market Void: Where ARCHON Wins
-
-Our research confirms four critical industry gaps that ARCHON directly solves:
-
-```mermaid
-flowchart LR
-    subgraph Gap_1 ["Gap 1: The Sovereignty Vacuum"]
-        G1["Zero tools autonomously migrate proprietary LLM code to open GPU infrastructure with test parity."]
-    end
-
-    subgraph Gap_2 ["Gap 2: The Verification Void"]
-        G2["Most AI coding tools spit out code blind without executing full test suites in isolated sandboxes."]
-    end
-
-    subgraph Gap_3 ["Gap 3: The Knowledge Cutoff Problem"]
-        G3["Coding agents hallucinate 2026 API parameters because their pre-training data is stale."]
-    end
-
-    subgraph Gap_4 ["Gap 4: The Monolithic Cost Penalty"]
-        G4["Running 500B+ models for trivial tasks bankrupts developers; small models fail at multi-file architecture."]
-    end
-
-    subgraph ARCHON_Solution ["ARCHON's Unfair Competitive Advantage"]
-        S1["Automated Closed-to-Open Refactoring (Nebius Token Factory)"]
-        S2["Closed-Loop Sandbox Execution with Automatic Rollback"]
-        S3["Real-Time Grounding via Tavily Search API ($3k Award)"]
-        S4["NVIDIA Nemotron Triad (Ultra 550B + Super MoE + Nano)"]
-    end
-
-    Gap_1 ==> S1
-    Gap_2 ==> S2
-    Gap_3 ==> S3
-    Gap_4 ==> S4
+```
+                 open model on open infra
+                          ^
+                          |            * ARCHON
+                          |
+   OpenHands / SWE-agent  |
+   (open framework,       |
+    closed model default) |
+                          |
+   LiteLLM                |
+   (proxy, no repair)     |
+--------------------------+--------------------------------> verified execution loop
+                          |
+   Moderne / Grit         |            Devin
+   (deterministic,        |            Claude Code / Codex CLI
+    no LLM reasoning)     |            (closed model, strong loop)
+                          |
+                 closed model / closed infra
 ```
 
----
-
-## 6. Detailed Architectural Comparison: ARCHON vs. Predecessors
-
-### Architectural Scenario: Migrating an OpenAI Assistants Pipeline to Open Infrastructure
-
-| Workflow Stage | How LiteLLM / Portkey Handles It | How Devin / OpenHands Handles It | **How ARCHON Autonomously Solves It** |
-| :--- | :--- | :--- | :--- |
-| **1. Discovery & AST Analysis** | Does not analyze code; requires manual developer configuration. | Scans files manually using generic grep; prone to missing nested imports. | **Tree-sitter AST parser** automatically builds dependency graphs and locates all proprietary model call sites. |
-| **2. Code Refactoring** | **Zero code changes.** Leaves codebase polluted with legacy SDK calls. | Generates code edits via single prompt; prone to syntax and argument errors. | **Nemotron 3 Ultra (550B)** refactors code to native Nebius Token Factory endpoints with Pydantic v2 schema alignment. |
-| **3. Grounding & Docs** | None. | Relies on model pre-training or basic browsing. | **Tavily Search API** retrieves exact 2026 Nebius Token Factory endpoints and Nemotron function schemas. |
-| **4. Execution & Safety** | None. | Runs locally or on generic VM. | Dispatches to **Nebius Token Factory Sandbox** with non-root security boundaries and resource caps. |
-| **5. Verification** | No test execution; relies on runtime traffic. | Checks basic terminal output; frequently hallucinates passing state. | Executes full test suite (`pytest` / `npm test`); iterates up to 5 times until **100% green exit code 0**. |
-| **6. Output & ROI** | Ongoing proxy subscription bill. | A branch or diff with unverified runtime costs. | **Side-by-side Monaco diff**, automated GitHub PR, and verified financial report proving **73% cost reduction**. |
+The right-hand side is crowded with excellent closed-model agents. The upper-right, a full verified loop on an open model with Nemotron 3 Ultra doing the patching and Nebius Sandboxes doing the forking, is where ARCHON is aiming. Whether it belongs there is decided by the golden-dataset resolve rate, which is reported honestly in the README.
 
 ---
 
-## 7. Key Takeaways & Strategic Moat
+## 6. Sources
 
-1. **First-Mover Advantage in Open-Infrastructure Migration:** ARCHON is the first autonomous agent specifically engineered to act as a **growth catalyst for Nebius Token Factory**, solving the high-friction migration barrier that prevents enterprises from adopting open-weight models.
-2. **Superior Cognitive Unit Economics:** By partitioning tasks across the **NVIDIA Nemotron Triad** (Ultra for reasoning, Super for tools, Nano for parsing), ARCHON cuts agent operational costs by over **60%** compared to monolithic Claude 3.5 Sonnet agent runs.
-3. **The Zero-Regression Trust Model:** Because Archon verifies all modifications against real test suites in **Token Factory Sandboxes**, developers can merge PRs with absolute confidence.
-4. **Hackathon Alignment:** ARCHON addresses the exact mission statement of the **Nebius x NVIDIA Global AI Hackathon**: demonstrating that practical, high-performance AI systems built on open, independent infrastructure outperform closed alternatives on every metric.
+- Cognition, "Devin's 2025 Performance Review": https://cognition.ai/blog/devin-annual-performance-review-2025
+- Devin docs, use cases: https://docs.devin.ai/use-cases
+- Nebius Token Factory Sandboxes overview: https://docs.tokenfactory.nebius.com/sandboxes/overview
+- Nebius Sandboxes for SWE agents: https://docs.tokenfactory.nebius.com/sandboxes/swe-agents
+- Nebius Agents Blueprint: https://nebius.com/blog/posts/introducing-the-nebius-agents-blueprint
+- NVIDIA Nemotron 3 Ultra: https://developer.nvidia.com/blog/nvidia-nemotron-3-ultra-powers-faster-more-efficient-reasoning-for-long-running-agents/
+- OpenHands: https://github.com/All-Hands-AI/OpenHands
+- SWE-agent: https://github.com/SWE-agent/SWE-agent
+- LiteLLM: https://github.com/BerriAI/litellm

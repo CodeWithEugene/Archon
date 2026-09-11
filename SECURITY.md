@@ -1,57 +1,42 @@
 # Security Policy
 
-## Supported Versions
+## Reporting a vulnerability
 
-We actively monitor and provide security patches for the following versions:
-
-| Version | Supported          | Status |
-| ------- | ------------------ | ------ |
-| 1.0.x   | :white_check_mark: | Active Hackathon Build |
-| < 1.0   | :x:                | Deprecated / Development |
+If you find a security problem in this repository, including an exposed credential, please do not open a public issue. Email the maintainer listed in the GitHub repository profile with a description, reproduction steps, and impact. You will get an acknowledgement within 48 hours.
 
 ---
 
-## Reporting a Vulnerability
+## Threat model
 
-The project team takes security, agentic isolation, and data privacy seriously. If you discover a security vulnerability or credential exposure in this repository, please report it responsibly:
+ARCHON runs model-generated code against untrusted repositories, calls third-party APIs with paid credentials, and exposes a public demo. The controls below follow from that.
 
-1. **Do NOT file a public issue.**
-2. Send an email to the repository maintainer or team lead with:
-   - A description of the vulnerability.
-   - Exact steps or code required to reproduce the behavior.
-   - Any potential impact on agent isolation, data privacy, or infrastructure.
-3. You will receive an initial response and acknowledgment within **48 hours**.
-4. We will coordinate a patch and responsible public disclosure timeline once resolved.
+### 1. Credentials
 
----
+- `NEBIUS_API_KEY`, `TAVILY_API_KEY`, and `ARCHON_DEMO_TOKEN` live only in server-side environment variables. They are never sent to the browser, logged, or committed.
+- `.env*` files are ignored by `.gitignore`. Only `.env.example`, with empty values, is tracked.
+- ARCHON does not accept or store GitHub personal access tokens. Verified patches are delivered as downloadable `.patch` files with `git apply` instructions rather than pushed on the user's behalf.
 
-## AI Agent & Infrastructure Security Guidelines
+### 2. Code execution
 
-This repository interacts with high-performance AI inference backends (**Nebius Token Factory**), autonomous agent runtimes, and external search APIs (**Tavily**). All contributors and operators must strictly adhere to the following security principles:
+- All repository code, dependency installs, and test runs execute inside **Nebius Token Factory Sandboxes**, which are VM-isolated and hosted by Nebius. Nothing from a target repository runs on the ARCHON server.
+- Each candidate patch runs on its own sandbox fork. Failed forks are discarded; the baseline checkpoint is never mutated.
+- Every mission has a hard iteration limit and a hard spend cap. Both are enforced server-side.
+- Sandboxes are in beta. Per Nebius guidance, do not upload personal or sensitive data into them.
 
-### 1. Zero Credential Exposure
-- **Never commit API keys or credentials** to git tracking. All keys must be passed through local `.env` files or secure runtime secrets.
-- Required protected keys include:
-  - `NEBIUS_API_KEY` (Nebius Token Factory & AI Cloud)
-  - `TAVILY_API_KEY` (Tavily Search API)
-  - `LANGSMITH_API_KEY` (LangChain Observability)
-  - Any server authentication secrets or database connection strings.
-- Always ensure `.env` and `*.key` files are explicitly listed in `.gitignore`.
+### 3. Prompt injection and model output
 
-### 2. Autonomous Agent Sandboxing
-- Any dynamic code generation and execution triggered by coding agents **MUST execute in isolated sandboxes**:
-  - In production / cloud: Use **Nebius Token Factory Sandboxes**.
-  - In local / agentic deployments: Enforce **NVIDIA OpenShell** kernel-level sandboxing with strict declarative YAML access control policies.
-- Restrict network egress from sandboxed environments to prevent arbitrary outbound data exfiltration.
-- Mount file systems as read-only where possible, and strictly scope workspace write permissions.
+- Content fetched from the web through Tavily and content read from target repositories are treated as untrusted data. They are placed in clearly delimited context blocks and never as system instructions.
+- Model outputs that request tool calls are validated against strict Pydantic schemas before execution. Unknown tools or malformed arguments are rejected.
+- Patches are applied only inside a sandbox, only after syntax validation, and only surfaced to the user after the reviewer step and a passing test run.
 
-### 3. Prompt Injection & Tool Guardrails
-- Validate and sanitize all external web content retrieved via search or web scrapers before feeding it into model context windows.
-- Restrict agent tool definitions with strict schema validation (e.g. Zod, Pydantic) to prevent unauthorized arbitrary parameter execution.
-- Maintain human-in-the-loop validation for high-risk operations (e.g., file system deletions, financial actions, external communications).
+### 4. Public demo
+
+- The public demo defaults to **replay mode**, which streams recorded mission traces and makes no paid API calls.
+- **Live mode** requires `ARCHON_DEMO_TOKEN`, is rate-limited per IP, and is bounded by `ARCHON_MAX_MISSION_USD`.
+- Repository input is limited to public `https://github.com/...` URLs and SWE-bench Verified instance IDs. Local paths and arbitrary URLs are rejected.
 
 ---
 
-## Responsible Disclosure & Compliance
+## Compliance
 
-This repository complies with the official rules and safety guidelines of the **Nebius x NVIDIA Global AI Hackathon**. Any security research or penetration testing must be conducted against locally hosted or controlled test instances, and must not disrupt shared Nebius Token Factory or Devpost services.
+This project follows the Nebius x NVIDIA Global AI Hackathon rules. Any security testing must target locally hosted instances and must not disrupt shared Nebius, Tavily, or Devpost services.

@@ -1,105 +1,39 @@
-# Contributing Guidelines
+# Contributing
 
-Thank you for contributing to our submission for the **Nebius x NVIDIA Global AI Hackathon**! 
+ARCHON is a submission to the Nebius x NVIDIA Global AI Hackathon. Contributions are welcome as long as they respect the hackathon rules: all code must be original or properly licensed, and the project must keep running on Nebius Token Factory with NVIDIA open models.
 
-We welcome contributions from developers, researchers, designers, and testers. To ensure rapid progress, clean collaboration, and full compliance with the hackathon rules, please follow the guidelines below.
+## Layout
 
----
-
-## Code of Conduct
-
-We are committed to maintaining a welcoming, inclusive, and collaborative environment. All contributors are expected to:
-- Be respectful, constructive, and open to diverse technical viewpoints.
-- Focus on practical, high-impact problem solving.
-- Uphold academic and professional integrity—no plagiarism or unlicensed third-party code.
-
----
-
-## Hackathon Architecture & Project Layout
-
-The repository is structured into two main operational pillars:
 ```
-.
-├── 0.docs/                # Project documentation, research, and hackathon dossier
-│   ├── info.md            # Comprehensive hackathon reference dossier
-│   └── problem+solution.md # Target problem definition, architecture, and value proposition
-├── 1.platform/            # Working software implementation
-│   ├── client/            # User-facing frontend application (UI/UX)
-│   └── server/            # Backend agent core, model orchestration, and API endpoints
-├── CONTRIBUTING.md        # Contribution rules and workflow (this file)
-├── LICENSE.md             # Apache 2.0 open-source license
-├── README.md              # Project overview, quickstart, and hackathon submission details
-└── SECURITY.md            # AI security, secret protection, and sandbox policies
+0.docs/            Research and design documents
+  build/           PRD, DESIGN, AGENTS, PLAN, TESTING, SESSIONS
+1.platform/
+  client/          Next.js 16 cockpit
+  server/          FastAPI orchestrator
+2.submission/      Devpost text and the developer feedback log
 ```
 
----
+## Workflow
 
-## Development Workflow
+- `main` is what gets submitted. Work on branches named `feat/...`, `fix/...`, `docs/...`, or `chore/...`.
+- Conventional Commits: `feat(server): add sandbox fork per candidate`, `fix(client): reconnect SSE on drop`, `docs(plan): move golden set to week 5`.
+- Open a pull request with what changed, why, any new environment variables, and how you verified it.
+- Update [0.docs/build/SESSIONS.md](0.docs/build/SESSIONS.md) at the end of every working session.
+- When you hit friction with Nebius, Sandboxes, or Nemotron, add a row to [2.submission/FEEDBACK.md](2.submission/FEEDBACK.md) the same day.
 
-### 1. Branching Strategy
-We adhere to a lightweight git workflow:
-- `main`: The stable, production-ready release branch submitted to Devpost.
-- `develop` (optional): Staging branch for active feature consolidation.
-- Feature branches should follow semantic naming:
-  - `feat/<short-feature-name>`: New feature or agent capability
-  - `fix/<short-bug-name>`: Bug fix or stability improvement
-  - `docs/<short-description>`: Documentation and cookbook updates
-  - `perf/<short-description>`: Latency, token optimization, or compute speedup
+## Secrets
 
-### 2. Commit Message Conventions
-We follow the **Conventional Commits** specification:
+Never commit `.env` files or keys. Copy `.env.example` to `.env` and fill it locally. The keys in use are `NEBIUS_API_KEY`, `TAVILY_API_KEY`, and `ARCHON_DEMO_TOKEN`.
+
+## Before you push
+
+```bash
+cd 1.platform/server && ruff check . && ruff format --check . && mypy --strict app/ && pytest tests/unit -q
+cd 1.platform/client && npm run lint && npx tsc --noEmit
 ```
-<type>(<scope>): <subject>
 
-[optional body]
+Integration tests need real keys and are skipped without them. See [0.docs/build/TESTING.md](0.docs/build/TESTING.md).
 
-[optional footer]
-```
-Common types:
-- `feat`: A new feature (e.g. `feat(agent): add dynamic hybrid router for Nemotron 3 Ultra`)
-- `fix`: A bug fix (e.g. `fix(client): handle SSE disconnect gracefully in chat window`)
-- `docs`: Documentation changes (e.g. `docs(readme): add setup guide for Tavily API key`)
-- `refactor`: Code refactoring without behavioral alterations
-- `test`: Adding or refactoring unit/integration tests
-- `chore`: Dependency upgrades, tool configs, or repo maintenance
+## Scope discipline
 
-### 3. Environment & Secrets Management
-- **Never commit `.env` or credentials.**
-- Always copy `.env.example` to `.env.local` or `.env` and fill in local keys:
-  ```bash
-  NEBIUS_API_KEY=your_token_factory_key
-  TAVILY_API_KEY=your_tavily_key
-  ```
-
----
-
-## Code Quality & Judging Alignment
-
-Every pull request should directly advance our score across the four Hackathon Judging Criteria:
-
-1. **Technological Implementation (25%):**
-   - Is the code robust, modular, and error-handled?
-   - Does it cleanly leverage **Nebius Token Factory** endpoints or **Nebius AI Cloud** compute?
-   - Does it effectively incorporate **NVIDIA Nemotron** or other NVIDIA open models?
-2. **Design & UX (25%):**
-   - Is the user interface polished, reactive, and intuitive?
-   - Are streaming responses and agent thoughts transparently visualized?
-3. **Potential Impact (25%):**
-   - Does the contribution tangibly solve the core user pain point?
-4. **Quality of the Idea (25%):**
-   - Does the implementation push the boundaries of open AI infrastructure?
-
----
-
-## Submitting a Pull Request (PR)
-
-1. Ensure your code passes all lint checks, type checks, and tests:
-   ```bash
-   npm run lint # or pytest / ruff for Python services
-   ```
-2. Rebase or merge the latest changes from `main`.
-3. Open a PR with a clear, descriptive title and bullet points covering:
-   - What changed and why.
-   - Any new environment variables introduced.
-   - Verification steps and screenshots/recordings if UI changes were made.
-4. Request review from at least one teammate before merging.
+The plan has a cut list. If a change adds a dependency, a service, or a mission type that is not in [0.docs/build/PLAN.md](0.docs/build/PLAN.md), raise it in the PR description first.

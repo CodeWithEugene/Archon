@@ -1,194 +1,173 @@
 <div align="center">
 
-# ARCHON: Autonomous Open-Infrastructure Software Engineering & Sovereign AI Migration Engine
+# ARCHON
 
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Inference: Nebius Token Factory](https://img.shields.io/badge/Inference-Nebius_Token_Factory-00D26A?logo=nebius)](https://dev.nebius.com/)
-[![Models: NVIDIA Nemotron](https://img.shields.io/badge/Models-NVIDIA_Nemotron-76B900?logo=nvidia)](https://www.nvidia.com/)
-[![Search: Tavily API](https://img.shields.io/badge/Grounding-Tavily_Search_API-FF6B6B)](https://tavily.com/)
-[![Platform: Devpost](https://img.shields.io/badge/Devpost-Global_AI_Hackathon-003E54?logo=devpost)](https://nebiusglobalaihackathon.devpost.com/)
+**Autonomous, sandbox-verified software repair and AI-stack migration, running on Nebius Token Factory and NVIDIA Nemotron.**
 
-<br />
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE.md)
+[![Inference: Nebius Token Factory](https://img.shields.io/badge/Inference-Nebius_Token_Factory-00D26A)](https://tokenfactory.nebius.com/)
+[![Models: NVIDIA Nemotron 3](https://img.shields.io/badge/Models-NVIDIA_Nemotron_3-76B900)](https://nebius.com/services/token-factory/nemotron)
+[![Sandboxes: Token Factory](https://img.shields.io/badge/Execution-Token_Factory_Sandboxes-1F6FEB)](https://docs.tokenfactory.nebius.com/sandboxes/overview)
+[![Grounding: Tavily](https://img.shields.io/badge/Grounding-Tavily_Search_API-FF6B6B)](https://tavily.com/)
+[![Devpost](https://img.shields.io/badge/Devpost-Nebius_x_NVIDIA_Global_AI_Hackathon-003E54)](https://nebiusglobalaihackathon.devpost.com/)
 
-### **Grand Prize Contender** for the **[Nebius x NVIDIA Global AI Hackathon](https://nebiusglobalaihackathon.devpost.com/)**  
-*"Build the next frontier of AI on open infrastructure."*
-
-<br />
-
-<p align="center">
-  <a href="https://dev.nebius.com/" target="_blank">
-    <img src="https://dev.nebius.com/logo.svg" alt="Nebius Logo" height="38" />
-  </a>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://www.nvidia.com/" target="_blank">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/2/21/Nvidia_logo.svg" alt="NVIDIA Logo" height="34" />
-  </a>
-</p>
+Submission to the **[Nebius x NVIDIA Global AI Hackathon](https://nebiusglobalaihackathon.devpost.com/)**, Track 1: Coding and Agentic Engineering.
 
 </div>
 
 ---
 
-## 🚀 Overview & The 1st-Place Thesis
+## Status
 
-**`ARCHON`** is an autonomous, open-infrastructure software engineering and migration platform designed to solve the two biggest bottlenecks in modern AI development:
-1. **The Sovereign Migration Imperative:** Autonomously refactoring codebases locked into proprietary APIs (OpenAI Assistants, Anthropic Claude, AWS Bedrock) to run natively on **Nebius Token Factory** and **NVIDIA Nemotron**, delivering **65%–80% cost reductions** with complete data sovereignty and zero vendor lock-in.
-2. **Autonomous Closed-Loop Repository Self-Healing:** Diagnosing, reproducing, and repairing complex CI/CD failures, dependency breakages, and GitHub issues inside isolated **Nebius Token Factory Sandboxes**, verified by live regression test suites before code is ever merged.
-
-All agent reasoning is grounded in real time using the **Tavily Search API** to pull upstream changelogs and documentation, eliminating hallucination.
-
-### 🎯 Track Selection & Prize Target
-* **Primary Track:** **Track 1: Coding and Agentic Engineering Track**
-* **Secondary Cross-Eligibility:** **Track 2: Best Apps and Agents Track**
-* **Target Awards:** **Grand Prize ($20,000 USD)** + **Best Use of Tavily ($3,000 USD)** + **City Winner Award ($500 USD)**
+> **Pre-alpha. Documentation and architecture only. No runnable code yet.**
+> Development started September 11, 2026. Follow progress in [0.docs/build/SESSIONS.md](0.docs/build/SESSIONS.md) and the plan in [0.docs/build/PLAN.md](0.docs/build/PLAN.md).
 
 ---
 
-## 🏛️ System Architecture
+## What ARCHON does
+
+ARCHON takes a repository with a failing test suite, reproduces the failure inside a **Nebius Token Factory Sandbox**, researches the error with the **Tavily Search API**, asks **NVIDIA Nemotron 3 Ultra** to diagnose and patch it, and re-runs the tests inside the sandbox until they pass. Every candidate patch is tried on its own sandbox fork, so failed attempts are discarded rather than rolled back. The user gets a verified diff, the full terminal transcript, and the agent's reasoning trace.
+
+Two mission types share that loop:
+
+1. **Bug healing** (primary). Input: a repo plus a failing test command, or a SWE-bench Verified instance from the Sandboxes catalog. Output: a patch that makes the failing tests pass without breaking the passing ones.
+2. **AI-stack migration** (secondary). Input: a repo that calls the OpenAI or Anthropic SDK. Output: a patch that points the client at Nebius Token Factory and maps model names to Nemotron equivalents, verified by the repo's own tests plus a small parity harness, with a cost estimate computed from a maintained price table.
+
+Everything the agent does is streamed live to a web cockpit: reasoning, Tavily queries, sandbox terminal output, and a side-by-side diff.
+
+## Architecture
 
 ```mermaid
 flowchart TD
-    subgraph Client_Experience ["1. User Cockpit (1.platform/client)"]
-        UI_Input["Repository Ingestion & Mission Selector"]
-        CognitiveStream["Real-Time Agent Thought Stream (SSE)"]
-        TerminalView["Live Sandbox Terminal (xterm.js)"]
-        MonacoDiff["Side-by-Side Monaco Diff Inspector"]
-        PRDispatch["One-Click GitHub PR Dispatch"]
+    subgraph Client ["Cockpit (1.platform/client, Next.js 16)"]
+        UI["Mission form"]
+        Stream["Reasoning stream (SSE)"]
+        Term["Sandbox terminal (xterm.js)"]
+        Diff["Diff viewer (Monaco)"]
     end
 
-    subgraph Orchestrator_Core ["2. Orchestration Core (1.platform/server)"]
-        Router["Dynamic Cognitive Router"]
-        AST_Engine["Tree-sitter Code Indexer"]
-        LoopEngine["Closed-Loop Self-Healing State Machine"]
+    subgraph Server ["Orchestrator (1.platform/server, FastAPI)"]
+        SM["Mission state machine"]
+        Router["Model router"]
+        SBX["Sandbox client (contree-sdk)"]
     end
 
-    subgraph Nebius_NVIDIA_Stack ["3. Nebius Token Factory & NVIDIA Cognitive Triad"]
-        NemotronUltra["NVIDIA Nemotron 3 Ultra (550B)\nArchitectural Planning & Root-Cause Deduction"]
-        NemotronSuper["NVIDIA Nemotron 3 Super (120B MoE)\nTool Invocations & Unit Test Generation"]
-        NemotronNano["NVIDIA Nemotron Nano / 70B\nSyntax Linting & Terminal Log Parsing"]
-        TF_Sandbox["Nebius Token Factory Sandboxes\nIsolated Container Execution (pytest, npm test, tsc)"]
+    subgraph Nebius ["Nebius Token Factory"]
+        Ultra["Nemotron 3 Ultra 550B-A55B<br/>diagnosis and patch synthesis"]
+        Super["Nemotron 3 Super 120B-A12B<br/>orchestration, review, research"]
+        Nano["Nemotron 3 Nano 30B-A3B<br/>log compaction, test parsing"]
+        Sandboxes["Token Factory Sandboxes<br/>microVM, fork per attempt"]
     end
 
-    subgraph External_Grounding ["4. Real-Time Grounding & Observability"]
-        Tavily["Tavily Search API\nLive Docs, CVEs & Upstream Changelogs"]
-        LangSmith["LangSmith\nAgent Tracing & Evaluation Metrics"]
-    end
+    Tavily["Tavily Search API"]
 
-    UI_Input --> Router
-    CognitiveStream <--> Router
-    TerminalView <--> TF_Sandbox
-    MonacoDiff <--> LoopEngine
-
-    Router --> AST_Engine
-    AST_Engine --> LoopEngine
-
-    LoopEngine <--> NemotronUltra
-    LoopEngine <--> NemotronSuper
-    LoopEngine <--> NemotronNano
-    LoopEngine <--> TF_Sandbox
-    LoopEngine <--> Tavily
-    LoopEngine -.-> LangSmith
+    UI --> SM
+    SM --> Stream
+    SM --> Router
+    Router --> Ultra
+    Router --> Super
+    Router --> Nano
+    SM --> SBX --> Sandboxes
+    Sandboxes --> Term
+    SM --> Tavily
+    SM --> Diff
 ```
 
----
+## How Nebius and NVIDIA are used
 
-## ⚡ The Three Core Operational Modes
+| Component | What ARCHON uses it for |
+| :--- | :--- |
+| **Nebius Token Factory inference** (`https://api.tokenfactory.nebius.com/v1/`) | Every model call, through the OpenAI-compatible API. |
+| **Nemotron 3 Ultra** (`nvidia/nemotron-3-ultra-550b-a55b`) | Root-cause analysis and patch generation. |
+| **Nemotron 3 Super** (`nvidia/nemotron-3-super-120b-a12b`) | Mission supervisor, patch review, Tavily query synthesis. |
+| **Nemotron 3 Nano** (`nvidia/nemotron-3-nano-30b-a3b`) | Compacting test logs and parsing pass/fail counts. Confirm the exact ID with `GET /v1/models` before use. |
+| **Token Factory Sandboxes** (`contree-sdk`) | Clone, install, run tests, and fork one sandbox per candidate patch. Currently in beta. |
+| **Tavily Search API** | Fetches current documentation and upstream issue threads for the failing library before the model reasons about a fix. |
 
-1. **🔄 Sovereign AI Stack Migration (Closed to Open):**
-   - Ingests repositories using `openai`, `anthropic`, or proprietary wrappers.
-   - Refactors client initializations to the Nebius Token Factory API (`https://api.tokenfactory.nebius.com/v1`).
-   - Maps model calls to **Nemotron 3 Ultra (550B)** and **Nemotron 3 Super (120B MoE)**.
-   - Tests and verifies functional parity inside a Token Factory Sandbox.
-2. **🛠️ Autonomous Bug & CI/CD Self-Healing:**
-   - Ingests raw stack traces, failing GitHub Actions logs, or issue tickets.
-   - Reproduces the failure inside a clean sandbox environment.
-   - Uses Tavily to retrieve current upstream resolutions and documentation.
-   - Nemotron 3 Ultra plans and authors multi-file surgical fixes.
-   - Re-runs test suites iteratively until **100% green with zero regressions**.
-3. **⚡ Upstream Dependency & Vulnerability Modernization:**
-   - Identifies breaking changes across major library version bumps (e.g. Pydantic v1 -> v2, Next.js 14 -> 15).
-   - Fetches official migration guides via Tavily.
-   - Refactors deprecated code patterns with verified sandbox tests.
-
----
-
-## 📂 Repository Structure
+## Repository layout
 
 ```
 .
-├── 0.docs/                         # Project research & hackathon documentation
-│   ├── info.md                     # Comprehensive hackathon master dossier (rules, prizes, tracks)
-│   └── problem+solution.md          # Complete ARCHON specification, architecture & benchmarks
-├── 1.platform/                     # Working software platform
-│   ├── client/                     # Next.js 15 developer cockpit (React 19, Tailwind, Monaco, xterm.js)
-│   │   ├── package.json
-│   │   └── src/
-│   └── server/                     # FastAPI autonomous agent core (Python 3.11+, Nebius, Tavily)
-│       ├── requirements.txt
-│       └── app/
-├── CONTRIBUTING.md                 # Git workflow, PR standards & team rules
-├── LICENSE.md                      # Apache 2.0 Open Source License
-├── README.md                       # Project overview & running guide (this file)
-└── SECURITY.md                     # Agent safety, credential management & sandbox rules
+├── 0.docs/
+│   ├── info.md                 # Hackathon rules, prizes, dates, platform notes
+│   ├── problem+solution.md     # Problem framing and solution overview
+│   ├── prior-art.md            # Competitive landscape
+│   └── build/
+│       ├── PRD.md              # Requirements
+│       ├── DESIGN.md           # Technical design
+│       ├── AGENTS.md           # Agent roles, prompts, protocols
+│       ├── PLAN.md             # Schedule, budget, risks
+│       ├── TESTING.md          # Test strategy and golden dataset
+│       └── SESSIONS.md         # Session log and ADRs
+├── 1.platform/
+│   ├── client/                 # Next.js 16 cockpit (not yet scaffolded)
+│   └── server/                 # FastAPI orchestrator (not yet scaffolded)
+├── 2.submission/
+│   ├── README.md               # Devpost submission text (draft)
+│   └── FEEDBACK.md             # Running log of Nebius / NVIDIA developer feedback
+├── CONTRIBUTING.md
+├── LICENSE.md                  # Apache 2.0
+├── README.md
+└── SECURITY.md
 ```
 
----
+## Quickstart
 
-## 🛠️ Quickstart & Setup Guide
+The commands below describe the intended setup. They will work once `1.platform/` is scaffolded.
 
 ### Prerequisites
-- Node.js 18+ (for `1.platform/client`)
-- Python 3.10+ (for `1.platform/server`)
-- Nebius Token Factory API Key (`NEBIUS_API_KEY`)
-- Tavily Search API Key (`TAVILY_API_KEY`)
 
-### 1. Environment Configuration
-Create a `.env` file in `1.platform/server/`:
-```bash
-# Nebius Token Factory Inference
-NEBIUS_API_KEY=your_token_factory_key_here
-NEBIUS_BASE_URL=https://api.tokenfactory.nebius.com/v1
+- Python 3.12+
+- Node.js 20+
+- A Nebius Token Factory API key with Sandboxes beta access
+- A Tavily API key
 
-# Tavily Real-Time Web Grounding
-TAVILY_API_KEY=your_tavily_key_here
+### Server
 
-# (Optional) Observability & Tracing
-LANGCHAIN_TRACING_V2=true
-LANGCHAIN_API_KEY=your_langsmith_key_here
-```
-
-### 2. Backend Server Setup
 ```bash
 cd 1.platform/server
-python3 -m venv venv
-source venv/bin/activate
+cp .env.example .env        # then fill in NEBIUS_API_KEY and TAVILY_API_KEY
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python -m app.main
+uvicorn app.main:app --reload --port 8000
 ```
-The server will start listening at `http://localhost:8000`.
 
-### 3. Frontend Client Setup
+### Client
+
 ```bash
 cd 1.platform/client
 npm install
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser to launch the Archon Cockpit.
 
----
+Open `http://localhost:3000`.
 
-## 📋 Hackathon Submission Compliance Checklist
+### Environment variables
 
-- [x] **Runs on Nebius Token Factory / AI Cloud:** Active runtime calls to `https://api.tokenfactory.nebius.com/v1`.
-- [x] **Uses NVIDIA Open-Source Models:** Powered by NVIDIA Nemotron 3 Ultra (550B), Super (120B MoE), and Nano.
-- [x] **Integrates Nebius Sandboxes:** Code compilation and regression testing performed in isolated containers.
-- [x] **Integrates Tavily API:** Live web grounding in the autonomous reasoning loop for the $3,000 Bonus Award.
-- [x] **Track Identification:** Submitted to **Track 1: Coding and Agentic Engineering Track**.
-- [x] **Open Source License:** Fully compliant **Apache 2.0 License** in `LICENSE.md`.
-- [x] **Working Demo & Video:** Live interactive web cockpit and 3-minute video walkthrough demonstrating autonomous migration and self-healing.
+```bash
+NEBIUS_API_KEY=            # Token Factory inference and Sandboxes
+NEBIUS_BASE_URL=https://api.tokenfactory.nebius.com/v1/
+NEBIUS_SANDBOX_URL=https://api.tokenfactory.nebius.com/sandboxes
+TAVILY_API_KEY=
+ARCHON_DEMO_TOKEN=         # Required for live mode on the public demo
+ARCHON_MAX_MISSION_USD=3   # Hard per-mission spend cap
+```
 
----
+## Submission checklist
 
-## 📄 License
+Boxes are ticked only when the item exists and has been verified.
 
-This project is licensed under the **Apache License 2.0** — see the [LICENSE.md](file:///Users/eugenius/Work/Nebius-x-NVIDIA-Global-AI-Hackathon/LICENSE.md) file for details.
+- [ ] Runs on Nebius Token Factory: live inference calls to `api.tokenfactory.nebius.com`
+- [ ] Uses NVIDIA open models: Nemotron 3 Ultra, Super, and Nano
+- [ ] Executes code in Token Factory Sandboxes
+- [ ] Tavily Search API called at runtime inside the reasoning loop
+- [ ] Track chosen: Track 1, Coding and Agentic Engineering
+- [x] Open-source license: Apache 2.0 in `LICENSE.md`
+- [ ] Public demo URL, live through the judging window (Dec 1 to Dec 15, 2026)
+- [ ] YouTube demo video under three minutes
+- [ ] Product feedback section written ([2.submission/FEEDBACK.md](2.submission/FEEDBACK.md))
+- [ ] Devpost entry submitted before Oct 30, 2026, 10:00 AM PDT
+
+## License
+
+Apache License 2.0. See [LICENSE.md](LICENSE.md).
