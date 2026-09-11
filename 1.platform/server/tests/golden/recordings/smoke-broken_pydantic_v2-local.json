@@ -1,0 +1,2040 @@
+{
+ "version": 1,
+ "recorded_at": "2026-09-11T16:26:26.376228+00:00",
+ "mission": {
+  "id": "m_6bc26c42",
+  "type": "BUG_HEALING",
+  "repo_url": "https://github.com/CodeWithEugene/Nebius-x-NVIDIA-Global-AI-Hackathon/tree/main/1.platform/server/tests/golden/fixtures/broken_pydantic_v2",
+  "git_ref": "main",
+  "test_command": ". .venv/bin/activate && pytest -q",
+  "install_command": "python3 -m venv .venv && . .venv/bin/activate && pip install -q -e . pytest",
+  "swe_instance_id": null,
+  "hint": null,
+  "status": "VERIFIED",
+  "iteration": 1,
+  "spend_usd": 0.0,
+  "baseline_image": "img_065fc37f",
+  "baseline_report": {
+   "exit_code": 1,
+   "passed": [
+    "tests.py::test_email_is_normalized",
+    "tests.py::test_invalid_email_is_rejected"
+   ],
+   "failed": [
+    "tests.py::test_model_declares_v2_config_and_validators",
+    "tests.py::test_parse_user_uses_v2_validation",
+    "tests.py::test_user_from_row_reads_attributes",
+    "tests.py::test_user_to_dict_uses_v2_serialization"
+   ],
+   "errors": [],
+   "summary": "4 failed, 2 passed",
+   "parsed": true
+  },
+  "selected_attempt": "a_940b2d99",
+  "failure_report": null,
+  "replay_of": null,
+  "diff": [
+   {
+    "path": "userkit/schemas.py",
+    "original": "\"\"\"Schema definitions for userkit.\n\nNOTE: this module is written against the Pydantic V1 API. It still imports\nunder Pydantic V2 (via the deprecation shims) but misbehaves at runtime.\n\"\"\"\n\nfrom typing import List, Optional\n\nfrom pydantic import BaseModel, validator\n\nMIN_DISPLAY_NAME = 2\n\n\nclass User(BaseModel):\n    \"\"\"A single user record.\"\"\"\n\n    id: int\n    email: str\n    display_name: str\n    tags: List[str] = []\n    bio: Optional[str] = None\n\n    @validator(\"email\")\n    def normalize_email(cls, value):  # noqa: N805 - pydantic v1 style\n        \"\"\"Lowercase the address and reject anything without an '@'.\"\"\"\n        if \"@\" not in value:\n            raise ValueError(\"email must contain '@'\")\n        local, _, domain = value.strip().partition(\"@\")\n        if not local or not domain:\n            raise ValueError(\"email must have a local part and a domain\")\n        return f\"{local.lower()}@{domain.lower()}\"\n\n    @validator(\"display_name\")\n    def check_display_name(cls, value):  # noqa: N805 - pydantic v1 style\n        \"\"\"Require a non-trivial display name.\"\"\"\n        cleaned = value.strip()\n        if len(cleaned) < MIN_DISPLAY_NAME:\n            raise ValueError(f\"display_name must be at least {MIN_DISPLAY_NAME} characters\")\n        return cleaned\n\n    class Config:\n        orm_mode = True\n",
+    "modified": "\"\"\"Schema definitions for userkit.\n\nThis module targets the Pydantic V2 API.\n\"\"\"\n\nfrom typing import List, Optional\n\nfrom pydantic import BaseModel, ConfigDict, field_validator\n\nMIN_DISPLAY_NAME = 2\n\n\nclass User(BaseModel):\n    \"\"\"A single user record.\"\"\"\n\n    model_config = ConfigDict(from_attributes=True)\n\n    id: int\n    email: str\n    display_name: str\n    tags: List[str] = []\n    bio: Optional[str] = None\n\n    @field_validator(\"email\")\n    @classmethod\n    def normalize_email(cls, value):\n        \"\"\"Lowercase the address and reject anything without an '@'.\"\"\"\n        if \"@\" not in value:\n            raise ValueError(\"email must contain '@'\")\n        local, _, domain = value.strip().partition(\"@\")\n        if not local or not domain:\n            raise ValueError(\"email must have a local part and a domain\")\n        return f\"{local.lower()}@{domain.lower()}\"\n\n    @field_validator(\"display_name\")\n    @classmethod\n    def check_display_name(cls, value):\n        \"\"\"Require a non-trivial display name.\"\"\"\n        cleaned = value.strip()\n        if len(cleaned) < MIN_DISPLAY_NAME:\n            raise ValueError(f\"display_name must be at least {MIN_DISPLAY_NAME} characters\")\n        return cleaned\n",
+    "language": "python"
+   },
+   {
+    "path": "userkit/service.py",
+    "original": "\"\"\"Service helpers that serialize and parse :class:`~userkit.schemas.User`.\"\"\"\n\nfrom typing import Any, Dict, Iterable, List\n\nfrom .schemas import User\n\n\ndef user_to_dict(user: User) -> Dict[str, Any]:\n    \"\"\"Serialize a user to a plain dictionary.\"\"\"\n    return user.dict()\n\n\ndef parse_user(payload: Dict[str, Any]) -> User:\n    \"\"\"Build a user from an untrusted mapping.\"\"\"\n    if not isinstance(payload, dict):\n        raise TypeError(\"payload must be a mapping\")\n    return User.parse_obj(payload)\n\n\ndef user_from_row(row: Any) -> User:\n    \"\"\"Build a user from an ORM row (attribute access, not a mapping).\"\"\"\n    return User.from_orm(row)\n\n\ndef serialize_users(users: Iterable[User]) -> List[Dict[str, Any]]:\n    \"\"\"Serialize many users, sorted by id for deterministic output.\"\"\"\n    return [user_to_dict(user) for user in sorted(users, key=lambda u: u.id)]\n",
+    "modified": "\"\"\"Service helpers that serialize and parse :class:`~userkit.schemas.User`.\"\"\"\n\nfrom typing import Any, Dict, Iterable, List\n\nfrom .schemas import User\n\n\ndef user_to_dict(user: User) -> Dict[str, Any]:\n    \"\"\"Serialize a user to a plain dictionary.\"\"\"\n    return user.model_dump()\n\n\ndef parse_user(payload: Dict[str, Any]) -> User:\n    \"\"\"Build a user from an untrusted mapping.\"\"\"\n    if not isinstance(payload, dict):\n        raise TypeError(\"payload must be a mapping\")\n    return User.model_validate(payload)\n\n\ndef user_from_row(row: Any) -> User:\n    \"\"\"Build a user from an ORM row (attribute access, not a mapping).\"\"\"\n    return User.model_validate(row)\n\n\ndef serialize_users(users: Iterable[User]) -> List[Dict[str, Any]]:\n    \"\"\"Serialize many users, sorted by id for deterministic output.\"\"\"\n    return [user_to_dict(user) for user in sorted(users, key=lambda u: u.id)]\n",
+    "language": "python"
+   }
+  ],
+  "summary": {
+   "root_cause": "The models use Pydantic v1 APIs that Pydantic 2 deprecates or rejects."
+  },
+  "created_at": "2026-09-11T16:26:12.139036Z",
+  "finished_at": "2026-09-11T16:26:26.373806Z"
+ },
+ "attempts": [
+  {
+   "id": "a_940b2d99",
+   "mission_id": "m_6bc26c42",
+   "iteration": 1,
+   "parent_image": "img_065fc37f",
+   "result_image": "img_5610ce42",
+   "patch": "diff --git a/userkit/schemas.py b/userkit/schemas.py\nindex 4b5677a..28cf1d8 100644\n--- a/userkit/schemas.py\n+++ b/userkit/schemas.py\n@@ -1,12 +1,11 @@\n \"\"\"Schema definitions for userkit.\n \n-NOTE: this module is written against the Pydantic V1 API. It still imports\n-under Pydantic V2 (via the deprecation shims) but misbehaves at runtime.\n+This module targets the Pydantic V2 API.\n \"\"\"\n \n from typing import List, Optional\n \n-from pydantic import BaseModel, validator\n+from pydantic import BaseModel, ConfigDict, field_validator\n \n MIN_DISPLAY_NAME = 2\n \n@@ -14,14 +13,17 @@ MIN_DISPLAY_NAME = 2\n class User(BaseModel):\n     \"\"\"A single user record.\"\"\"\n \n+    model_config = ConfigDict(from_attributes=True)\n+\n     id: int\n     email: str\n     display_name: str\n     tags: List[str] = []\n     bio: Optional[str] = None\n \n-    @validator(\"email\")\n-    def normalize_email(cls, value):  # noqa: N805 - pydantic v1 style\n+    @field_validator(\"email\")\n+    @classmethod\n+    def normalize_email(cls, value):\n         \"\"\"Lowercase the address and reject anything without an '@'.\"\"\"\n         if \"@\" not in value:\n             raise ValueError(\"email must contain '@'\")\n@@ -30,13 +32,11 @@ class User(BaseModel):\n             raise ValueError(\"email must have a local part and a domain\")\n         return f\"{local.lower()}@{domain.lower()}\"\n \n-    @validator(\"display_name\")\n-    def check_display_name(cls, value):  # noqa: N805 - pydantic v1 style\n+    @field_validator(\"display_name\")\n+    @classmethod\n+    def check_display_name(cls, value):\n         \"\"\"Require a non-trivial display name.\"\"\"\n         cleaned = value.strip()\n         if len(cleaned) < MIN_DISPLAY_NAME:\n             raise ValueError(f\"display_name must be at least {MIN_DISPLAY_NAME} characters\")\n         return cleaned\n-\n-    class Config:\n-        orm_mode = True\ndiff --git a/userkit/service.py b/userkit/service.py\nindex 67472ff..a26e3ab 100644\n--- a/userkit/service.py\n+++ b/userkit/service.py\n@@ -7,19 +7,19 @@ from .schemas import User\n \n def user_to_dict(user: User) -> Dict[str, Any]:\n     \"\"\"Serialize a user to a plain dictionary.\"\"\"\n-    return user.dict()\n+    return user.model_dump()\n \n \n def parse_user(payload: Dict[str, Any]) -> User:\n     \"\"\"Build a user from an untrusted mapping.\"\"\"\n     if not isinstance(payload, dict):\n         raise TypeError(\"payload must be a mapping\")\n-    return User.parse_obj(payload)\n+    return User.model_validate(payload)\n \n \n def user_from_row(row: Any) -> User:\n     \"\"\"Build a user from an ORM row (attribute access, not a mapping).\"\"\"\n-    return User.from_orm(row)\n+    return User.model_validate(row)\n \n \n def serialize_users(users: Iterable[User]) -> List[Dict[str, Any]]:\n",
+   "rationale": "reference solution",
+   "exit_code": 0,
+   "fail_to_pass": 4,
+   "pass_to_pass_broken": 0,
+   "patch_lines": 26,
+   "applied": true,
+   "selected": true,
+   "report": {
+    "exit_code": 0,
+    "passed": [
+     "tests.py::test_email_is_normalized",
+     "tests.py::test_invalid_email_is_rejected",
+     "tests.py::test_model_declares_v2_config_and_validators",
+     "tests.py::test_parse_user_uses_v2_validation",
+     "tests.py::test_user_from_row_reads_attributes",
+     "tests.py::test_user_to_dict_uses_v2_serialization"
+    ],
+    "failed": [],
+    "errors": [],
+    "summary": "0 failed, 6 passed",
+    "parsed": true
+   },
+   "report_output": "......                                                                   [100%]\n==================================== PASSES ====================================\n=========================== short test summary info ============================\nPASSED tests/test_schemas.py::test_email_is_normalized\nPASSED tests/test_schemas.py::test_invalid_email_is_rejected\nPASSED tests/test_schemas.py::test_user_to_dict_uses_v2_serialization\nPASSED tests/test_schemas.py::test_parse_user_uses_v2_validation\nPASSED tests/test_schemas.py::test_user_from_row_reads_attributes\nPASSED tests/test_schemas.py::test_model_declares_v2_config_and_validators\n6 passed in 0.26s\n",
+   "error": null
+  }
+ ],
+ "usage": [
+  {
+   "mission_id": "m_6bc26c42",
+   "model": "nvidia/nemotron-3-super-120b-a12b",
+   "prompt_tokens": 2000,
+   "completion_tokens": 200,
+   "cost_usd": 0.0,
+   "task": ""
+  },
+  {
+   "mission_id": "m_6bc26c42",
+   "model": "nvidia/nemotron-3-ultra-550b-a55b",
+   "prompt_tokens": 1000,
+   "completion_tokens": 100,
+   "cost_usd": 0.0,
+   "task": ""
+  }
+ ],
+ "events": [
+  {
+   "id": 1,
+   "kind": "status",
+   "payload": {
+    "status": "PROVISIONING",
+    "iteration": 0
+   },
+   "ts": "2026-09-11T16:26:12.142611+00:00"
+  },
+  {
+   "id": 2,
+   "kind": "thought",
+   "payload": {
+    "stage": "PROVISIONING",
+    "model": "archon",
+    "text": "Cloning the repository and installing dependencies in a fresh sandbox."
+   },
+   "ts": "2026-09-11T16:26:12.144175+00:00"
+  },
+  {
+   "id": 3,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "cmd",
+    "line": "$ git clone --quiet --depth 200 file:///var/folders/fm/gz20np4s4yj5lpc3zb862zz00000gn/T/archon-fixture-l3zfi62t/broken_pydantic_v2 repo && cd repo && git checkout --quiet main && git log --oneline -1"
+   },
+   "ts": "2026-09-11T16:26:12.148812+00:00"
+  },
+  {
+   "id": 4,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "359bcda fixture broken_pydantic_v2"
+   },
+   "ts": "2026-09-11T16:26:12.921110+00:00"
+  },
+  {
+   "id": 5,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "cmd",
+    "line": "$ python3 -m venv .venv && . .venv/bin/activate && pip install -q -e . pytest"
+   },
+   "ts": "2026-09-11T16:26:12.934526+00:00"
+  },
+  {
+   "id": 6,
+   "kind": "status",
+   "payload": {
+    "status": "REPRODUCING",
+    "iteration": 0
+   },
+   "ts": "2026-09-11T16:26:21.304282+00:00"
+  },
+  {
+   "id": 7,
+   "kind": "thought",
+   "payload": {
+    "stage": "REPRODUCING",
+    "model": "archon",
+    "text": "Running the test suite on the untouched checkout to record the baseline."
+   },
+   "ts": "2026-09-11T16:26:21.305803+00:00"
+  },
+  {
+   "id": 8,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "cmd",
+    "line": "$ . .venv/bin/activate && pytest -q -rA --junitxml=../archon-junit.xml"
+   },
+   "ts": "2026-09-11T16:26:21.740446+00:00"
+  },
+  {
+   "id": 9,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "..FFFF                                                                   [100%]"
+   },
+   "ts": "2026-09-11T16:26:23.258993+00:00"
+  },
+  {
+   "id": 10,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "=================================== FAILURES ==================================="
+   },
+   "ts": "2026-09-11T16:26:23.259672+00:00"
+  },
+  {
+   "id": 11,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "___________________ test_user_to_dict_uses_v2_serialization ____________________"
+   },
+   "ts": "2026-09-11T16:26:23.260075+00:00"
+  },
+  {
+   "id": 12,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-11T16:26:23.260569+00:00"
+  },
+  {
+   "id": 13,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    def test_user_to_dict_uses_v2_serialization():"
+   },
+   "ts": "2026-09-11T16:26:23.260878+00:00"
+  },
+  {
+   "id": 14,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        user = User(id=4, email=\"lin@example.com\", display_name=\"Lin\", tags=[\"a\"])"
+   },
+   "ts": "2026-09-11T16:26:23.261432+00:00"
+  },
+  {
+   "id": 15,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        with no_deprecation_warnings():"
+   },
+   "ts": "2026-09-11T16:26:23.261726+00:00"
+  },
+  {
+   "id": 16,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ">           data = user_to_dict(user)"
+   },
+   "ts": "2026-09-11T16:26:23.262015+00:00"
+  },
+  {
+   "id": 17,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "                   ^^^^^^^^^^^^^^^^^^"
+   },
+   "ts": "2026-09-11T16:26:23.262716+00:00"
+  },
+  {
+   "id": 18,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-11T16:26:23.263025+00:00"
+  },
+  {
+   "id": 19,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "tests/test_schemas.py:51: "
+   },
+   "ts": "2026-09-11T16:26:23.263339+00:00"
+  },
+  {
+   "id": 20,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ "
+   },
+   "ts": "2026-09-11T16:26:23.263712+00:00"
+  },
+  {
+   "id": 21,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "../../../img_065fc37f/work/repo/userkit/service.py:10: in user_to_dict"
+   },
+   "ts": "2026-09-11T16:26:23.264166+00:00"
+  },
+  {
+   "id": 22,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    return user.dict()"
+   },
+   "ts": "2026-09-11T16:26:23.264592+00:00"
+  },
+  {
+   "id": 23,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "           ^^^^^^^^^^^"
+   },
+   "ts": "2026-09-11T16:26:23.264894+00:00"
+  },
+  {
+   "id": 24,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ "
+   },
+   "ts": "2026-09-11T16:26:23.265298+00:00"
+  },
+  {
+   "id": 25,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-11T16:26:23.265584+00:00"
+  },
+  {
+   "id": 26,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "self = User(id=4, email='lin@example.com', display_name='Lin', tags=['a'], bio=None)"
+   },
+   "ts": "2026-09-11T16:26:23.265874+00:00"
+  },
+  {
+   "id": 27,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "include = None, exclude = None, by_alias = False, exclude_unset = False"
+   },
+   "ts": "2026-09-11T16:26:23.266166+00:00"
+  },
+  {
+   "id": 28,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "exclude_defaults = False, exclude_none = False"
+   },
+   "ts": "2026-09-11T16:26:23.266450+00:00"
+  },
+  {
+   "id": 29,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-11T16:26:23.266717+00:00"
+  },
+  {
+   "id": 30,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    @typing_extensions.deprecated('The `dict` method is deprecated; use `model_dump` instead.', category=None)"
+   },
+   "ts": "2026-09-11T16:26:23.266993+00:00"
+  },
+  {
+   "id": 31,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    def dict(  # noqa: D102"
+   },
+   "ts": "2026-09-11T16:26:23.267261+00:00"
+  },
+  {
+   "id": 32,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        self,"
+   },
+   "ts": "2026-09-11T16:26:23.267546+00:00"
+  },
+  {
+   "id": 33,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        *,"
+   },
+   "ts": "2026-09-11T16:26:23.267832+00:00"
+  },
+  {
+   "id": 34,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        include: IncEx | None = None,"
+   },
+   "ts": "2026-09-11T16:26:23.268307+00:00"
+  },
+  {
+   "id": 35,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        exclude: IncEx | None = None,"
+   },
+   "ts": "2026-09-11T16:26:23.268594+00:00"
+  },
+  {
+   "id": 36,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        by_alias: bool = False,"
+   },
+   "ts": "2026-09-11T16:26:23.268874+00:00"
+  },
+  {
+   "id": 37,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        exclude_unset: bool = False,"
+   },
+   "ts": "2026-09-11T16:26:23.269157+00:00"
+  },
+  {
+   "id": 38,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        exclude_defaults: bool = False,"
+   },
+   "ts": "2026-09-11T16:26:23.269431+00:00"
+  },
+  {
+   "id": 39,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        exclude_none: bool = False,"
+   },
+   "ts": "2026-09-11T16:26:23.269724+00:00"
+  },
+  {
+   "id": 40,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    ) -> Dict[str, Any]:  # noqa UP006"
+   },
+   "ts": "2026-09-11T16:26:23.270020+00:00"
+  },
+  {
+   "id": 41,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ">       warnings.warn("
+   },
+   "ts": "2026-09-11T16:26:23.270358+00:00"
+  },
+  {
+   "id": 42,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "            'The `dict` method is deprecated; use `model_dump` instead.',"
+   },
+   "ts": "2026-09-11T16:26:23.270651+00:00"
+  },
+  {
+   "id": 43,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "            category=PydanticDeprecatedSince20,"
+   },
+   "ts": "2026-09-11T16:26:23.270926+00:00"
+  },
+  {
+   "id": 44,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "            stacklevel=2,"
+   },
+   "ts": "2026-09-11T16:26:23.271408+00:00"
+  },
+  {
+   "id": 45,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        )"
+   },
+   "ts": "2026-09-11T16:26:23.271701+00:00"
+  },
+  {
+   "id": 46,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "E       pydantic.warnings.PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/"
+   },
+   "ts": "2026-09-11T16:26:23.271993+00:00"
+  },
+  {
+   "id": 47,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-11T16:26:23.272259+00:00"
+  },
+  {
+   "id": 48,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ".venv/lib/python3.13/site-packages/pydantic/main.py:1333: PydanticDeprecatedSince20"
+   },
+   "ts": "2026-09-11T16:26:23.272609+00:00"
+  },
+  {
+   "id": 49,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "______________________ test_parse_user_uses_v2_validation ______________________"
+   },
+   "ts": "2026-09-11T16:26:23.272963+00:00"
+  },
+  {
+   "id": 50,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-11T16:26:23.273263+00:00"
+  },
+  {
+   "id": 51,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    def test_parse_user_uses_v2_validation():"
+   },
+   "ts": "2026-09-11T16:26:23.273548+00:00"
+  },
+  {
+   "id": 52,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        payload = {\"id\": 5, \"email\": \"KAT@Example.com\", \"display_name\": \"Kat\"}"
+   },
+   "ts": "2026-09-11T16:26:23.274105+00:00"
+  },
+  {
+   "id": 53,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        with no_deprecation_warnings():"
+   },
+   "ts": "2026-09-11T16:26:23.274386+00:00"
+  },
+  {
+   "id": 54,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ">           user = parse_user(payload)"
+   },
+   "ts": "2026-09-11T16:26:23.274675+00:00"
+  },
+  {
+   "id": 55,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "                   ^^^^^^^^^^^^^^^^^^^"
+   },
+   "ts": "2026-09-11T16:26:23.274957+00:00"
+  },
+  {
+   "id": 56,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-11T16:26:23.275342+00:00"
+  },
+  {
+   "id": 57,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "tests/test_schemas.py:64: "
+   },
+   "ts": "2026-09-11T16:26:23.275617+00:00"
+  },
+  {
+   "id": 58,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ "
+   },
+   "ts": "2026-09-11T16:26:23.275903+00:00"
+  },
+  {
+   "id": 59,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "../../../img_065fc37f/work/repo/userkit/service.py:17: in parse_user"
+   },
+   "ts": "2026-09-11T16:26:23.276197+00:00"
+  },
+  {
+   "id": 60,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    return User.parse_obj(payload)"
+   },
+   "ts": "2026-09-11T16:26:23.276583+00:00"
+  },
+  {
+   "id": 61,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "           ^^^^^^^^^^^^^^^^^^^^^^^"
+   },
+   "ts": "2026-09-11T16:26:23.276848+00:00"
+  },
+  {
+   "id": 62,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ "
+   },
+   "ts": "2026-09-11T16:26:23.277261+00:00"
+  },
+  {
+   "id": 63,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-11T16:26:23.277547+00:00"
+  },
+  {
+   "id": 64,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "cls = <class 'userkit.schemas.User'>"
+   },
+   "ts": "2026-09-11T16:26:23.277826+00:00"
+  },
+  {
+   "id": 65,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "obj = {'id': 5, 'email': 'KAT@Example.com', 'display_name': 'Kat'}"
+   },
+   "ts": "2026-09-11T16:26:23.278128+00:00"
+  },
+  {
+   "id": 66,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-11T16:26:23.278409+00:00"
+  },
+  {
+   "id": 67,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    @classmethod"
+   },
+   "ts": "2026-09-11T16:26:23.278674+00:00"
+  },
+  {
+   "id": 68,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    @typing_extensions.deprecated('The `parse_obj` method is deprecated; use `model_validate` instead.', category=None)"
+   },
+   "ts": "2026-09-11T16:26:23.278943+00:00"
+  },
+  {
+   "id": 69,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    def parse_obj(cls, obj: Any) -> Self:  # noqa: D102"
+   },
+   "ts": "2026-09-11T16:26:23.279221+00:00"
+  },
+  {
+   "id": 70,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ">       warnings.warn("
+   },
+   "ts": "2026-09-11T16:26:23.279491+00:00"
+  },
+  {
+   "id": 71,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "            'The `parse_obj` method is deprecated; use `model_validate` instead.',"
+   },
+   "ts": "2026-09-11T16:26:23.279770+00:00"
+  },
+  {
+   "id": 72,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "            category=PydanticDeprecatedSince20,"
+   },
+   "ts": "2026-09-11T16:26:23.280074+00:00"
+  },
+  {
+   "id": 73,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "            stacklevel=2,"
+   },
+   "ts": "2026-09-11T16:26:23.280352+00:00"
+  },
+  {
+   "id": 74,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        )"
+   },
+   "ts": "2026-09-11T16:26:23.280612+00:00"
+  },
+  {
+   "id": 75,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "E       pydantic.warnings.PydanticDeprecatedSince20: The `parse_obj` method is deprecated; use `model_validate` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/"
+   },
+   "ts": "2026-09-11T16:26:23.281200+00:00"
+  },
+  {
+   "id": 76,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-11T16:26:23.281494+00:00"
+  },
+  {
+   "id": 77,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ".venv/lib/python3.13/site-packages/pydantic/main.py:1384: PydanticDeprecatedSince20"
+   },
+   "ts": "2026-09-11T16:26:23.281772+00:00"
+  },
+  {
+   "id": 78,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "_____________________ test_user_from_row_reads_attributes ______________________"
+   },
+   "ts": "2026-09-11T16:26:23.282058+00:00"
+  },
+  {
+   "id": 79,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-11T16:26:23.282336+00:00"
+  },
+  {
+   "id": 80,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    def test_user_from_row_reads_attributes():"
+   },
+   "ts": "2026-09-11T16:26:23.282603+00:00"
+  },
+  {
+   "id": 81,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        row = Row(id=6, email=\"Rae@Example.com\", display_name=\"Rae\", tags=[\"x\", \"y\"])"
+   },
+   "ts": "2026-09-11T16:26:23.282869+00:00"
+  },
+  {
+   "id": 82,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        with no_deprecation_warnings():"
+   },
+   "ts": "2026-09-11T16:26:23.283126+00:00"
+  },
+  {
+   "id": 83,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ">           user = user_from_row(row)"
+   },
+   "ts": "2026-09-11T16:26:23.283388+00:00"
+  },
+  {
+   "id": 84,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "                   ^^^^^^^^^^^^^^^^^^"
+   },
+   "ts": "2026-09-11T16:26:23.283693+00:00"
+  },
+  {
+   "id": 85,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-11T16:26:23.283952+00:00"
+  },
+  {
+   "id": 86,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "tests/test_schemas.py:74: "
+   },
+   "ts": "2026-09-11T16:26:23.284224+00:00"
+  },
+  {
+   "id": 87,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ "
+   },
+   "ts": "2026-09-11T16:26:23.284493+00:00"
+  },
+  {
+   "id": 88,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "../../../img_065fc37f/work/repo/userkit/service.py:22: in user_from_row"
+   },
+   "ts": "2026-09-11T16:26:23.284765+00:00"
+  },
+  {
+   "id": 89,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    return User.from_orm(row)"
+   },
+   "ts": "2026-09-11T16:26:23.285247+00:00"
+  },
+  {
+   "id": 90,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "           ^^^^^^^^^^^^^^^^^^"
+   },
+   "ts": "2026-09-11T16:26:23.285616+00:00"
+  },
+  {
+   "id": 91,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ "
+   },
+   "ts": "2026-09-11T16:26:23.285904+00:00"
+  },
+  {
+   "id": 92,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-11T16:26:23.286190+00:00"
+  },
+  {
+   "id": 93,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "cls = <class 'userkit.schemas.User'>"
+   },
+   "ts": "2026-09-11T16:26:23.286482+00:00"
+  },
+  {
+   "id": 94,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "obj = <test_schemas.Row object at 0x1065ebcb0>"
+   },
+   "ts": "2026-09-11T16:26:23.286787+00:00"
+  },
+  {
+   "id": 95,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-11T16:26:23.287054+00:00"
+  },
+  {
+   "id": 96,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    @classmethod"
+   },
+   "ts": "2026-09-11T16:26:23.287319+00:00"
+  },
+  {
+   "id": 97,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    @typing_extensions.deprecated("
+   },
+   "ts": "2026-09-11T16:26:23.287617+00:00"
+  },
+  {
+   "id": 98,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        'The `from_orm` method is deprecated; set '"
+   },
+   "ts": "2026-09-11T16:26:23.287893+00:00"
+  },
+  {
+   "id": 99,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        \"`model_config['from_attributes']=True` and use `model_validate` instead.\","
+   },
+   "ts": "2026-09-11T16:26:23.288156+00:00"
+  },
+  {
+   "id": 100,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        category=None,"
+   },
+   "ts": "2026-09-11T16:26:23.288464+00:00"
+  },
+  {
+   "id": 101,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    )"
+   },
+   "ts": "2026-09-11T16:26:23.288755+00:00"
+  },
+  {
+   "id": 102,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    def from_orm(cls, obj: Any) -> Self:  # noqa: D102"
+   },
+   "ts": "2026-09-11T16:26:23.289108+00:00"
+  },
+  {
+   "id": 103,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ">       warnings.warn("
+   },
+   "ts": "2026-09-11T16:26:23.289482+00:00"
+  },
+  {
+   "id": 104,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "            'The `from_orm` method is deprecated; set '"
+   },
+   "ts": "2026-09-11T16:26:23.289835+00:00"
+  },
+  {
+   "id": 105,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "            \"`model_config['from_attributes']=True` and use `model_validate` instead.\","
+   },
+   "ts": "2026-09-11T16:26:23.290137+00:00"
+  },
+  {
+   "id": 106,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "            category=PydanticDeprecatedSince20,"
+   },
+   "ts": "2026-09-11T16:26:23.290440+00:00"
+  },
+  {
+   "id": 107,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "            stacklevel=2,"
+   },
+   "ts": "2026-09-11T16:26:23.290704+00:00"
+  },
+  {
+   "id": 108,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        )"
+   },
+   "ts": "2026-09-11T16:26:23.290970+00:00"
+  },
+  {
+   "id": 109,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "E       pydantic.warnings.PydanticDeprecatedSince20: The `from_orm` method is deprecated; set `model_config['from_attributes']=True` and use `model_validate` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/"
+   },
+   "ts": "2026-09-11T16:26:23.291232+00:00"
+  },
+  {
+   "id": 110,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-11T16:26:23.291489+00:00"
+  },
+  {
+   "id": 111,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ".venv/lib/python3.13/site-packages/pydantic/main.py:1484: PydanticDeprecatedSince20"
+   },
+   "ts": "2026-09-11T16:26:23.291750+00:00"
+  },
+  {
+   "id": 112,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "_________________ test_model_declares_v2_config_and_validators _________________"
+   },
+   "ts": "2026-09-11T16:26:23.291994+00:00"
+  },
+  {
+   "id": 113,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-11T16:26:23.292232+00:00"
+  },
+  {
+   "id": 114,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    def test_model_declares_v2_config_and_validators():"
+   },
+   "ts": "2026-09-11T16:26:23.292481+00:00"
+  },
+  {
+   "id": 115,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        decorators = User.__pydantic_decorators__"
+   },
+   "ts": "2026-09-11T16:26:23.292727+00:00"
+  },
+  {
+   "id": 116,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ">       assert dict(decorators.validators) == {}, \"V1 @validator still present\""
+   },
+   "ts": "2026-09-11T16:26:23.292972+00:00"
+  },
+  {
+   "id": 117,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "E       AssertionError: V1 @validator still present"
+   },
+   "ts": "2026-09-11T16:26:23.293220+00:00"
+  },
+  {
+   "id": 118,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "E       assert {'normalize_e...fields=None))} == {}"
+   },
+   "ts": "2026-09-11T16:26:23.293467+00:00"
+  },
+  {
+   "id": 119,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "E         "
+   },
+   "ts": "2026-09-11T16:26:23.293716+00:00"
+  },
+  {
+   "id": 120,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "E         Left contains 2 more items:"
+   },
+   "ts": "2026-09-11T16:26:23.293959+00:00"
+  },
+  {
+   "id": 121,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "E         {'check_display_name': Decorator(cls_ref='userkit.schemas.User:5170505200',"
+   },
+   "ts": "2026-09-11T16:26:23.294199+00:00"
+  },
+  {
+   "id": 122,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "E                                          cls_var_name='check_display_name',"
+   },
+   "ts": "2026-09-11T16:26:23.294439+00:00"
+  },
+  {
+   "id": 123,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "E                                          func=<function make_generic_v1_field_validator.<locals>.wrapper2 at 0x1066de020>,"
+   },
+   "ts": "2026-09-11T16:26:23.294684+00:00"
+  },
+  {
+   "id": 124,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "E                                          shim=<function make_generic_v1_field_validator at 0x1066394e0>,"
+   },
+   "ts": "2026-09-11T16:26:23.294929+00:00"
+  },
+  {
+   "id": 125,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "E                                          info=ValidatorDecoratorInfo(fields=('display_name',),..."
+   },
+   "ts": "2026-09-11T16:26:23.295196+00:00"
+  },
+  {
+   "id": 126,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "E         "
+   },
+   "ts": "2026-09-11T16:26:23.295450+00:00"
+  },
+  {
+   "id": 127,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "E         ...Full output truncated (14 lines hidden), use '-vv' to show"
+   },
+   "ts": "2026-09-11T16:26:23.295693+00:00"
+  },
+  {
+   "id": 128,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-11T16:26:23.295938+00:00"
+  },
+  {
+   "id": 129,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "tests/test_schemas.py:83: AssertionError"
+   },
+   "ts": "2026-09-11T16:26:23.296176+00:00"
+  },
+  {
+   "id": 130,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "=============================== warnings summary ==============================="
+   },
+   "ts": "2026-09-11T16:26:23.296407+00:00"
+  },
+  {
+   "id": 131,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "../../../img_065fc37f/work/repo/userkit/schemas.py:23"
+   },
+   "ts": "2026-09-11T16:26:23.296644+00:00"
+  },
+  {
+   "id": 132,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "  /private/var/folders/fm/gz20np4s4yj5lpc3zb862zz00000gn/T/archon-local-59c0ejh9/img_065fc37f/work/repo/userkit/schemas.py:23: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/"
+   },
+   "ts": "2026-09-11T16:26:23.296916+00:00"
+  },
+  {
+   "id": 133,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    @validator(\"email\")"
+   },
+   "ts": "2026-09-11T16:26:23.297176+00:00"
+  },
+  {
+   "id": 134,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-11T16:26:23.297434+00:00"
+  },
+  {
+   "id": 135,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "../../../img_065fc37f/work/repo/userkit/schemas.py:33"
+   },
+   "ts": "2026-09-11T16:26:23.297769+00:00"
+  },
+  {
+   "id": 136,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "  /private/var/folders/fm/gz20np4s4yj5lpc3zb862zz00000gn/T/archon-local-59c0ejh9/img_065fc37f/work/repo/userkit/schemas.py:33: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/"
+   },
+   "ts": "2026-09-11T16:26:23.298057+00:00"
+  },
+  {
+   "id": 137,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    @validator(\"display_name\")"
+   },
+   "ts": "2026-09-11T16:26:23.298341+00:00"
+  },
+  {
+   "id": 138,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-11T16:26:23.298610+00:00"
+  },
+  {
+   "id": 139,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "../../../img_065fc37f/work/repo/userkit/schemas.py:14"
+   },
+   "ts": "2026-09-11T16:26:23.298865+00:00"
+  },
+  {
+   "id": 140,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "  /private/var/folders/fm/gz20np4s4yj5lpc3zb862zz00000gn/T/archon-local-59c0ejh9/img_065fc37f/work/repo/userkit/schemas.py:14: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/"
+   },
+   "ts": "2026-09-11T16:26:23.299127+00:00"
+  },
+  {
+   "id": 141,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    class User(BaseModel):"
+   },
+   "ts": "2026-09-11T16:26:23.299377+00:00"
+  },
+  {
+   "id": 142,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-11T16:26:23.299631+00:00"
+  },
+  {
+   "id": 143,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ".venv/lib/python3.13/site-packages/pydantic/_internal/_config.py:386"
+   },
+   "ts": "2026-09-11T16:26:23.299879+00:00"
+  },
+  {
+   "id": 144,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "  /private/var/folders/fm/gz20np4s4yj5lpc3zb862zz00000gn/T/archon-local-59c0ejh9/img_cb7b22cd/work/repo/.venv/lib/python3.13/site-packages/pydantic/_internal/_config.py:386: UserWarning: Valid config keys have changed in V2:"
+   },
+   "ts": "2026-09-11T16:26:23.300115+00:00"
+  },
+  {
+   "id": 145,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "  * 'orm_mode' has been renamed to 'from_attributes'"
+   },
+   "ts": "2026-09-11T16:26:23.300354+00:00"
+  },
+  {
+   "id": 146,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    warnings.warn(message, UserWarning)"
+   },
+   "ts": "2026-09-11T16:26:23.300601+00:00"
+  },
+  {
+   "id": 147,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-11T16:26:23.300841+00:00"
+  },
+  {
+   "id": 148,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html"
+   },
+   "ts": "2026-09-11T16:26:23.301081+00:00"
+  },
+  {
+   "id": 149,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "==================================== PASSES ===================================="
+   },
+   "ts": "2026-09-11T16:26:23.301363+00:00"
+  },
+  {
+   "id": 150,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "=========================== short test summary info ============================"
+   },
+   "ts": "2026-09-11T16:26:23.301617+00:00"
+  },
+  {
+   "id": 151,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED tests/test_schemas.py::test_email_is_normalized"
+   },
+   "ts": "2026-09-11T16:26:23.301901+00:00"
+  },
+  {
+   "id": 152,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED tests/test_schemas.py::test_invalid_email_is_rejected"
+   },
+   "ts": "2026-09-11T16:26:23.302151+00:00"
+  },
+  {
+   "id": 153,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "FAILED tests/test_schemas.py::test_user_to_dict_uses_v2_serialization - pydan..."
+   },
+   "ts": "2026-09-11T16:26:23.302400+00:00"
+  },
+  {
+   "id": 154,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "FAILED tests/test_schemas.py::test_parse_user_uses_v2_validation - pydantic.w..."
+   },
+   "ts": "2026-09-11T16:26:23.302652+00:00"
+  },
+  {
+   "id": 155,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "FAILED tests/test_schemas.py::test_user_from_row_reads_attributes - pydantic...."
+   },
+   "ts": "2026-09-11T16:26:23.302892+00:00"
+  },
+  {
+   "id": 156,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "FAILED tests/test_schemas.py::test_model_declares_v2_config_and_validators - ..."
+   },
+   "ts": "2026-09-11T16:26:23.303136+00:00"
+  },
+  {
+   "id": 157,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "4 failed, 2 passed, 4 warnings in 0.29s"
+   },
+   "ts": "2026-09-11T16:26:23.303387+00:00"
+  },
+  {
+   "id": 158,
+   "kind": "tests",
+   "payload": {
+    "attempt": "baseline",
+    "exit_code": 1,
+    "passed": 2,
+    "failed": 4,
+    "total": 6,
+    "fail_to_pass": 0,
+    "pass_to_pass_broken": 0,
+    "summary": "4 failed, 2 passed"
+   },
+   "ts": "2026-09-11T16:26:23.304107+00:00"
+  },
+  {
+   "id": 159,
+   "kind": "status",
+   "payload": {
+    "status": "GROUNDING",
+    "iteration": 0
+   },
+   "ts": "2026-09-11T16:26:23.304767+00:00"
+  },
+  {
+   "id": 160,
+   "kind": "thought",
+   "payload": {
+    "stage": "GROUNDING",
+    "model": "archon",
+    "text": "Searching current documentation and issue threads for the failure signature."
+   },
+   "ts": "2026-09-11T16:26:23.305059+00:00"
+  },
+  {
+   "id": 161,
+   "kind": "usage",
+   "payload": {
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "task": "research_queries",
+    "prompt_tokens": 1000,
+    "completion_tokens": 100,
+    "cost_usd": 0.0
+   },
+   "ts": "2026-09-11T16:26:23.306163+00:00"
+  },
+  {
+   "id": 162,
+   "kind": "tavily",
+   "payload": {
+    "query": "pydantic v2 validator migration field_validator",
+    "results": 0,
+    "ms": 0,
+    "error": "disabled",
+    "cached": false
+   },
+   "ts": "2026-09-11T16:26:23.306513+00:00"
+  },
+  {
+   "id": 163,
+   "kind": "thought",
+   "payload": {
+    "stage": "GROUNDING",
+    "model": "archon",
+    "text": "Continuing without web grounding: search returned nothing (disabled)"
+   },
+   "ts": "2026-09-11T16:26:23.306770+00:00"
+  },
+  {
+   "id": 164,
+   "kind": "status",
+   "payload": {
+    "status": "REASONING",
+    "iteration": 1
+   },
+   "ts": "2026-09-11T16:26:23.307302+00:00"
+  },
+  {
+   "id": 165,
+   "kind": "thought",
+   "payload": {
+    "stage": "REASONING",
+    "model": "archon",
+    "text": "Asking Nemotron 3 Ultra for a root cause and candidate patches. Iteration 1 of 5."
+   },
+   "ts": "2026-09-11T16:26:23.307546+00:00"
+  },
+  {
+   "id": 166,
+   "kind": "usage",
+   "payload": {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "task": "diagnose_and_patch",
+    "prompt_tokens": 1000,
+    "completion_tokens": 100,
+    "cost_usd": 0.0
+   },
+   "ts": "2026-09-11T16:26:23.308085+00:00"
+  },
+  {
+   "id": 167,
+   "kind": "thought",
+   "payload": {
+    "stage": "REASONING",
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "text": "Root cause: The models use Pydantic v1 APIs that Pydantic 2 deprecates or rejects."
+   },
+   "ts": "2026-09-11T16:26:23.308437+00:00"
+  },
+  {
+   "id": 168,
+   "kind": "status",
+   "payload": {
+    "status": "TESTING",
+    "iteration": 1
+   },
+   "ts": "2026-09-11T16:26:23.308938+00:00"
+  },
+  {
+   "id": 169,
+   "kind": "thought",
+   "payload": {
+    "stage": "TESTING",
+    "model": "archon",
+    "text": "Applying each candidate on its own sandbox fork and re-running the tests. 1 candidate(s)."
+   },
+   "ts": "2026-09-11T16:26:23.309206+00:00"
+  },
+  {
+   "id": 170,
+   "kind": "patch",
+   "payload": {
+    "attempt": "a_940b2d99",
+    "iteration": 1,
+    "rationale": "reference solution",
+    "files": [
+     {
+      "path": "userkit/schemas.py",
+      "added": 10,
+      "removed": 10
+     },
+     {
+      "path": "userkit/service.py",
+      "added": 3,
+      "removed": 3
+     }
+    ]
+   },
+   "ts": "2026-09-11T16:26:23.309536+00:00"
+  },
+  {
+   "id": 171,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_940b2d99",
+    "stream": "cmd",
+    "line": "$ git apply --check ../archon.patch && git apply --whitespace=nowarn ../archon.patch && git status --short"
+   },
+   "ts": "2026-09-11T16:26:23.715262+00:00"
+  },
+  {
+   "id": 172,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_940b2d99",
+    "stream": "stdout",
+    "line": " M userkit/schemas.py"
+   },
+   "ts": "2026-09-11T16:26:24.381078+00:00"
+  },
+  {
+   "id": 173,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_940b2d99",
+    "stream": "stdout",
+    "line": " M userkit/service.py"
+   },
+   "ts": "2026-09-11T16:26:24.381614+00:00"
+  },
+  {
+   "id": 174,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_940b2d99",
+    "stream": "cmd",
+    "line": "$ . .venv/bin/activate && pytest -q -rA --junitxml=../archon-junit.xml"
+   },
+   "ts": "2026-09-11T16:26:24.840576+00:00"
+  },
+  {
+   "id": 175,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_940b2d99",
+    "stream": "stdout",
+    "line": "......                                                                   [100%]"
+   },
+   "ts": "2026-09-11T16:26:26.364856+00:00"
+  },
+  {
+   "id": 176,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_940b2d99",
+    "stream": "stdout",
+    "line": "==================================== PASSES ===================================="
+   },
+   "ts": "2026-09-11T16:26:26.365607+00:00"
+  },
+  {
+   "id": 177,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_940b2d99",
+    "stream": "stdout",
+    "line": "=========================== short test summary info ============================"
+   },
+   "ts": "2026-09-11T16:26:26.366063+00:00"
+  },
+  {
+   "id": 178,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_940b2d99",
+    "stream": "stdout",
+    "line": "PASSED tests/test_schemas.py::test_email_is_normalized"
+   },
+   "ts": "2026-09-11T16:26:26.366474+00:00"
+  },
+  {
+   "id": 179,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_940b2d99",
+    "stream": "stdout",
+    "line": "PASSED tests/test_schemas.py::test_invalid_email_is_rejected"
+   },
+   "ts": "2026-09-11T16:26:26.366853+00:00"
+  },
+  {
+   "id": 180,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_940b2d99",
+    "stream": "stdout",
+    "line": "PASSED tests/test_schemas.py::test_user_to_dict_uses_v2_serialization"
+   },
+   "ts": "2026-09-11T16:26:26.367228+00:00"
+  },
+  {
+   "id": 181,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_940b2d99",
+    "stream": "stdout",
+    "line": "PASSED tests/test_schemas.py::test_parse_user_uses_v2_validation"
+   },
+   "ts": "2026-09-11T16:26:26.367612+00:00"
+  },
+  {
+   "id": 182,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_940b2d99",
+    "stream": "stdout",
+    "line": "PASSED tests/test_schemas.py::test_user_from_row_reads_attributes"
+   },
+   "ts": "2026-09-11T16:26:26.368016+00:00"
+  },
+  {
+   "id": 183,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_940b2d99",
+    "stream": "stdout",
+    "line": "PASSED tests/test_schemas.py::test_model_declares_v2_config_and_validators"
+   },
+   "ts": "2026-09-11T16:26:26.368369+00:00"
+  },
+  {
+   "id": 184,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_940b2d99",
+    "stream": "stdout",
+    "line": "6 passed in 0.26s"
+   },
+   "ts": "2026-09-11T16:26:26.368735+00:00"
+  },
+  {
+   "id": 185,
+   "kind": "tests",
+   "payload": {
+    "attempt": "a_940b2d99",
+    "exit_code": 0,
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "fail_to_pass": 4,
+    "pass_to_pass_broken": 0,
+    "summary": "0 failed, 6 passed"
+   },
+   "ts": "2026-09-11T16:26:26.370100+00:00"
+  },
+  {
+   "id": 186,
+   "kind": "status",
+   "payload": {
+    "status": "REVIEWING",
+    "iteration": 1
+   },
+   "ts": "2026-09-11T16:26:26.370778+00:00"
+  },
+  {
+   "id": 187,
+   "kind": "thought",
+   "payload": {
+    "stage": "REVIEWING",
+    "model": "archon",
+    "text": "Checking the winning patch for deleted tests, unrelated changes, and secrets."
+   },
+   "ts": "2026-09-11T16:26:26.371124+00:00"
+  },
+  {
+   "id": 188,
+   "kind": "usage",
+   "payload": {
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "task": "review",
+    "prompt_tokens": 1000,
+    "completion_tokens": 100,
+    "cost_usd": 0.0
+   },
+   "ts": "2026-09-11T16:26:26.371981+00:00"
+  },
+  {
+   "id": 189,
+   "kind": "review",
+   "payload": {
+    "attempt": "a_940b2d99",
+    "verdict": "APPROVE",
+    "reasons": [
+     "matches reference"
+    ]
+   },
+   "ts": "2026-09-11T16:26:26.372400+00:00"
+  },
+  {
+   "id": 190,
+   "kind": "done",
+   "payload": {
+    "status": "VERIFIED",
+    "selected_attempt": "a_940b2d99",
+    "iterations": 1,
+    "spend_usd": 0.0,
+    "fail_to_pass": 4,
+    "pass_to_pass_broken": 0
+   },
+   "ts": "2026-09-11T16:26:26.374469+00:00"
+  }
+ ],
+ "note": "Smoke recording: local development backend, scripted model response (the fixture's reference patch), Tavily disabled. Demonstrates the loop mechanics, not model quality."
+}

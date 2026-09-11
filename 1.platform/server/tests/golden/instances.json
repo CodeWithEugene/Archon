@@ -1,0 +1,1 @@
+{"swe_bench_verified": [], "local_fixtures": ["broken_pydantic_v2", "openai_chat_service", "anthropic_summarizer"], "note": "SWE-bench Verified instance IDs are added in week 5 after Sandboxes beta access is confirmed."}

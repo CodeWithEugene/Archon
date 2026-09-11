@@ -1,0 +1,50 @@
+[
+  {
+    "id": "sum-01",
+    "function": "summarize",
+    "input": "The deploy failed three times last night. Each run timed out while pulling the base image from the internal registry. Ops restarted the registry at 02:10 and the fourth run succeeded.",
+    "reference_output": "Deploys failed three times due to registry pull timeouts until ops restarted the registry."
+  },
+  {
+    "id": "sum-02",
+    "function": "summarize",
+    "input": "Our Q3 retention numbers came in at 91 percent, up from 88 percent in Q2. The gain is concentrated in accounts that completed onboarding within seven days.",
+    "reference_output": "Q3 retention rose to 91 percent, driven by accounts that finished onboarding within a week."
+  },
+  {
+    "id": "sum-03",
+    "function": "summarize",
+    "input": "The customer wrote in to say the mobile app logs them out whenever they switch networks. They are on Android 15 and version 4.2.1 of the app. It does not happen on wifi alone.",
+    "reference_output": "An Android 15 user on app 4.2.1 is logged out whenever the device switches networks."
+  },
+  {
+    "id": "sum-04",
+    "function": "summarize",
+    "input": "We reviewed 40 support tickets from the billing queue. Twenty six were about proration on mid cycle upgrades, nine were refund requests, and five were duplicates.",
+    "reference_output": "Of 40 billing tickets, most concerned mid-cycle proration, with fewer refunds and duplicates."
+  },
+  {
+    "id": "cls-01",
+    "function": "classify",
+    "input": "The export button returns a 500 error every time I click it on the reports page.",
+    "reference_output": {"label": "bug", "confidence": 0.95}
+  },
+  {
+    "id": "cls-02",
+    "function": "classify",
+    "input": "It would be great if the dashboard let me pin my favourite saved views to the top.",
+    "reference_output": {"label": "feature_request", "confidence": 0.92}
+  },
+  {
+    "id": "cls-03",
+    "function": "classify",
+    "input": "How do I rotate the API key for a service account without downtime?",
+    "reference_output": {"label": "question", "confidence": 0.93}
+  },
+  {
+    "id": "cls-04",
+    "function": "classify",
+    "input": "Just wanted to say the new onboarding flow is excellent, it took us minutes instead of hours.",
+    "reference_output": {"label": "praise", "confidence": 0.94}
+  }
+]

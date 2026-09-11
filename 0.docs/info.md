@@ -178,7 +178,9 @@ Judges conduct an initial filter to verify that:
 2. The project is a genuine implementation, not a superficial wrapper or repackaged template.
 3. The project demonstrates real, functional integration with Nebius Token Factory/AI Cloud and NVIDIA models.
 
-### Stage 2: Comprehensive Scoring (4 Equally Weighted Criteria — 25% Each)
+### Stage 2: Comprehensive Scoring (4 Equally Weighted Criteria — 25% Each, each scored 1 to 5)
+
+Per the Devpost organizer email of September 11, 2026: "Everything that passes is then scored 1–5 on four equally weighted criteria." The same email describes the Track 1 bar as "an agent that plans, writes, tests, and iterates on a real repo with minimal human input."
 
 | Criterion | Weight | What Judges Look For |
 | :--- | :---: | :--- |

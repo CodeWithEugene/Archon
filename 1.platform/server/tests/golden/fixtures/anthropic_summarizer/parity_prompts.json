@@ -1,0 +1,50 @@
+[
+  {
+    "id": "sum-01",
+    "function": "summarize",
+    "input": "The deploy failed three times last night. Each run timed out while pulling the base image from the internal registry. Ops restarted the registry at 02:10 and the fourth run succeeded.",
+    "reference_output": "Three deploys failed after base-image pulls timed out against the internal registry. The fourth run succeeded once ops restarted the registry at 02:10."
+  },
+  {
+    "id": "sum-02",
+    "function": "summarize",
+    "input": "Our Q3 retention numbers came in at 91 percent, up from 88 percent in Q2. The gain is concentrated in accounts that completed onboarding within seven days.",
+    "reference_output": "Q3 retention reached 91 percent, up three points from Q2. The improvement came from accounts that finished onboarding within seven days."
+  },
+  {
+    "id": "sum-03",
+    "function": "summarize",
+    "input": "The customer wrote in to say the mobile app logs them out whenever they switch networks. They are on Android 15 and version 4.2.1 of the app. It does not happen on wifi alone.",
+    "reference_output": "A customer on Android 15 running app version 4.2.1 is logged out whenever the device switches networks. The problem does not occur on wifi alone."
+  },
+  {
+    "id": "sum-04",
+    "function": "summarize",
+    "input": "We reviewed 40 support tickets from the billing queue. Twenty six were about proration on mid cycle upgrades, nine were refund requests, and five were duplicates.",
+    "reference_output": "A review of 40 billing tickets found 26 about proration on mid-cycle upgrades. The remainder were nine refund requests and five duplicates."
+  },
+  {
+    "id": "stream-01",
+    "function": "summarize_streaming",
+    "input": "The migration moved 12 services off the legacy queue. Two services needed a schema change first. The rollout took nine days and there was no customer facing downtime.",
+    "reference_output": "Twelve services moved off the legacy queue over nine days, with two needing a schema change first. There was no customer-facing downtime."
+  },
+  {
+    "id": "stream-02",
+    "function": "summarize_streaming",
+    "input": "Search latency at p99 dropped from 820 milliseconds to 240 milliseconds after we added the inverted index cache. Memory use rose by about 1.2 gigabytes per node.",
+    "reference_output": "The inverted index cache cut p99 search latency from 820 to 240 milliseconds. The tradeoff was roughly 1.2 gigabytes of extra memory per node."
+  },
+  {
+    "id": "stream-03",
+    "function": "summarize_streaming",
+    "input": "Hiring closed four roles this quarter: two backend engineers, one designer, and one technical writer. Three offers were declined, all citing compensation.",
+    "reference_output": "Four roles closed this quarter: two backend engineers, a designer, and a technical writer. Three further offers were declined over compensation."
+  },
+  {
+    "id": "stream-04",
+    "function": "summarize_streaming",
+    "input": "The security review flagged eleven findings. Seven were low severity and already fixed. Three are medium and scheduled for next sprint. One high severity finding concerns token expiry and is being patched now.",
+    "reference_output": "The security review raised eleven findings, seven low severity and already fixed. Three medium findings are scheduled next sprint and one high severity token-expiry issue is being patched."
+  }
+]

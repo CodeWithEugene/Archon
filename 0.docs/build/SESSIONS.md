@@ -36,6 +36,36 @@
 
 ---
 
+## Session 2 — September 11, 2026 (night): Server build
+
+**Done**
+1. Scaffolded `1.platform/server`: FastAPI app, typed settings, SQLite store, event bus, SSE endpoint with `Last-Event-ID` resume.
+2. Installed and introspected `contree-sdk` 0.3.6. The docs lag the package: `Contree(token=, base_url=)` also needs `NEBIUS_PROJECT_ID`; `image.run(shell=, timeout=, files=, disposable=False)` creates fork points; results expose `exit_code`, `stdout`, `stderr`, `cost`, and the new image `uuid`. `ContreeBackend` is written against the real API.
+3. Three sandbox backends behind one protocol: `contree` (Token Factory Sandboxes), `local` (development only, copy-on-fork directories, refused in production), `fake` (scripted, for tests).
+4. Mission runner implementing the full state machine: provision, baseline, Tavily grounding, Ultra diagnose-and-patch, N candidates on N forks, scoring (no pass-to-pass regressions first), reviewer, spend cap, abort, failure report, recording.
+5. Migration mission: ripgrep scan, model mapping from `pricing.json`, cost estimate, model-level parity sample with the honest caveat.
+6. Roles: researcher, engineer (with `files_to_read` rounds), reviewer (deterministic safety checks then Super), compactor, narrator.
+7. Test parsing: JUnit XML written inside the sandbox, text fallback. Found and fixed the `pytest -q` gap where passing tests were not counted.
+8. 43 unit tests, ruff and mypy strict clean, GitHub Actions CI. Golden runner (`tests/golden/run.py`) proves the loop end to end on the local backend with a scripted model.
+9. Three fixture repositories for the golden set: `broken_pydantic_v2` (4 of 6 tests fail, reference patch fixes all 6), `openai_chat_service`, `anthropic_summarizer`.
+10. Client cockpit built (`1.platform/client`, Next.js 16, Zustand, Monaco, xterm) and verified in the browser against the live server: replay of the recorded local run renders the reasoning stream, per-attempt terminal tabs, reviewer verdict, per-model token totals, Monaco diff, and patch download. Fixed a duplicate-tab reducer bug found in that walkthrough.
+11. Development launch configs: `1.platform/server/scripts/dev.sh` (offline backends by default) and `.claude/launch.json`. Dev server uses port 8010 because 8000 was taken on this machine.
+
+**Decisions**
+- ADR-008: the supervisor is deterministic code, not a model. Super narrates optionally. See AGENTS.md 2.1.
+- ADR-009: test results come from a JUnit report produced inside the sandbox, never from parsing terminal text alone.
+
+**Blockers**
+- Sandboxes beta access requested; `ContreeBackend` is untested against the live API until it arrives.
+- No `NEBIUS_API_KEY` or `TAVILY_API_KEY` in this environment; live integration tests are written and skip cleanly.
+
+**Next**
+1. When keys arrive: `pytest tests/integration -q`, then `python -m tests.golden.run --fixture broken_pydantic_v2 --llm nebius --backend local --record`.
+2. When Sandboxes access arrives: run the week-1 gate test in `tests/integration/test_live.py`, then pick 10 SWE-bench Verified instances and fill `tests/golden/instances.json`.
+3. Live-stream terminal lines from Sandboxes operations instead of emitting them after each command completes.
+
+---
+
 ## Architectural Decision Records
 
 ### ADR-001: Track selection
@@ -66,6 +96,14 @@
 ### ADR-006: Replay mode for the public demo
 - **Decision:** The public demo defaults to replaying recorded golden-dataset missions. Live mode requires a bearer token and a per-mission spend cap.
 - **Rationale:** The demo must stay up through December 15 on a small credit budget, and an unauthenticated endpoint that spends Ultra tokens would be drained.
+
+### ADR-008: Deterministic supervisor
+- **Decision:** Mission control flow is code. Models are called only inside roles (research, patch, review, compaction, optional narration).
+- **Rationale:** Cheaper, testable offline with fakes, and every decision is explainable from the state machine.
+
+### ADR-009: JUnit for test results
+- **Decision:** Test commands get `--junitxml` appended when they are pytest, and the report is read back from the result image. Terminal text is a fallback.
+- **Rationale:** `pytest -q` hides PASSED lines and the decorated summary; text parsing under-counted passing tests in the first real run.
 
 ### ADR-007: Honest metrics
 - **Decision:** No fixed cost-saving percentage in docs or UI. Estimates are computed from `pricing.json` with its date shown. Golden-dataset results are reported as the actual resolved count.

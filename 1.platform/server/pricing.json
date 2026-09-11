@@ -1,0 +1,39 @@
+{
+  "updated": "2026-09-11",
+  "currency": "USD",
+  "unit": "per 1M tokens",
+  "assumed_input_output_ratio": [3, 1],
+  "note": "List prices. Nebius Nemotron prices taken from a third-party catalog and must be confirmed against the Token Factory pricing page and GET /v1/models?verbose=true before submission.",
+  "sources": {
+    "openai": "https://developers.openai.com/api/docs/pricing",
+    "anthropic": "https://platform.claude.com/docs/en/about-claude/pricing",
+    "nebius_ultra_third_party": "https://www.requesty.ai/models/nebius/nvidia-nemotron-3-ultra-550b-a55b"
+  },
+  "models": {
+    "nvidia/nemotron-3-ultra-550b-a55b": { "input": 1.00, "output": 3.00, "provider": "nebius", "tier": "reasoning", "verified": false },
+    "nvidia/nemotron-3-super-120b-a12b": { "input": 0.40, "output": 1.20, "provider": "nebius", "tier": "mid", "verified": false },
+    "nvidia/nemotron-3-nano-30b-a3b":    { "input": 0.10, "output": 0.30, "provider": "nebius", "tier": "small", "verified": false },
+    "gpt-5.6-sol":   { "input": 5.00, "output": 30.00, "provider": "openai", "tier": "reasoning", "verified": true },
+    "gpt-5.5":       { "input": 5.00, "output": 30.00, "provider": "openai", "tier": "reasoning", "verified": true },
+    "gpt-5.4":       { "input": 2.50, "output": 15.00, "provider": "openai", "tier": "reasoning", "verified": true },
+    "gpt-5.6-terra": { "input": 2.00, "output": 12.00, "provider": "openai", "tier": "mid", "verified": true },
+    "gpt-5":         { "input": 1.25, "output": 5.00,  "provider": "openai", "tier": "mid", "verified": true },
+    "gpt-5-mini":    { "input": 0.25, "output": 2.00,  "provider": "openai", "tier": "small", "verified": true },
+    "gpt-5-nano":    { "input": 0.05, "output": 0.40,  "provider": "openai", "tier": "small", "verified": true },
+    "claude-fable-5-1":  { "input": 10.00, "output": 50.00, "provider": "anthropic", "tier": "reasoning", "verified": true },
+    "claude-opus-5":     { "input": 5.00,  "output": 25.00, "provider": "anthropic", "tier": "reasoning", "verified": true },
+    "claude-sonnet-5":   { "input": 2.00,  "output": 10.00, "provider": "anthropic", "tier": "mid", "verified": true },
+    "claude-sonnet-4-6": { "input": 3.00,  "output": 15.00, "provider": "anthropic", "tier": "mid", "verified": true },
+    "claude-haiku-4-5":  { "input": 1.00,  "output": 5.00,  "provider": "anthropic", "tier": "small", "verified": true }
+  },
+  "migration_map": {
+    "reasoning": "nvidia/nemotron-3-ultra-550b-a55b",
+    "mid": "nvidia/nemotron-3-super-120b-a12b",
+    "small": "nvidia/nemotron-3-nano-30b-a3b"
+  },
+  "aliases": {
+    "gpt-4o": "gpt-5.4", "gpt-4o-mini": "gpt-5-mini", "gpt-4.1": "gpt-5.4", "gpt-4.1-mini": "gpt-5-mini", "o3": "gpt-5.4", "o4-mini": "gpt-5-mini",
+    "claude-3-5-sonnet-latest": "claude-sonnet-4-6", "claude-3-7-sonnet-latest": "claude-sonnet-4-6", "claude-sonnet-4-5": "claude-sonnet-4-6",
+    "claude-3-5-haiku-latest": "claude-haiku-4-5", "claude-opus-4-1": "claude-opus-5", "claude-opus-4-8": "claude-opus-5"
+  }
+}

@@ -60,37 +60,37 @@ gantt
 - [ ] Decide city affiliation for the submission form.
 
 ### Week 1 (Sep 14 to Sep 20): Spike
-- [ ] `1.platform/server`: FastAPI app, Pydantic settings, `/healthz`, SSE endpoint that emits a heartbeat.
-- [ ] Nebius client wrapper over the OpenAI SDK with per-call token and cost accounting.
-- [ ] `contree-sdk` wrapper: spawn from a base image, run a shell command, read exit code and output, checkpoint, fork.
-- [ ] End-to-end spike script: clone a small repo into a sandbox, install, run `pytest`, stream output to a terminal.
+- [x] `1.platform/server`: FastAPI app, Pydantic settings, `/healthz`, SSE endpoint that emits a heartbeat.
+- [x] Nebius client wrapper over the OpenAI SDK with per-call token and cost accounting.
+- [x] `contree-sdk` wrapper: spawn from a base image, run a shell command, read exit code and output, checkpoint, fork.
+- [x] End-to-end spike script: `tests/golden/run.py` clones a fixture, installs, runs pytest, streams output. Verified on the local backend; Sandboxes run pending beta access.
 - [ ] **Gate:** one Nemotron call and one sandbox test run succeed from the same process. If Sandboxes access is not granted by Sep 20, escalate on Discord and fall back to the SWE-bench preloaded images only.
 
 ### Week 2 (Sep 21 to Sep 27): Loop v1
-- [ ] Mission state machine with the states in `DESIGN.md` section 6.
-- [ ] Baseline reproduction and test-result parsing (pytest first; Nano-assisted parsing for other runners).
-- [ ] Tavily grounding: query synthesis, search with timeout, delimited context injection.
-- [ ] Ultra diagnose-and-patch prompt returning structured JSON diffs.
-- [ ] Apply on fork, re-test, iterate up to 5.
+- [x] Mission state machine with the states in `DESIGN.md` section 6.
+- [x] Baseline reproduction and test-result parsing (pytest first; Nano-assisted parsing for other runners).
+- [x] Tavily grounding: query synthesis, search with timeout, delimited context injection.
+- [x] Ultra diagnose-and-patch prompt returning structured JSON diffs.
+- [x] Apply on fork, re-test, iterate up to 5.
 - [ ] **Gate:** one SWE-bench Verified instance resolved end to end from the CLI.
 
 ### Week 3 (Sep 28 to Oct 4): Loop v2
-- [ ] Best-of-N: two candidate patches per iteration, each on its own fork, scored and selected.
-- [ ] Reviewer step on Super: checks the diff for secrets, unrelated changes, and test deletions.
-- [ ] Spend cap and iteration cap enforced with a readable failure report.
-- [ ] Migration mission type: ripgrep locators, rewrite prompt, `pricing.json`, parity harness.
+- [x] Best-of-N: two candidate patches per iteration, each on its own fork, scored and selected.
+- [x] Reviewer step on Super: checks the diff for secrets, unrelated changes, and test deletions.
+- [x] Spend cap and iteration cap enforced with a readable failure report.
+- [x] Migration mission type: ripgrep locators, rewrite prompt, `pricing.json`, parity harness.
 - [ ] **Gate:** 3 of 5 tried SWE-bench instances resolve; one migration fixture passes.
 
 ### Week 4 (Oct 5 to Oct 11): Cockpit
-- [ ] Next.js 16 app with Tailwind v4 and Zustand.
-- [ ] Mission form with SWE-bench dropdown and GitHub URL input.
-- [ ] Reasoning stream and xterm.js terminal fed by SSE.
-- [ ] Monaco side-by-side diff, patch download, `git apply` snippet, summary card.
-- [ ] **Gate:** full mission visible in the browser without opening a terminal.
+- [x] Next.js 16 app with Tailwind v4 and Zustand.
+- [x] Mission form with SWE-bench dropdown and GitHub URL input.
+- [x] Reasoning stream and xterm.js terminal fed by SSE.
+- [x] Monaco side-by-side diff, patch download, `git apply` snippet, summary card.
+- [x] **Gate:** full mission visible in the browser without opening a terminal. Verified September 11 with the recorded local run replayed through the live server into the cockpit.
 
 ### Week 5 (Oct 12 to Oct 18): Golden set and demo
 - [ ] Run the golden dataset on Ultra. Record every trace to `tests/golden/recordings/`.
-- [ ] Replay mode that streams recordings through the same SSE channel.
+- [x] Replay mode that streams recordings through the same SSE channel.
 - [ ] Deploy: client on Vercel, server on Railway or Nebius Serverless Endpoints. Replay by default, live mode behind `ARCHON_DEMO_TOKEN`.
 - [ ] Uptime monitor pointing at the demo.
 - [ ] **Gate:** a stranger can open the demo URL and watch a full mission replay.

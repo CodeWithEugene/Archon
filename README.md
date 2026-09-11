@@ -19,8 +19,11 @@ Submission to the **[Nebius x NVIDIA Global AI Hackathon](https://nebiusglobalai
 
 ## Status
 
-> **Pre-alpha. Documentation and architecture only. No runnable code yet.**
-> Development started September 11, 2026. Follow progress in [0.docs/build/SESSIONS.md](0.docs/build/SESSIONS.md) and the plan in [0.docs/build/PLAN.md](0.docs/build/PLAN.md).
+> **Alpha. The server and the repair loop exist and run end to end offline. Not yet verified against live Nebius inference or Token Factory Sandboxes.**
+>
+> What works today (September 11, 2026): FastAPI orchestrator, mission state machine, three sandbox backends (Token Factory Sandboxes via `contree-sdk`, a development-only local backend, a fake for tests), Tavily grounding, Nemotron role prompts, JUnit-based verification, replay mode, 44 unit tests, CI. A scripted end-to-end run on the local backend takes a repository with 4 failing tests to 6 passing on a forked workspace. The Next.js cockpit is being built. Live Nebius and Sandboxes runs are blocked on API keys and beta access.
+>
+> Progress log: [0.docs/build/SESSIONS.md](0.docs/build/SESSIONS.md). Plan: [0.docs/build/PLAN.md](0.docs/build/PLAN.md).
 
 ---
 

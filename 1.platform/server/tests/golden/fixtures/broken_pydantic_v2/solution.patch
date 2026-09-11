@@ -1,0 +1,83 @@
+diff --git a/userkit/schemas.py b/userkit/schemas.py
+index 4b5677a..28cf1d8 100644
+--- a/userkit/schemas.py
++++ b/userkit/schemas.py
+@@ -1,12 +1,11 @@
+ """Schema definitions for userkit.
+ 
+-NOTE: this module is written against the Pydantic V1 API. It still imports
+-under Pydantic V2 (via the deprecation shims) but misbehaves at runtime.
++This module targets the Pydantic V2 API.
+ """
+ 
+ from typing import List, Optional
+ 
+-from pydantic import BaseModel, validator
++from pydantic import BaseModel, ConfigDict, field_validator
+ 
+ MIN_DISPLAY_NAME = 2
+ 
+@@ -14,14 +13,17 @@ MIN_DISPLAY_NAME = 2
+ class User(BaseModel):
+     """A single user record."""
+ 
++    model_config = ConfigDict(from_attributes=True)
++
+     id: int
+     email: str
+     display_name: str
+     tags: List[str] = []
+     bio: Optional[str] = None
+ 
+-    @validator("email")
+-    def normalize_email(cls, value):  # noqa: N805 - pydantic v1 style
++    @field_validator("email")
++    @classmethod
++    def normalize_email(cls, value):
+         """Lowercase the address and reject anything without an '@'."""
+         if "@" not in value:
+             raise ValueError("email must contain '@'")
+@@ -30,13 +32,11 @@ class User(BaseModel):
+             raise ValueError("email must have a local part and a domain")
+         return f"{local.lower()}@{domain.lower()}"
+ 
+-    @validator("display_name")
+-    def check_display_name(cls, value):  # noqa: N805 - pydantic v1 style
++    @field_validator("display_name")
++    @classmethod
++    def check_display_name(cls, value):
+         """Require a non-trivial display name."""
+         cleaned = value.strip()
+         if len(cleaned) < MIN_DISPLAY_NAME:
+             raise ValueError(f"display_name must be at least {MIN_DISPLAY_NAME} characters")
+         return cleaned
+-
+-    class Config:
+-        orm_mode = True
+diff --git a/userkit/service.py b/userkit/service.py
+index 67472ff..a26e3ab 100644
+--- a/userkit/service.py
++++ b/userkit/service.py
+@@ -7,19 +7,19 @@ from .schemas import User
+ 
+ def user_to_dict(user: User) -> Dict[str, Any]:
+     """Serialize a user to a plain dictionary."""
+-    return user.dict()
++    return user.model_dump()
+ 
+ 
+ def parse_user(payload: Dict[str, Any]) -> User:
+     """Build a user from an untrusted mapping."""
+     if not isinstance(payload, dict):
+         raise TypeError("payload must be a mapping")
+-    return User.parse_obj(payload)
++    return User.model_validate(payload)
+ 
+ 
+ def user_from_row(row: Any) -> User:
+     """Build a user from an ORM row (attribute access, not a mapping)."""
+-    return User.from_orm(row)
++    return User.model_validate(row)
+ 
+ 
+ def serialize_users(users: Iterable[User]) -> List[Dict[str, Any]]:

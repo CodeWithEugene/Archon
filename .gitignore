@@ -33,3 +33,8 @@ dist/
 build/
 coverage/
 .coverage
+
+# Runtime databases and local recordings from smoke runs
+*.db
+*.db-journal
+1.platform/server/golden.db

@@ -32,7 +32,7 @@ flowchart TD
 
 ### 2.1 Supervisor
 
-- **Model:** `nvidia/nemotron-3-super-120b-a12b`
+- **Implementation note (Session 2):** the supervisor's control flow is deterministic Python (`app/core/runner.py`). It does not ask a model which step comes next; the state machine in DESIGN.md section 6 is the policy. Nemotron 3 Super is used by the supervisor only for optional one-line narration (`ARCHON_NARRATE_WITH_SUPER=1`), and by the researcher and reviewer roles below. This is cheaper and auditable.
 - **Owns:** the mission state machine, iteration and spend budgets, the decision to stop.
 - **Does not:** write code or read the repository directly.
 - **Tools:** `run_baseline`, `request_grounding`, `request_patches`, `try_candidates`, `request_review`, `emit_thought`, `finish`.

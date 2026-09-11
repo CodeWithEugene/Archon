@@ -20,6 +20,8 @@ Format per entry: date, surface, what happened, what you expected, suggestion.
 | 2026-09-11 | The Sandboxes overview does not state whether sandboxes have outbound network access for `git clone` and `pip install`. | An explicit statement about network egress. | Add a "networking" section to the overview. |
 | 2026-09-11 | The Python SDK getting-started page never shows the `pip install` command or the import line for `Contree`. | A copy-pasteable first example. | Add install and imports to the top of the page. |
 | 2026-09-11 | No published per-run CPU, memory, or wall-clock limits. Only "50 concurrent operations" and "180-day checkpoint retention". | Resource limits so agents can budget commands. | Publish the limits table. |
+| 2026-09-11 | `contree-sdk` 0.3.6 differs from the docs: the constructor is `Contree(config=None, *, base_url=None, token=None)` and `IAMAuth` also requires `NEBIUS_PROJECT_ID`, which the getting-started page never mentions. `ContreeImage` has no `iter_output`, although the reference page lists it. | Docs generated from the shipped version. | Pin doc pages to SDK releases and add the project-id requirement to the first example. |
+| 2026-09-11 | Fork semantics are excellent for best-of-N repair: `image.run(..., disposable=False)` gives a parent, and N children can run from it. But this is documented under "branching" with no mention of running children concurrently with `asyncio.gather`. | A short "parallel attempts" recipe. | Add a concurrency example to the branching page; it is the killer feature for SWE agents. |
 
 ## NVIDIA Nemotron models
 

@@ -1,0 +1,44 @@
+[project]
+name = "archon-server"
+version = "0.1.0"
+description = "ARCHON orchestrator: sandbox-verified software repair on Nebius Token Factory and NVIDIA Nemotron"
+requires-python = ">=3.12"
+license = { text = "Apache-2.0" }
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.30",
+  "pydantic>=2.7",
+  "pydantic-settings>=2.3",
+  "openai>=2,<4",
+  "tavily-python>=0.5",
+  "contree-sdk>=0.3.6",
+  "contree-client>=0.4.0",
+  "aiosqlite>=0.20",
+  "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-asyncio>=0.23", "ruff>=0.5", "mypy>=1.10", "types-aiofiles"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = ["tests/golden/fixtures", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "ASYNC", "S", "N", "W"]
+ignore = ["S101", "S603", "S604", "S607", "B008", "N818"]
+per-file-ignores = { "tests/*" = ["S", "E501"], "app/llm/prompts.py" = ["E501"], "app/store/db.py" = ["E501"] }
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
+exclude = ["tests/golden/fixtures/"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = ["slow: runs real subprocesses and pip installs"]
+testpaths = ["tests/unit", "tests/integration"]
+filterwarnings = ["ignore::DeprecationWarning"]

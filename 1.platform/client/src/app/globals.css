@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+/*
+ * ARCHON cockpit — dark only, high-contrast engineering console.
+ * No light theme: the app forces `color-scheme: dark`.
+ */
+
+:root {
+  color-scheme: dark;
+
+  --archon-bg: #07090c;
+  --archon-panel: #0e1319;
+  --archon-panel-alt: #131a22;
+  --archon-line: #1e2831;
+  --archon-line-strong: #2c3945;
+  --archon-text: #e8eef5;
+  --archon-muted: #8a9aab;
+  --archon-faint: #5d6c7c;
+
+  --archon-accent: #ff9d2e;
+  --archon-accent-dim: #7a4a11;
+  --archon-ok: #35c46b;
+  --archon-warn: #e3b341;
+  --archon-bad: #ff5f56;
+  --archon-info: #4b9dff;
+  --archon-nano: #2fd0c4;
+}
+
+@theme inline {
+  --color-bg: var(--archon-bg);
+  --color-panel: var(--archon-panel);
+  --color-panel-alt: var(--archon-panel-alt);
+  --color-line: var(--archon-line);
+  --color-line-strong: var(--archon-line-strong);
+  --color-text: var(--archon-text);
+  --color-muted: var(--archon-muted);
+  --color-faint: var(--archon-faint);
+  --color-accent: var(--archon-accent);
+  --color-accent-dim: var(--archon-accent-dim);
+  --color-ok: var(--archon-ok);
+  --color-warn: var(--archon-warn);
+  --color-bad: var(--archon-bad);
+  --color-info: var(--archon-info);
+  --color-nano: var(--archon-nano);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", Menlo,
+    monospace;
+}
+
+html,
+body {
+  background: var(--archon-bg);
+  color: var(--archon-text);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Thin, unobtrusive scrollbars everywhere. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--archon-line-strong) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--archon-line-strong);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Focus ring: visible, square, unmistakable. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--archon-accent);
+  outline-offset: 2px;
+}
+
+/* Faint grid backdrop — technical, not decorative. */
+.archon-grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+@keyframes archon-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.archon-live-dot {
+  animation: archon-pulse 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .archon-live-dot {
+    animation: none;
+  }
+}
+
+/* xterm.js baseline styling (imported CSS is scoped to .xterm). */
+.xterm .xterm-viewport {
+  background-color: transparent !important;
+}

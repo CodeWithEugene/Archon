@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "userkit"
+version = "0.1.0"
+description = "Tiny user schema toolkit used as an ARCHON repair fixture."
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2,<3",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[tool.setuptools.packages.find]
+include = ["userkit*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
