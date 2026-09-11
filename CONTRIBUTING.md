@@ -29,7 +29,7 @@ Never commit `.env` files or keys. Copy `.env.example` to `.env` and fill it loc
 
 ```bash
 cd 1.platform/server && ruff check . && ruff format --check . && mypy --strict app/ && pytest tests/unit -q
-cd 1.platform/client && npm run lint && npx tsc --noEmit
+cd 1.platform/client && npm run lint && npm run typecheck
 ```
 
 Integration tests need real keys and are skipped without them. See [0.docs/build/TESTING.md](0.docs/build/TESTING.md).

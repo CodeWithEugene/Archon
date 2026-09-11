@@ -20,7 +20,7 @@
 
 ```bash
 cd 1.platform/server && ruff check . && ruff format --check . && mypy --strict app/
-cd 1.platform/client && npm run lint && npx tsc --noEmit
+cd 1.platform/client && npm run lint && npm run typecheck
 ```
 
 ---
