@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import shlex
 from dataclasses import dataclass
 from pathlib import PurePosixPath
@@ -17,7 +18,8 @@ ENSURE_GIT = (
     "(command -v git >/dev/null 2>&1 || (apt-get update -qq >/dev/null 2>&1 && "
     "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq git ca-certificates >/dev/null 2>&1))"
 )
-MAX_EXCERPT_BYTES = 60_000
+MAX_EXCERPT_BYTES = 150_000
+RANGE_SUFFIX = re.compile(r":(\d+)-(\d+)$")
 
 
 @dataclass
@@ -84,6 +86,7 @@ class SandboxService:
         git_ref: str,
         install_command: str | None,
         on_output: OutputHook | None,
+        subdir: str | None = None,
     ) -> str:
         base = await self.backend.base_image(self.base_image_ref)
         # Command paths stay relative to the working directory: the development local backend maps only the
@@ -108,9 +111,11 @@ class SandboxService:
             if "could not read Username" in res.stderr or "Authentication failed" in res.stderr:
                 hint = " (the repository is private or does not exist; ARCHON clones public repositories only)"
             raise SandboxError(f"git clone or checkout failed{hint}", res)
-        install = install_command or await self._detect_install(res.image_id)
+        project_dir = f"{self.repo_dir}/{subdir}" if subdir else self.repo_dir
+        scoped = self.with_repo_dir(project_dir) if subdir else self
+        install = install_command or await scoped._detect_install(res.image_id)
         res2 = await self.backend.run(
-            res.image_id, RunSpec(shell=install, cwd=self.repo_dir, timeout_s=self.timeout), on_output
+            res.image_id, RunSpec(shell=install, cwd=project_dir, timeout_s=self.timeout), on_output
         )
         if res2.exit_code != 0 or res2.image_id is None:
             raise SandboxError("dependency installation failed", res2)
@@ -183,32 +188,61 @@ class SandboxService:
         candidate: Candidate,
         originals: dict[str, str],
         on_output: OutputHook | None,
+        known_paths: set[str] | None = None,
     ) -> Applied:
         """Fork the baseline and write the candidate into it. Edits are applied here and the diff is produced
         by git inside the fork, so the model never has to get hunk headers right."""
         if candidate.uses_edits:
-            return await self._apply_edits(base_image, candidate, originals, on_output)
+            return await self._apply_edits(base_image, candidate, originals, on_output, known_paths or set())
         return await self._apply_patch(base_image, candidate.patch, on_output)
 
+    def resolve_path(self, path: str, known: set[str]) -> str:
+        """Map a model-written path onto a real repository path.
+
+        Models drop leading directory components ("platform/x.py" for "1.platform/x.py") or add a "./".
+        Exact match wins; otherwise a unique suffix match among known paths; otherwise the path as written.
+        """
+        p = self.normalize_path(path)
+        if not known or p in known:
+            return p
+        suffix = "/" + p
+        hits = [k for k in known if k.endswith(suffix) or k == p]
+        if len(hits) == 1:
+            return hits[0]
+        tail = p.rsplit("/", 1)[-1]
+        hits = [k for k in known if k.rsplit("/", 1)[-1] == tail]
+        return hits[0] if len(hits) == 1 else p
+
     async def _apply_edits(
-        self, base_image: str, candidate: Candidate, originals: dict[str, str], on_output: OutputHook | None
+        self,
+        base_image: str,
+        candidate: Candidate,
+        originals: dict[str, str],
+        on_output: OutputHook | None,
+        known: set[str],
     ) -> Applied:
         new_contents: dict[str, str] = {}
         by_path: dict[str, list[tuple[str, str]]] = {}
         for e in candidate.edits:
-            by_path.setdefault(e.path.lstrip("/"), []).append((e.search, e.replace))
+            by_path.setdefault(self.resolve_path(e.path, known), []).append((e.search, e.replace))
         for path, pairs in by_path.items():
             original = originals.get(path)
             if original is None:
                 original = await self.read_repo_file(base_image, path)
             if original is None:
-                return Applied(None, "", f"{path}: file not found in repository; use files[] to create new files")
+                from difflib import get_close_matches
+
+                close = get_close_matches(path, sorted(known), n=3, cutoff=0.5)
+                hint = f" Did you mean {', '.join(close)}?" if close else ""
+                return Applied(
+                    None, "", f"{path}: file not found in repository.{hint} Use exact paths from the file list."
+                )
             try:
                 new_contents[path] = apply_edits(original, pairs, path)
             except EditError as exc:
                 return Applied(None, "", str(exc))
         for f in candidate.files:
-            new_contents[f.path.lstrip("/")] = f.content
+            new_contents[self.resolve_path(f.path, known)] = f.content
         if not new_contents:
             return Applied(None, "", "candidate contained no changes")
         for path in new_contents:
@@ -231,7 +265,7 @@ class SandboxService:
         pp = "../archon.patch"  # relative to the repo dir; the file is uploaded at self.patch_path
         apply_cmd = (
             f"(git apply --whitespace=nowarn {pp} || git apply --3way --whitespace=nowarn {pp}) "
-            "&& git add -A -- . ':!.venv' && git diff --cached --no-color"
+            "&& git add -u && git diff --cached --no-color"  # -u: tracked files only; never stages archon.* helpers
         )
         res = await self.backend.run(
             base_image,
@@ -266,25 +300,52 @@ class SandboxService:
         return p.lstrip("/")
 
     async def read_repo_file(self, image_id: str, rel_path: str) -> str | None:
+        """Read a repository file. `path:120-260` returns that inclusive line range, numbered."""
+        line_range: tuple[int, int] | None = None
+        m = RANGE_SUFFIX.search(rel_path)
+        if m:
+            line_range = (int(m.group(1)), int(m.group(2)))
+            rel_path = rel_path[: m.start()]
         rel_path = self.normalize_path(rel_path)
         if not rel_path or ".." in rel_path.split("/"):
             return None
+        if line_range is not None:
+            full = await self._read_full(image_id, rel_path)
+            if full is None:
+                return None
+            lines = full.split("\n")
+            a, b = max(1, line_range[0]), min(len(lines), line_range[1])
+            return "\n".join(f"{i:5d}| {lines[i - 1]}" for i in range(a, b + 1))
+        text = await self._read_full(image_id, rel_path)
+        if text is None:
+            return None
+        if len(text) > MAX_EXCERPT_BYTES:
+            dropped = len(text) - MAX_EXCERPT_BYTES
+            text = text[:MAX_EXCERPT_BYTES] + (
+                f"\n... [truncated {dropped} chars; request '{rel_path}:START-END' for a line range]"
+            )
+        return text
+
+    async def _read_full(self, image_id: str, rel_path: str) -> str | None:
         try:
             data = await self.backend.read_file(image_id, f"{self.repo_dir}/{rel_path}")
         except FileNotFoundError:
             return None
-        text = data.decode("utf-8", errors="replace")
-        if len(text) > MAX_EXCERPT_BYTES:
-            text = text[:MAX_EXCERPT_BYTES] + f"\n... [truncated {len(text) - MAX_EXCERPT_BYTES} chars]"
-        return text
+        return data.decode("utf-8", errors="replace")
 
     async def read_many(self, image_id: str, rel_paths: list[str]) -> dict[str, str]:
+        """Keys are normalized repo-relative paths (with any :START-END range kept), so repeated requests dedupe."""
         out: dict[str, str] = {}
         for p in rel_paths[:8]:
             text = await self.read_repo_file(image_id, p)
             if text is not None:
-                out[p] = text
+                out[self.normalize_key(p)] = text
         return out
+
+    def normalize_key(self, path: str) -> str:
+        m = RANGE_SUFFIX.search(path)
+        base = path[: m.start()] if m else path
+        return self.normalize_path(base) + (m.group(0) if m else "")
 
     async def search(self, image_id: str, patterns: list[str], max_lines: int = 200) -> str:
         """Locate call sites with ripgrep, falling back to grep. Output is line-numbered."""
@@ -303,8 +364,8 @@ class SandboxService:
     async def list_files(self, image_id: str, limit: int = 600) -> list[str]:
         """Tracked source files, code first, docs and data last, so the engineer can name real paths."""
         cmd = (
-            "git ls-files | grep -vE '\\.(png|jpg|jpeg|gif|ico|svg|woff2?|ttf|pdf|lock|min\\.js|map)$' "
-            f"| grep -vE '^(docs?|doc|examples?|benchmarks?)/' | head -n {limit}"
+            "git ls-files | grep -vE '\\.(png|jpg|jpeg|gif|ico|svg|woff2?|ttf|pdf|lock|min\\.js|map|patch|diff)$' "
+            f"| grep -vE '^(docs?|doc|examples?|benchmarks?)/|EXPECTED_FIX' | head -n {limit}"
         )
         res = await self.backend.run(image_id, RunSpec(shell=cmd, cwd=self.repo_dir, timeout_s=60, keep=False), None)
         return [line.strip() for line in res.stdout.splitlines() if line.strip()]

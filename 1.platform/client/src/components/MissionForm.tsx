@@ -23,6 +23,7 @@ export function MissionForm() {
   const [repoUrl, setRepoUrl] = useState("");
   const [gitRef, setGitRef] = useState("main");
   const [testCommand, setTestCommand] = useState("pytest tests/ -x -q");
+  const [subdir, setSubdir] = useState("");
   const [hint, setHint] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,6 +77,7 @@ export function MissionForm() {
             test_command: testCommand.trim(),
             swe_instance_id: null,
           };
+    if (source === "repo" && subdir.trim().length > 0) body.subdir = subdir.trim().replace(/^\/+|\/+$/g, "");
     if (hint.trim().length > 0) body.hint = hint.trim();
 
     setSubmitting(true);
@@ -165,6 +167,21 @@ export function MissionForm() {
               value={gitRef}
               onChange={(event) => setGitRef(event.target.value)}
               placeholder="main"
+              spellCheck={false}
+              className="w-full border border-line-strong bg-bg px-3 py-2 font-mono text-[13px] text-text placeholder:text-faint"
+            />
+          </Field>
+          <Field
+            label="Subproject path"
+            htmlFor="subdir"
+            optional
+            hint="For monorepos: the directory that holds the project. The test command runs there."
+          >
+            <input
+              id="subdir"
+              value={subdir}
+              onChange={(event) => setSubdir(event.target.value)}
+              placeholder="packages/api"
               spellCheck={false}
               className="w-full border border-line-strong bg-bg px-3 py-2 font-mono text-[13px] text-text placeholder:text-faint"
             />

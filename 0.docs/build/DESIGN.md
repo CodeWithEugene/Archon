@@ -222,6 +222,7 @@ class MissionStatus(StrEnum):
   "git_ref": "main",
   "test_command": "pytest tests/ -x -q",
   "swe_instance_id": null,
+  "subdir": "optional/subproject/path for monorepos",
   "hint": "optional pasted stack trace"
 }
 ```

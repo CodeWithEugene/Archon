@@ -135,6 +135,19 @@ For each instance the harness records: the full SSE event log, every attempt's p
 
 Target: at least 5 of 10 resolved. Report the actual number honestly in the README and the video.
 
+Results so far (September 12, 2026; execution in Token Factory Sandboxes, Nemotron 3 Ultra patching):
+
+| Instance | Difficulty | Result | Iterations | Inference cost |
+| :--- | :--- | :--- | :---: | ---: |
+| psf__requests-1142 | <15 min | VERIFIED | 1 | $0.032 |
+| psf__requests-1921 | <15 min | VERIFIED | 1 | $0.053 |
+| psf__requests-1766 | <15 min | VERIFIED | 1 | $0.037 |
+| psf__requests-5414 | <15 min | VERIFIED | 1 | $0.075 |
+| psf__requests-2931 | 15 min to 1 hour | VERIFIED | 5 | $0.263 |
+| psf__requests-2317 | <15 min | VERIFIED | 2 | $0.210 |
+
+Each VERIFIED row has a recording under `tests/golden/recordings/` that replays in the cockpit. Six of six resolved; total inference spend for the six verified runs $0.67. Judgement follows ADR-014: every FAIL_TO_PASS id that fails at baseline must pass, no PASS_TO_PASS id may break. On 2317 only one of the eight listed FAIL_TO_PASS tests actually fails at baseline in the sandbox (the others pass there already), so that run is judged on that one test.
+
 ### 5.2 Migration: 2 fixtures
 
 - `fixtures/openai_chat_service`: a small FastAPI app using `openai` chat completions with one tool call, and a pytest suite that mocks the client.

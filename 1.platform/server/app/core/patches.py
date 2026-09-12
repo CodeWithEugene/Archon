@@ -59,15 +59,28 @@ def apply_edits(original: str, edits: list[tuple[str, str]], path: str = "") -> 
             text = "\n".join(lines)
             continue
         first = search.strip().split("\n")[0].strip()[:80]
+        lines = text.split("\n")
         hint = ""
+        anchor: int | None = None
         if first:
-            for ln, line in enumerate(text.split("\n"), 1):
+            for ln, line in enumerate(lines, 1):
                 if first in line:
-                    hint = f" The first search line appears at line {ln}; the following lines differ from the file."
+                    anchor = ln
                     break
-            else:
-                hint = " The first search line does not appear anywhere in the file."
-        raise EditError(f"{path}: edit {i} search block not found.{hint} Copy the text verbatim from the source shown.")
+        if anchor is not None:
+            a, b = max(1, anchor - 2), min(len(lines), anchor + 14)
+            real = "\n".join(f"{n:5d}| {lines[n - 1]}" for n in range(a, b + 1))
+            hint = (
+                f" The first search line appears at line {anchor} but the following lines differ from the file."
+                f" The file actually reads:\n{real}"
+            )
+        else:
+            head = "\n".join(f"{n:5d}| {lines[n - 1]}" for n in range(1, min(len(lines), 30) + 1))
+            hint = f" The first search line does not appear anywhere in the file. The file begins:\n{head}"
+        raise EditError(
+            f"{path}: edit {i} search block not found.{hint}\n"
+            "Copy the search text verbatim from the file; do not paraphrase or invent fields."
+        )
     return text
 
 

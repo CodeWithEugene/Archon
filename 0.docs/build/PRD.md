@@ -67,7 +67,7 @@ Show that an open model on open infrastructure can run a complete, verified soft
 ## 5. Functional requirements
 
 ### FR-1 Mission intake
-- **FR-1.1** Accept a public `https://github.com/<owner>/<repo>` URL with an optional git ref, plus a test command. Reject any other URL scheme and any filesystem path.
+- **FR-1.1** Accept a public `https://github.com/<owner>/<repo>` URL with an optional git ref, an optional subproject path for monorepos, plus a test command. Reject any other URL scheme and any filesystem path.
 - **FR-1.2** Accept a SWE-bench Verified instance ID and resolve it to the preloaded Sandboxes environment.
 - **FR-1.3** Accept a mission type: `BUG_HEALING` or `MIGRATION`.
 - **FR-1.4** Accept an optional pasted stack trace or CI log to seed the diagnosis.

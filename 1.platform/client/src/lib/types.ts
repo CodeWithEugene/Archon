@@ -37,6 +37,8 @@ export interface CreateMissionRequest {
   git_ref?: string;
   test_command?: string;
   swe_instance_id?: string | null;
+  /** Optional subproject path inside the repository (monorepos). */
+  subdir?: string;
   hint?: string;
 }
 

@@ -71,7 +71,20 @@ class MissionCreate(BaseModel):
     test_command: str | None = None
     install_command: str | None = None
     swe_instance_id: str | None = None
+    subdir: str | None = Field(default=None, max_length=300, description="Subproject path inside the repository")
     hint: str | None = Field(default=None, max_length=20_000)
+
+    @field_validator("subdir")
+    @classmethod
+    def _subdir(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        v = v.strip().strip("/")
+        if not v:
+            return None
+        if ".." in v.split("/") or v.startswith(("-", "~")) or not re.match(r"^[A-Za-z0-9_./-]+$", v):
+            raise ValueError("subdir must be a relative path inside the repository")
+        return v
 
     @field_validator("git_ref")
     @classmethod
@@ -235,6 +248,7 @@ class Mission(BaseModel):
     test_command: str | None
     install_command: str | None = None
     swe_instance_id: str | None
+    subdir: str | None = None
     hint: str | None = None
     status: MissionStatus = MissionStatus.PENDING
     iteration: int = 0

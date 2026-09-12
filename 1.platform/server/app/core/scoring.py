@@ -5,15 +5,36 @@ from __future__ import annotations
 from app.core.models import Attempt, TestReport
 
 
-def score_attempt(baseline: TestReport, attempt: Attempt) -> Attempt:
-    """Fill fail_to_pass and pass_to_pass_broken on the attempt from its report."""
+def matches_any(test_id: str, ids: set[str]) -> bool:
+    """SWE-bench stores some parametrized ids truncated at the first space, so match on prefix too."""
+    return test_id in ids or any(test_id.startswith(i) for i in ids)
+
+
+def select(ids: set[str], dataset_ids: set[str] | None) -> set[str]:
+    """Restrict a set of observed test ids to those the dataset names (prefix-aware). None keeps all."""
+    if dataset_ids is None:
+        return ids
+    return {t for t in ids if matches_any(t, dataset_ids)}
+
+
+def score_attempt(
+    baseline: TestReport,
+    attempt: Attempt,
+    targets: set[str] | None = None,
+    protected: set[str] | None = None,
+) -> Attempt:
+    """Fill fail_to_pass and pass_to_pass_broken on the attempt from its report.
+
+    `targets` / `protected` are the instance's FAIL_TO_PASS / PASS_TO_PASS ids when known (SWE-bench);
+    otherwise every test that failed at baseline is a target and every test that passed is protected.
+    """
     report = attempt.report
     if report is None or not attempt.applied:
         attempt.fail_to_pass = 0
         attempt.pass_to_pass_broken = len(baseline.passed) if baseline.passed else 1
         return attempt
-    base_fail = baseline.failing
-    base_pass = set(baseline.passed)
+    base_fail = select(baseline.failing, targets)
+    base_pass = select(set(baseline.passed), protected)
     now_pass = set(report.passed)
     now_fail = report.failing
     if baseline.parsed and report.parsed and not _placeholder(baseline) and not _placeholder(report):
@@ -43,14 +64,21 @@ def best_attempt(attempts: list[Attempt]) -> Attempt | None:
     return max(attempts, key=attempt_key)
 
 
-def is_resolved(baseline: TestReport, attempt: Attempt) -> bool:
-    """All originally failing tests pass, nothing that passed before broke, and the run exited 0."""
+def is_resolved(
+    baseline: TestReport,
+    attempt: Attempt,
+    targets: set[str] | None = None,
+    protected: set[str] | None = None,
+) -> bool:
+    """Every target test passes, no protected test broke, and (without instance ids) the run exited 0."""
     if not attempt.applied or attempt.report is None:
         return False
     if attempt.pass_to_pass_broken != 0:
         return False
-    if attempt.report.exit_code != 0:
-        return False
     if baseline.parsed and attempt.report.parsed and not _placeholder(baseline) and not _placeholder(attempt.report):
-        return baseline.failing <= set(attempt.report.passed)
-    return True
+        wanted = select(baseline.failing, targets)
+        if targets is not None:
+            # Instance-scoped judgement: unrelated failures in the same files do not block resolution.
+            return bool(wanted) and wanted <= set(attempt.report.passed)
+        return attempt.report.exit_code == 0 and wanted <= set(attempt.report.passed)
+    return attempt.report.exit_code == 0

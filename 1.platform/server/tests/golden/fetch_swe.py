@@ -21,6 +21,10 @@ SWE_DIR = HERE / "swe"
 INSTANCES = HERE / "instances.json"
 DATASET = "princeton-nlp/SWE-bench_Verified"
 WORKDIR = "/testbed"
+# Some instances include network-bound tests that hang inside the sandbox. A per-test timeout keeps the
+# run bounded; the plugin is installed on the fly (the sandbox has outbound network).
+PYTEST_TIMEOUT_PREP = "(python -m pip install -q pytest-timeout >/dev/null 2>&1 || true) &&"
+PYTEST_TIMEOUT_FLAGS = "--timeout=30 --timeout-method=signal"  # signal fails one test; thread kills pytest
 ACTIVATE = (
     "source /opt/miniconda3/bin/activate && conda activate testbed"  # same as the SWE-bench harness; runs under bash
 )
@@ -72,15 +76,18 @@ def fetch(instance_id: str) -> dict[str, object]:
     f2p = json.loads(r["FAIL_TO_PASS"]) if isinstance(r["FAIL_TO_PASS"], str) else r["FAIL_TO_PASS"]
     p2p = json.loads(r["PASS_TO_PASS"]) if isinstance(r["PASS_TO_PASS"], str) else r["PASS_TO_PASS"]
     test_ids = [*f2p, *p2p]
-    # Only the instance's own tests count, exactly like the SWE-bench harness.
-    quoted = " ".join(f"'{t}'" for t in test_ids)  # node ids can contain [brackets]; quote them
+    # Only the instance's own tests count, exactly like the SWE-bench harness. The dataset stores some
+    # parametrized ids truncated at the first space ("...[test-test-Basic"); pytest aborts on unknown ids,
+    # so those are left out of the command and matched by prefix when judging results.
+    runnable = [t for t in test_ids if "[" not in t or t.endswith("]")]
+    quoted = " ".join(f"'{t}'" for t in runnable)
     return {
         "id": instance_id,
         "repo": f"https://github.com/{r['repo']}",
         "base_commit": r["base_commit"],
         "image": image_tag(instance_id),
         "workdir": WORKDIR,
-        "test_command": f"{ACTIVATE} && pytest -q {quoted}",
+        "test_command": f"{ACTIVATE} && {PYTEST_TIMEOUT_PREP} pytest -q {PYTEST_TIMEOUT_FLAGS} {quoted}",
         "fail_to_pass": f2p,
         "pass_to_pass": p2p,
         "test_patch": r["test_patch"],
@@ -88,6 +95,7 @@ def fetch(instance_id: str) -> dict[str, object]:
         "difficulty": r.get("difficulty", ""),
         "short_problem": str(r["problem_statement"]).strip().split("\n")[0][:200],
         "gold_patch_chars": len(r["patch"]),
+        "dropped_truncated_ids": [t for t in test_ids if t not in runnable],
     }
 
 

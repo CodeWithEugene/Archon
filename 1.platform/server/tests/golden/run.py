@@ -120,6 +120,7 @@ async def main(argv: list[str]) -> int:
     ap.add_argument("--repo", help="public GitHub URL")
     ap.add_argument("--test-command", default=None)
     ap.add_argument("--install-command", default=None)
+    ap.add_argument("--subdir", default=None, help="subproject path inside the repository")
     ap.add_argument("--type", choices=[t.value for t in MissionType], default=None)
     ap.add_argument("--llm", choices=["fake", "nebius"], default="nebius")
     ap.add_argument("--backend", choices=["local", "contree"], default="local")
@@ -194,6 +195,7 @@ async def main(argv: list[str]) -> int:
             test_command=args.test_command or "pytest -q",
             install_command=args.install_command,
             swe_instance_id=None,
+            subdir=args.subdir,
         )
 
     if args.llm == "fake":

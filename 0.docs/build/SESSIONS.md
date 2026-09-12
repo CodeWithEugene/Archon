@@ -103,8 +103,18 @@
 8. Two more real-API findings fixed: the Sandboxes shell is `/bin/sh` (conda activation silently no-ops there, so the backend now runs through bash when present), and the engineer had been constructed before the per-instance `/testbed` sandbox service was swapped in, so its file reads went to `/work/repo`. The engineer now also receives the repository file list, the failing test source, and close-match hints for wrong paths.
 9. **`psf__requests-1142` RESOLVED in a Token Factory Sandbox: 1 iteration, 49 s, $0.032.** Recording kept as `swe-psf__requests-1142-sandbox-nemotron.json`.
 
+10. Batch of five more instances: 1921 VERIFIED (1 iteration, $0.05), 2931 VERIFIED (5 iterations, $0.26); 2317 and 1766 failed on an engineer loop bug (re-requesting files it already had until the round limit); 5414 failed because the SWE-bench dataset stores two parametrized ids truncated at a space, pytest aborted with exit 4, zero tests ran, and every attempt was judged against nothing.
+11. Fixes: normalized dedupe of requested files with a hard "no more reading" stop, line-range reads (`path:START-END`), 150 KB excerpt cap; truncated ids dropped from the test command and instance-scoped judging (FAIL_TO_PASS must pass, PASS_TO_PASS must not break, prefix matching) so unrelated failures in the same file no longer block resolution; fail fast when a baseline runs zero tests.
+12. CI red on `main`: when the repo dir became configurable, clone and patch commands used absolute paths that the development local backend does not map. Made relative; the slow local-backend test passes again. Also `git add -A -- . ':!.venv'` errored on the gitignored in-repo venv; now `git add -A`.
+13. Repository renamed to `CodeWithEugene/Archon` and made public. References and the git remote updated.
+15. Subproject missions: `subdir` on mission create scopes install, tests, file list, excerpts, and edits to a directory inside the repository (monorepos). The Pydantic fixture inside this repository is the test case. First scoped run still failed because Ultra paraphrased the source instead of copying it (invented fields); the edit-mismatch report now quotes the real file text at the mismatch point, sources are placed before the file list in the prompt, and fixture answer keys (`solution.patch`, `EXPECTED_FIX.md`) are hidden from the file list.
+16. `psf__requests-2317`: the run has network-bound tests that hang inside the sandbox; the 15-minute command limit was hit. `pytest-timeout` is now installed on the fly with `--timeout=30 --timeout-method=signal`.
+17. `psf__requests-2317` VERIFIED with the signal-based per-test timeout (2 iterations, $0.21). **Six of six SWE-bench Verified instances resolved inside Token Factory Sandboxes.**
+14. Reruns after the fixes: 1766 VERIFIED (1 iteration, $0.037), 5414 VERIFIED (1 iteration, $0.075). Five of six instances resolved. Two more resilience fixes from the reruns: Ultra sometimes drops the leading `1.` of a path and sometimes writes its reasoning into `content` until the token ceiling; paths now resolve by unique suffix, truncated non-JSON replies retry with a larger budget and then with thinking off, and a non-JSON engineer turn costs one iteration instead of the mission.
+
 **Decisions**
 - ADR-012: no model-written unified diffs. Edits in, `git diff` out.
+- ADR-014: resolution for SWE-bench missions is judged on the instance's FAIL_TO_PASS and PASS_TO_PASS ids with prefix matching, never on the process exit code, because the dataset contains truncated ids and the test files contain unrelated network-dependent tests.
 - ADR-013: SWE-bench missions follow the harness exactly: apply the test patch first, run only the instance's own test ids, judge on fail-to-pass and pass-to-pass.
 
 ---

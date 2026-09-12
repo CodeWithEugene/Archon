@@ -21,7 +21,9 @@ Submission to the **[Nebius x NVIDIA Global AI Hackathon](https://nebiusglobalai
 
 > **Alpha, live on all four pillars.** On September 12, 2026 ARCHON resolved **SWE-bench Verified `psf__requests-1142` inside a Nebius Token Factory Sandbox**: the preloaded environment booted, the instance's test patch was applied, the baseline reproduced 1 failing and 5 passing tests, Nemotron 3 Super synthesized Tavily queries and a research brief, Nemotron 3 Ultra read the source and produced the fix as search-and-replace edits, the fix ran on a sandbox fork, 6 of 6 tests passed with 0 regressions, and the Super reviewer approved. One iteration, 49 seconds, $0.032 of inference. Every step is a span in LangSmith.
 >
-> Not yet done: the rest of the golden set, a hosted demo, the video.
+> Golden set so far: **6 of 6** SWE-bench Verified `psf/requests` instances resolved in Sandboxes, $0.67 of inference in total (see [TESTING.md](0.docs/build/TESTING.md)). Known limitation: a subproject buried deep inside a monorepo (`subdir`) resolved 0 of 3 times in Sandboxes while the same project as a standalone repository resolved first try; Ultra tends to paraphrase source files in that prompt shape. Network-bound test suites need the per-test timeout the SWE-bench commands now carry.
+>
+> Not yet done: a hosted demo, the video.
 >
 > Progress log: [0.docs/build/SESSIONS.md](0.docs/build/SESSIONS.md). Plan: [0.docs/build/PLAN.md](0.docs/build/PLAN.md).
 

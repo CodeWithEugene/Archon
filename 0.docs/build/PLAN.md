@@ -80,7 +80,7 @@ gantt
 - [x] LangSmith tracing across the loop (optional, key-gated).
 - [x] Spend cap and iteration cap enforced with a readable failure report.
 - [x] Migration mission type: ripgrep locators, rewrite prompt, `pricing.json`, parity harness.
-- [ ] **Gate:** 3 of 5 tried SWE-bench instances resolve; one migration fixture passes.
+- [x] **Gate:** 3 of 5 tried SWE-bench instances resolve (6 of 6 on September 12); migration fixture on live Nemotron still to run.
 
 ### Week 4 (Oct 5 to Oct 11): Cockpit
 - [x] Next.js 16 app with Tailwind v4 and Zustand.

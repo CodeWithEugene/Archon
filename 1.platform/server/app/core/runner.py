@@ -24,7 +24,7 @@ from app.core.models import (
 )
 from app.core.patches import check_patch_safety, inspect_patch
 from app.core.pricing import PriceTable
-from app.core.scoring import best_attempt, is_resolved, score_attempt
+from app.core.scoring import best_attempt, is_resolved, score_attempt, select
 from app.grounding.tavily import Grounder, SearchResult
 from app.llm.client import LLM, LLMError, UsageHook
 from app.missions.migration import run_parity_sample, scan_repository
@@ -56,6 +56,12 @@ LANG_BY_EXT = {
     ".yaml": "yaml",
     ".yml": "yaml",
 }
+
+
+SCHEMA_NOTE = (
+    'Reply with only the JSON object: {"root_cause": str, "files_to_read": [str], '
+    '"candidates": [{"rationale": str, "edits": [{"path": str, "search": str, "replace": str}]}]}'
+)
 
 
 class Aborted(Exception):
@@ -218,6 +224,22 @@ class MissionRunner:
         await self._emit_tests("baseline", base.report)
         self._check_abort()
 
+        if base.report.total == 0:
+            self.m.failure_report = (
+                "The test command ran no tests (pytest exit "
+                f"{base.report.exit_code}). Check the test command and test ids."
+            )
+            await self._emit(EventKind.ERROR, {"message": self.m.failure_report})
+            await self._finish(MissionStatus.FAILED, {"reason": "no tests ran"})
+            return
+        targets, protected = self._instance_ids()
+        if self.m.type == MissionType.BUG_HEALING and not select(base.report.failing, targets):
+            await self._thought(
+                "REPRODUCING",
+                "None of the target tests fail on the untouched checkout. Nothing to fix.",
+            )
+            await self._finish(MissionStatus.NOTHING_TO_FIX, {})
+            return
         if self.m.type == MissionType.BUG_HEALING and base.report.exit_code == 0:
             await self._thought(
                 "REPRODUCING", "The test suite already passes on the untouched checkout. Nothing to fix."
@@ -266,7 +288,7 @@ class MissionRunner:
 
         # 4. iterate
         excerpts = await self._initial_excerpts(base.image_id, base.output, migration)
-        file_listing = await self.d.sandbox.list_files(base.image_id)
+        file_listing = rank_listing(await self.d.sandbox.list_files(base.image_id), list(excerpts), limit=300)
         previous: Attempt | None = None
         previous_output: str | None = None
         for iteration in range(1, s.max_iterations + 1):
@@ -285,17 +307,34 @@ class MissionRunner:
                 migration=migration,
                 file_listing=file_listing,
             )
-            out = await self.engineer.propose(req)
+            try:
+                out = await self.engineer.propose(req)
+            except LLMError as exc:
+                self._check_abort()
+                await self._thought(
+                    "REASONING", f"The engineer produced no usable output this iteration ({exc}). Trying again."
+                )
+                previous_output = f"Your previous reply was unusable: {exc}. {SCHEMA_NOTE}"
+                continue
             self._check_abort()
             await self._thought("REASONING", f"Root cause: {out.root_cause}", s.ultra_model)
 
             await self._status(MissionStatus.TESTING)
             await self._narrate("TESTING", f"{len(out.candidates)} candidate(s).")
-            attempts = await self._test_candidates(base, iteration, out.candidates, test_cmd, excerpts)
+            attempts = await self._test_candidates(
+                base,
+                iteration,
+                out.candidates,
+                test_cmd,
+                excerpts,
+                targets,
+                protected,
+                set(file_listing) | set(excerpts),
+            )
             self._check_abort()
 
             best = best_attempt(attempts)
-            if best is not None and is_resolved(base.report, best):
+            if best is not None and is_resolved(base.report, best, targets, protected):
                 await self._status(MissionStatus.REVIEWING)
                 await self._narrate("REVIEWING")
                 review = await self.reviewer.review(
@@ -359,9 +398,24 @@ class MissionRunner:
             )
             return await self.d.sandbox.provision_prebuilt(inst.image, inst.test_patch, self._terminal("baseline"))
         assert self.m.repo_url is not None
-        return await self.d.sandbox.provision_repo(
-            self.m.repo_url, self.m.git_ref, self.m.install_command, self._terminal("baseline")
+        image = await self.d.sandbox.provision_repo(
+            self.m.repo_url, self.m.git_ref, self.m.install_command, self._terminal("baseline"), self.m.subdir
         )
+        if self.m.subdir:
+            # Scope everything downstream (tests, file list, excerpts, edits) to the subproject.
+            self.d.sandbox = self.d.sandbox.with_repo_dir(f"{self.d.sandbox.repo_dir}/{self.m.subdir}")
+            self.engineer = Engineer(self.llm, self.d.sandbox)
+            await self._thought("PROVISIONING", f"Scoped to subproject {self.m.subdir}.")
+        return image
+
+    def _instance_ids(self) -> tuple[set[str] | None, set[str] | None]:
+        """FAIL_TO_PASS / PASS_TO_PASS ids for SWE-bench missions; None for ordinary repositories."""
+        if not self.m.swe_instance_id:
+            return None, None
+        inst = self.d.swe.get(self.m.swe_instance_id)
+        if inst is None:
+            return None, None
+        return set(inst.fail_to_pass), set(inst.pass_to_pass)
 
     def _test_command(self) -> str:
         if not self.m.test_command:
@@ -430,6 +484,9 @@ class MissionRunner:
         candidates: list[Candidate],
         test_cmd: str,
         originals: dict[str, str],
+        targets: set[str] | None = None,
+        protected: set[str] | None = None,
+        known_paths: set[str] | None = None,
     ) -> list[Attempt]:
         attempts: list[Attempt] = []
         for c in candidates:
@@ -451,7 +508,9 @@ class MissionRunner:
                     await self._emit(EventKind.TERMINAL, {"attempt": a.id, "stream": "stderr", "line": a.error})
                     return
             try:
-                applied = await self.d.sandbox.apply_candidate(base.image_id, c, originals, self._terminal(a.id))
+                applied = await self.d.sandbox.apply_candidate(
+                    base.image_id, c, originals, self._terminal(a.id), known_paths
+                )
             except SandboxError as exc:
                 a.error = str(exc)
                 return
@@ -491,7 +550,7 @@ class MissionRunner:
                     ],
                 },
             )
-            score_attempt(base.report, a)
+            score_attempt(base.report, a, targets, protected)
             await self.d.store.save_attempt(a)
             if a.report is not None:
                 await self._emit_tests(a.id, a.report, a.fail_to_pass, a.pass_to_pass_broken)
@@ -553,3 +612,27 @@ class MissionRunner:
             f"Parity sample: {result.sampled} prompts, mean similarity {result.mean_similarity:.2f}. {result.note}",
             self.d.settings.super_model,
         )
+
+
+def rank_listing(paths: list[str], seeds: list[str], limit: int = 300) -> list[str]:
+    """Order repository paths by shared directory depth with the seed paths (failing tests, tracebacks).
+
+    In a monorepo the relevant package is a small corner of the tree; this keeps it at the top of the list
+    the engineer sees and trims the rest.
+    """
+    seed_dirs = [s.rsplit("/", 1)[0] for s in seeds if "/" in s]
+
+    def score(p: str) -> tuple[int, int, str]:
+        best = 0
+        for d in seed_dirs:
+            parts_d, parts_p = d.split("/"), p.split("/")
+            n = 0
+            for a, b in zip(parts_d, parts_p, strict=False):
+                if a != b:
+                    break
+                n += 1
+            best = max(best, n)
+        is_test = "test" in p.lower()
+        return (-best, 1 if is_test else 0, p)
+
+    return sorted(paths, key=score)[:limit]

@@ -1,0 +1,2987 @@
+{
+ "version": 1,
+ "recorded_at": "2026-09-12T18:21:44.284604+00:00",
+ "mission": {
+  "id": "m_c0717a9d",
+  "type": "BUG_HEALING",
+  "repo_url": "https://github.com/psf/requests",
+  "git_ref": "main",
+  "test_command": "source /opt/miniconda3/bin/activate && conda activate testbed && pytest -q 'test_requests.py::RequestsTestCase::test_DIGESTAUTH_QUOTES_QOP_VALUE' 'test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_ALTERNATIVE' 'test_requests.py::RequestsTestCase::test_cookie_sent_on_redirect' 'test_requests.py::RequestsTestCase::test_custom_content_type' 'test_requests.py::RequestsTestCase::test_params_are_merged_case_sensitive' 'test_requests.py::RequestsTestCase::test_user_agent_transfers' 'test_requests.py::RequestsTestCase::test_BASICAUTH_TUPLE_HTTP_200_OK_GET' 'test_requests.py::RequestsTestCase::test_DIGESTAUTH_WRONG_HTTP_401_GET' 'test_requests.py::RequestsTestCase::test_DIGEST_AUTH_RETURNS_COOKIE' 'test_requests.py::RequestsTestCase::test_DIGEST_AUTH_SETS_SESSION_COOKIES' 'test_requests.py::RequestsTestCase::test_DIGEST_STREAM' 'test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_WITH_MIXED_PARAMS' 'test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_WITH_PARAMS' 'test_requests.py::RequestsTestCase::test_HTTP_200_OK_HEAD' 'test_requests.py::RequestsTestCase::test_HTTP_200_OK_PUT' 'test_requests.py::RequestsTestCase::test_HTTP_302_ALLOW_REDIRECT_GET' 'test_requests.py::RequestsTestCase::test_POSTBIN_GET_POST_FILES_WITH_DATA' 'test_requests.py::RequestsTestCase::test_autoset_header_values_are_native' 'test_requests.py::RequestsTestCase::test_basic_building' 'test_requests.py::RequestsTestCase::test_basicauth_with_netrc' 'test_requests.py::RequestsTestCase::test_can_send_nonstring_objects_with_files' 'test_requests.py::RequestsTestCase::test_cannot_send_unprepared_requests' 'test_requests.py::RequestsTestCase::test_cookie_parameters' 'test_requests.py::RequestsTestCase::test_cookie_persists_via_api' 'test_requests.py::RequestsTestCase::test_cookie_quote_wrapped' 'test_requests.py::RequestsTestCase::test_decompress_gzip' 'test_requests.py::RequestsTestCase::test_different_encodings_dont_break_post' 'test_requests.py::RequestsTestCase::test_entry_points' 'test_requests.py::RequestsTestCase::test_fixes_1329' 'test_requests.py::RequestsTestCase::test_generic_cookiejar_works' 'test_requests.py::RequestsTestCase::test_get_auth_from_url' 'test_requests.py::RequestsTestCase::test_header_keys_are_native' 'test_requests.py::RequestsTestCase::test_header_remove_is_case_insensitive' 'test_requests.py::RequestsTestCase::test_hook_receives_request_arguments' 'test_requests.py::RequestsTestCase::test_http_error' 'test_requests.py::RequestsTestCase::test_invalid_url' 'test_requests.py::RequestsTestCase::test_links' 'test_requests.py::RequestsTestCase::test_long_authinfo_in_url' 'test_requests.py::RequestsTestCase::test_mixed_case_scheme_acceptable' 'test_requests.py::RequestsTestCase::test_no_content_length' 'test_requests.py::RequestsTestCase::test_oddball_schemes_dont_check_URLs' 'test_requests.py::RequestsTestCase::test_params_are_added_before_fragment' 'test_requests.py::RequestsTestCase::test_path_is_not_double_encoded' 'test_requests.py::RequestsTestCase::test_prepared_request_hook' 'test_requests.py::RequestsTestCase::test_request_and_response_are_pickleable' 'test_requests.py::RequestsTestCase::test_request_cookie_overrides_session_cookie' 'test_requests.py::RequestsTestCase::test_request_ok_set' 'test_requests.py::RequestsTestCase::test_requests_in_history_are_not_overridden' 'test_requests.py::RequestsTestCase::test_response_is_iterable' 'test_requests.py::RequestsTestCase::test_session_pickling' 'test_requests.py::RequestsTestCase::test_set_cookie_on_301' 'test_requests.py::RequestsTestCase::test_status_raising' 'test_requests.py::RequestsTestCase::test_time_elapsed_blank' 'test_requests.py::RequestsTestCase::test_transport_adapter_ordering' 'test_requests.py::RequestsTestCase::test_unicode_get' 'test_requests.py::RequestsTestCase::test_unicode_header_name' 'test_requests.py::RequestsTestCase::test_unicode_multipart_post' 'test_requests.py::RequestsTestCase::test_unicode_multipart_post_fieldnames' 'test_requests.py::RequestsTestCase::test_uppercase_scheme_redirect' 'test_requests.py::RequestsTestCase::test_urlencoded_get_query_multivalued_param' 'test_requests.py::TestContentEncodingDetection::test_html4_pragma' 'test_requests.py::TestContentEncodingDetection::test_html_charset' 'test_requests.py::TestContentEncodingDetection::test_none' 'test_requests.py::TestContentEncodingDetection::test_precedence' 'test_requests.py::TestContentEncodingDetection::test_xhtml_pragma' 'test_requests.py::TestContentEncodingDetection::test_xml' 'test_requests.py::TestCaseInsensitiveDict::test_contains' 'test_requests.py::TestCaseInsensitiveDict::test_delitem' 'test_requests.py::TestCaseInsensitiveDict::test_docstring_example' 'test_requests.py::TestCaseInsensitiveDict::test_equality' 'test_requests.py::TestCaseInsensitiveDict::test_fixes_649' 'test_requests.py::TestCaseInsensitiveDict::test_get' 'test_requests.py::TestCaseInsensitiveDict::test_getitem' 'test_requests.py::TestCaseInsensitiveDict::test_iter' 'test_requests.py::TestCaseInsensitiveDict::test_iterable_init' 'test_requests.py::TestCaseInsensitiveDict::test_kwargs_init' 'test_requests.py::TestCaseInsensitiveDict::test_len' 'test_requests.py::TestCaseInsensitiveDict::test_lower_items' 'test_requests.py::TestCaseInsensitiveDict::test_mapping_init' 'test_requests.py::TestCaseInsensitiveDict::test_preserve_key_case' 'test_requests.py::TestCaseInsensitiveDict::test_preserve_last_key_case' 'test_requests.py::TestCaseInsensitiveDict::test_setdefault' 'test_requests.py::TestCaseInsensitiveDict::test_update' 'test_requests.py::TestCaseInsensitiveDict::test_update_retains_unchanged' 'test_requests.py::UtilsTestCase::test_super_len_io_streams'",
+  "install_command": null,
+  "swe_instance_id": "psf__requests-1766",
+  "hint": "quote qop options in Digest Auth\nBased on RFC2617 (http://tools.ietf.org/html/rfc2617), the value of\n'qop-options' directive should be quoted with double quotes:\n\n```\nqop-options\n     This directive is optional, but is made so only for backward\n     compatibility with RFC 2069 [6]; it SHOULD be used by all\n     implementations compliant with this version of the Digest\n     scheme. If present, it is a quoted string of one or more\n     tokens indicating the \"quality of protection\" values supported by\n     the server.  The value \"auth\" indicates authentication; the\n     value \"auth-int\" indicates authentication with\n     integrity protection; see the\n```\n\ncurl comamnd-line tool also appends these quotes. You can see this\nby `curl -v --digest --user user:passwd http://example.com/digest-auth`.\nUnfortunately, some minor server-side implementations seem to be sensitive\non this difference.\n\n",
+  "status": "VERIFIED",
+  "iteration": 1,
+  "spend_usd": 0.036514,
+  "baseline_image": "b8bd725e-4943-44d2-94d1-2ef887e126b0",
+  "baseline_report": {
+   "exit_code": 1,
+   "passed": [
+    "test_requests.py::RequestsTestCase::test_BASICAUTH_TUPLE_HTTP_200_OK_GET",
+    "test_requests.py::RequestsTestCase::test_DIGESTAUTH_WRONG_HTTP_401_GET",
+    "test_requests.py::RequestsTestCase::test_DIGEST_AUTH_RETURNS_COOKIE",
+    "test_requests.py::RequestsTestCase::test_DIGEST_AUTH_SETS_SESSION_COOKIES",
+    "test_requests.py::RequestsTestCase::test_DIGEST_STREAM",
+    "test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_ALTERNATIVE",
+    "test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_WITH_MIXED_PARAMS",
+    "test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_WITH_PARAMS",
+    "test_requests.py::RequestsTestCase::test_HTTP_200_OK_HEAD",
+    "test_requests.py::RequestsTestCase::test_HTTP_200_OK_PUT",
+    "test_requests.py::RequestsTestCase::test_HTTP_302_ALLOW_REDIRECT_GET",
+    "test_requests.py::RequestsTestCase::test_POSTBIN_GET_POST_FILES_WITH_DATA",
+    "test_requests.py::RequestsTestCase::test_autoset_header_values_are_native",
+    "test_requests.py::RequestsTestCase::test_basic_building",
+    "test_requests.py::RequestsTestCase::test_basicauth_with_netrc",
+    "test_requests.py::RequestsTestCase::test_can_send_nonstring_objects_with_files",
+    "test_requests.py::RequestsTestCase::test_cannot_send_unprepared_requests",
+    "test_requests.py::RequestsTestCase::test_cookie_parameters",
+    "test_requests.py::RequestsTestCase::test_cookie_persists_via_api",
+    "test_requests.py::RequestsTestCase::test_cookie_quote_wrapped",
+    "test_requests.py::RequestsTestCase::test_cookie_sent_on_redirect",
+    "test_requests.py::RequestsTestCase::test_custom_content_type",
+    "test_requests.py::RequestsTestCase::test_decompress_gzip",
+    "test_requests.py::RequestsTestCase::test_different_encodings_dont_break_post",
+    "test_requests.py::RequestsTestCase::test_entry_points",
+    "test_requests.py::RequestsTestCase::test_fixes_1329",
+    "test_requests.py::RequestsTestCase::test_generic_cookiejar_works",
+    "test_requests.py::RequestsTestCase::test_get_auth_from_url",
+    "test_requests.py::RequestsTestCase::test_header_keys_are_native",
+    "test_requests.py::RequestsTestCase::test_header_remove_is_case_insensitive",
+    "test_requests.py::RequestsTestCase::test_hook_receives_request_arguments",
+    "test_requests.py::RequestsTestCase::test_http_error",
+    "test_requests.py::RequestsTestCase::test_invalid_url",
+    "test_requests.py::RequestsTestCase::test_links",
+    "test_requests.py::RequestsTestCase::test_long_authinfo_in_url",
+    "test_requests.py::RequestsTestCase::test_mixed_case_scheme_acceptable",
+    "test_requests.py::RequestsTestCase::test_no_content_length",
+    "test_requests.py::RequestsTestCase::test_oddball_schemes_dont_check_URLs",
+    "test_requests.py::RequestsTestCase::test_params_are_added_before_fragment",
+    "test_requests.py::RequestsTestCase::test_params_are_merged_case_sensitive",
+    "test_requests.py::RequestsTestCase::test_path_is_not_double_encoded",
+    "test_requests.py::RequestsTestCase::test_prepared_request_hook",
+    "test_requests.py::RequestsTestCase::test_request_and_response_are_pickleable",
+    "test_requests.py::RequestsTestCase::test_request_cookie_overrides_session_cookie",
+    "test_requests.py::RequestsTestCase::test_request_ok_set",
+    "test_requests.py::RequestsTestCase::test_requests_in_history_are_not_overridden",
+    "test_requests.py::RequestsTestCase::test_response_is_iterable",
+    "test_requests.py::RequestsTestCase::test_session_pickling",
+    "test_requests.py::RequestsTestCase::test_set_cookie_on_301",
+    "test_requests.py::RequestsTestCase::test_status_raising",
+    "test_requests.py::RequestsTestCase::test_time_elapsed_blank",
+    "test_requests.py::RequestsTestCase::test_transport_adapter_ordering",
+    "test_requests.py::RequestsTestCase::test_unicode_get",
+    "test_requests.py::RequestsTestCase::test_unicode_header_name",
+    "test_requests.py::RequestsTestCase::test_unicode_multipart_post",
+    "test_requests.py::RequestsTestCase::test_unicode_multipart_post_fieldnames",
+    "test_requests.py::RequestsTestCase::test_uppercase_scheme_redirect",
+    "test_requests.py::RequestsTestCase::test_urlencoded_get_query_multivalued_param",
+    "test_requests.py::RequestsTestCase::test_user_agent_transfers",
+    "test_requests.py::TestCaseInsensitiveDict::test_contains",
+    "test_requests.py::TestCaseInsensitiveDict::test_delitem",
+    "test_requests.py::TestCaseInsensitiveDict::test_docstring_example",
+    "test_requests.py::TestCaseInsensitiveDict::test_equality",
+    "test_requests.py::TestCaseInsensitiveDict::test_fixes_649",
+    "test_requests.py::TestCaseInsensitiveDict::test_get",
+    "test_requests.py::TestCaseInsensitiveDict::test_getitem",
+    "test_requests.py::TestCaseInsensitiveDict::test_iter",
+    "test_requests.py::TestCaseInsensitiveDict::test_iterable_init",
+    "test_requests.py::TestCaseInsensitiveDict::test_kwargs_init",
+    "test_requests.py::TestCaseInsensitiveDict::test_len",
+    "test_requests.py::TestCaseInsensitiveDict::test_lower_items",
+    "test_requests.py::TestCaseInsensitiveDict::test_mapping_init",
+    "test_requests.py::TestCaseInsensitiveDict::test_preserve_key_case",
+    "test_requests.py::TestCaseInsensitiveDict::test_preserve_last_key_case",
+    "test_requests.py::TestCaseInsensitiveDict::test_setdefault",
+    "test_requests.py::TestCaseInsensitiveDict::test_update",
+    "test_requests.py::TestCaseInsensitiveDict::test_update_retains_unchanged",
+    "test_requests.py::TestContentEncodingDetection::test_html4_pragma",
+    "test_requests.py::TestContentEncodingDetection::test_html_charset",
+    "test_requests.py::TestContentEncodingDetection::test_none",
+    "test_requests.py::TestContentEncodingDetection::test_precedence",
+    "test_requests.py::TestContentEncodingDetection::test_xhtml_pragma",
+    "test_requests.py::TestContentEncodingDetection::test_xml",
+    "test_requests.py::UtilsTestCase::test_super_len_io_streams"
+   ],
+   "failed": [
+    "test_requests.py::RequestsTestCase::test_DIGESTAUTH_QUOTES_QOP_VALUE"
+   ],
+   "errors": [],
+   "summary": "1 failed, 84 passed",
+   "parsed": true
+  },
+  "selected_attempt": "a_3bd7bf53",
+  "failure_report": null,
+  "replay_of": null,
+  "diff": [
+   {
+    "path": "requests/auth.py",
+    "original": "# -*- coding: utf-8 -*-\n\n\"\"\"\nrequests.auth\n~~~~~~~~~~~~~\n\nThis module contains the authentication handlers for Requests.\n\"\"\"\n\nimport os\nimport re\nimport time\nimport hashlib\nimport logging\n\nfrom base64 import b64encode\n\nfrom .compat import urlparse, str\nfrom .utils import parse_dict_header\n\nlog = logging.getLogger(__name__)\n\nCONTENT_TYPE_FORM_URLENCODED = 'application/x-www-form-urlencoded'\nCONTENT_TYPE_MULTI_PART = 'multipart/form-data'\n\n\ndef _basic_auth_str(username, password):\n    \"\"\"Returns a Basic Auth string.\"\"\"\n\n    return 'Basic ' + b64encode(('%s:%s' % (username, password)).encode('latin1')).strip().decode('latin1')\n\n\nclass AuthBase(object):\n    \"\"\"Base class that all auth implementations derive from\"\"\"\n\n    def __call__(self, r):\n        raise NotImplementedError('Auth hooks must be callable.')\n\n\nclass HTTPBasicAuth(AuthBase):\n    \"\"\"Attaches HTTP Basic Authentication to the given Request object.\"\"\"\n    def __init__(self, username, password):\n        self.username = username\n        self.password = password\n\n    def __call__(self, r):\n        r.headers['Authorization'] = _basic_auth_str(self.username, self.password)\n        return r\n\n\nclass HTTPProxyAuth(HTTPBasicAuth):\n    \"\"\"Attaches HTTP Proxy Authentication to a given Request object.\"\"\"\n    def __call__(self, r):\n        r.headers['Proxy-Authorization'] = _basic_auth_str(self.username, self.password)\n        return r\n\n\nclass HTTPDigestAuth(AuthBase):\n    \"\"\"Attaches HTTP Digest Authentication to the given Request object.\"\"\"\n    def __init__(self, username, password):\n        self.username = username\n        self.password = password\n        self.last_nonce = ''\n        self.nonce_count = 0\n        self.chal = {}\n        self.pos = None\n\n    def build_digest_header(self, method, url):\n\n        realm = self.chal['realm']\n        nonce = self.chal['nonce']\n        qop = self.chal.get('qop')\n        algorithm = self.chal.get('algorithm')\n        opaque = self.chal.get('opaque')\n\n        if algorithm is None:\n            _algorithm = 'MD5'\n        else:\n            _algorithm = algorithm.upper()\n        # lambdas assume digest modules are imported at the top level\n        if _algorithm == 'MD5' or _algorithm == 'MD5-SESS':\n            def md5_utf8(x):\n                if isinstance(x, str):\n                    x = x.encode('utf-8')\n                return hashlib.md5(x).hexdigest()\n            hash_utf8 = md5_utf8\n        elif _algorithm == 'SHA':\n            def sha_utf8(x):\n                if isinstance(x, str):\n                    x = x.encode('utf-8')\n                return hashlib.sha1(x).hexdigest()\n            hash_utf8 = sha_utf8\n\n        KD = lambda s, d: hash_utf8(\"%s:%s\" % (s, d))\n\n        if hash_utf8 is None:\n            return None\n\n        # XXX not implemented yet\n        entdig = None\n        p_parsed = urlparse(url)\n        path = p_parsed.path\n        if p_parsed.query:\n            path += '?' + p_parsed.query\n\n        A1 = '%s:%s:%s' % (self.username, realm, self.password)\n        A2 = '%s:%s' % (method, path)\n        \n        HA1 = hash_utf8(A1)\n        HA2 = hash_utf8(A2)\n\n        if nonce == self.last_nonce:\n            self.nonce_count += 1\n        else:\n            self.nonce_count = 1\n        ncvalue = '%08x' % self.nonce_count\n        s = str(self.nonce_count).encode('utf-8')\n        s += nonce.encode('utf-8')\n        s += time.ctime().encode('utf-8')\n        s += os.urandom(8)\n\n        cnonce = (hashlib.sha1(s).hexdigest()[:16])\n        noncebit = \"%s:%s:%s:%s:%s\" % (nonce, ncvalue, cnonce, qop, HA2)\n        if _algorithm == 'MD5-SESS':\n            HA1 = hash_utf8('%s:%s:%s' % (HA1, nonce, cnonce))\n\n        if qop is None:\n            respdig = KD(HA1, \"%s:%s\" % (nonce, HA2))\n        elif qop == 'auth' or 'auth' in qop.split(','):\n            respdig = KD(HA1, noncebit)\n        else:\n            # XXX handle auth-int.\n            return None\n\n        self.last_nonce = nonce\n\n        # XXX should the partial digests be encoded too?\n        base = 'username=\"%s\", realm=\"%s\", nonce=\"%s\", uri=\"%s\", ' \\\n               'response=\"%s\"' % (self.username, realm, nonce, path, respdig)\n        if opaque:\n            base += ', opaque=\"%s\"' % opaque\n        if algorithm:\n            base += ', algorithm=\"%s\"' % algorithm\n        if entdig:\n            base += ', digest=\"%s\"' % entdig\n        if qop:\n            base += ', qop=auth, nc=%s, cnonce=\"%s\"' % (ncvalue, cnonce)\n\n        return 'Digest %s' % (base)\n\n    def handle_401(self, r, **kwargs):\n        \"\"\"Takes the given response and tries digest-auth, if needed.\"\"\"\n\n        if self.pos is not None:\n            # Rewind the file position indicator of the body to where\n            # it was to resend the request.\n            r.request.body.seek(self.pos)\n        num_401_calls = getattr(self, 'num_401_calls', 1)\n        s_auth = r.headers.get('www-authenticate', '')\n\n        if 'digest' in s_auth.lower() and num_401_calls < 2:\n\n            setattr(self, 'num_401_calls', num_401_calls + 1)\n            pat = re.compile(r'digest ', flags=re.IGNORECASE)\n            self.chal = parse_dict_header(pat.sub('', s_auth, count=1))\n\n            # Consume content and release the original connection\n            # to allow our new request to reuse the same one.\n            r.content\n            r.raw.release_conn()\n            prep = r.request.copy()\n            prep.prepare_cookies(r.cookies)\n\n            prep.headers['Authorization'] = self.build_digest_header(\n                prep.method, prep.url)\n            _r = r.connection.send(prep, **kwargs)\n            _r.history.append(r)\n            _r.request = prep\n\n            return _r\n\n        setattr(self, 'num_401_calls', 1)\n        return r\n\n    def __call__(self, r):\n        # If we have a saved nonce, skip the 401\n        if self.last_nonce:\n            r.headers['Authorization'] = self.build_digest_header(r.method, r.url)\n        try:\n            self.pos = r.body.tell()\n        except AttributeError:\n            pass\n        r.register_hook('response', self.handle_401)\n        return r\n",
+    "modified": "# -*- coding: utf-8 -*-\n\n\"\"\"\nrequests.auth\n~~~~~~~~~~~~~\n\nThis module contains the authentication handlers for Requests.\n\"\"\"\n\nimport os\nimport re\nimport time\nimport hashlib\nimport logging\n\nfrom base64 import b64encode\n\nfrom .compat import urlparse, str\nfrom .utils import parse_dict_header\n\nlog = logging.getLogger(__name__)\n\nCONTENT_TYPE_FORM_URLENCODED = 'application/x-www-form-urlencoded'\nCONTENT_TYPE_MULTI_PART = 'multipart/form-data'\n\n\ndef _basic_auth_str(username, password):\n    \"\"\"Returns a Basic Auth string.\"\"\"\n\n    return 'Basic ' + b64encode(('%s:%s' % (username, password)).encode('latin1')).strip().decode('latin1')\n\n\nclass AuthBase(object):\n    \"\"\"Base class that all auth implementations derive from\"\"\"\n\n    def __call__(self, r):\n        raise NotImplementedError('Auth hooks must be callable.')\n\n\nclass HTTPBasicAuth(AuthBase):\n    \"\"\"Attaches HTTP Basic Authentication to the given Request object.\"\"\"\n    def __init__(self, username, password):\n        self.username = username\n        self.password = password\n\n    def __call__(self, r):\n        r.headers['Authorization'] = _basic_auth_str(self.username, self.password)\n        return r\n\n\nclass HTTPProxyAuth(HTTPBasicAuth):\n    \"\"\"Attaches HTTP Proxy Authentication to a given Request object.\"\"\"\n    def __call__(self, r):\n        r.headers['Proxy-Authorization'] = _basic_auth_str(self.username, self.password)\n        return r\n\n\nclass HTTPDigestAuth(AuthBase):\n    \"\"\"Attaches HTTP Digest Authentication to the given Request object.\"\"\"\n    def __init__(self, username, password):\n        self.username = username\n        self.password = password\n        self.last_nonce = ''\n        self.nonce_count = 0\n        self.chal = {}\n        self.pos = None\n\n    def build_digest_header(self, method, url):\n\n        realm = self.chal['realm']\n        nonce = self.chal['nonce']\n        qop = self.chal.get('qop')\n        algorithm = self.chal.get('algorithm')\n        opaque = self.chal.get('opaque')\n\n        if algorithm is None:\n            _algorithm = 'MD5'\n        else:\n            _algorithm = algorithm.upper()\n        # lambdas assume digest modules are imported at the top level\n        if _algorithm == 'MD5' or _algorithm == 'MD5-SESS':\n            def md5_utf8(x):\n                if isinstance(x, str):\n                    x = x.encode('utf-8')\n                return hashlib.md5(x).hexdigest()\n            hash_utf8 = md5_utf8\n        elif _algorithm == 'SHA':\n            def sha_utf8(x):\n                if isinstance(x, str):\n                    x = x.encode('utf-8')\n                return hashlib.sha1(x).hexdigest()\n            hash_utf8 = sha_utf8\n\n        KD = lambda s, d: hash_utf8(\"%s:%s\" % (s, d))\n\n        if hash_utf8 is None:\n            return None\n\n        # XXX not implemented yet\n        entdig = None\n        p_parsed = urlparse(url)\n        path = p_parsed.path\n        if p_parsed.query:\n            path += '?' + p_parsed.query\n\n        A1 = '%s:%s:%s' % (self.username, realm, self.password)\n        A2 = '%s:%s' % (method, path)\n        \n        HA1 = hash_utf8(A1)\n        HA2 = hash_utf8(A2)\n\n        if nonce == self.last_nonce:\n            self.nonce_count += 1\n        else:\n            self.nonce_count = 1\n        ncvalue = '%08x' % self.nonce_count\n        s = str(self.nonce_count).encode('utf-8')\n        s += nonce.encode('utf-8')\n        s += time.ctime().encode('utf-8')\n        s += os.urandom(8)\n\n        cnonce = (hashlib.sha1(s).hexdigest()[:16])\n        noncebit = \"%s:%s:%s:%s:%s\" % (nonce, ncvalue, cnonce, qop, HA2)\n        if _algorithm == 'MD5-SESS':\n            HA1 = hash_utf8('%s:%s:%s' % (HA1, nonce, cnonce))\n\n        if qop is None:\n            respdig = KD(HA1, \"%s:%s\" % (nonce, HA2))\n        elif qop == 'auth' or 'auth' in qop.split(','):\n            respdig = KD(HA1, noncebit)\n        else:\n            # XXX handle auth-int.\n            return None\n\n        self.last_nonce = nonce\n\n        # XXX should the partial digests be encoded too?\n        base = 'username=\"%s\", realm=\"%s\", nonce=\"%s\", uri=\"%s\", ' \\\n               'response=\"%s\"' % (self.username, realm, nonce, path, respdig)\n        if opaque:\n            base += ', opaque=\"%s\"' % opaque\n        if algorithm:\n            base += ', algorithm=\"%s\"' % algorithm\n        if entdig:\n            base += ', digest=\"%s\"' % entdig\n        if qop:\n            base += ', qop=\"auth\", nc=%s, cnonce=\"%s\"' % (ncvalue, cnonce)\n\n        return 'Digest %s' % (base)\n\n    def handle_401(self, r, **kwargs):\n        \"\"\"Takes the given response and tries digest-auth, if needed.\"\"\"\n\n        if self.pos is not None:\n            # Rewind the file position indicator of the body to where\n            # it was to resend the request.\n            r.request.body.seek(self.pos)\n        num_401_calls = getattr(self, 'num_401_calls', 1)\n        s_auth = r.headers.get('www-authenticate', '')\n\n        if 'digest' in s_auth.lower() and num_401_calls < 2:\n\n            setattr(self, 'num_401_calls', num_401_calls + 1)\n            pat = re.compile(r'digest ', flags=re.IGNORECASE)\n            self.chal = parse_dict_header(pat.sub('', s_auth, count=1))\n\n            # Consume content and release the original connection\n            # to allow our new request to reuse the same one.\n            r.content\n            r.raw.release_conn()\n            prep = r.request.copy()\n            prep.prepare_cookies(r.cookies)\n\n            prep.headers['Authorization'] = self.build_digest_header(\n                prep.method, prep.url)\n            _r = r.connection.send(prep, **kwargs)\n            _r.history.append(r)\n            _r.request = prep\n\n            return _r\n\n        setattr(self, 'num_401_calls', 1)\n        return r\n\n    def __call__(self, r):\n        # If we have a saved nonce, skip the 401\n        if self.last_nonce:\n            r.headers['Authorization'] = self.build_digest_header(r.method, r.url)\n        try:\n            self.pos = r.body.tell()\n        except AttributeError:\n            pass\n        r.register_hook('response', self.handle_401)\n        return r\n",
+    "language": "python"
+   }
+  ],
+  "summary": {
+   "trace_url": "https://smith.langchain.com/o/ed80d820-b9cd-4bf6-9272-8f173cc1e037/projects/p/2ae55e09-4894-487d-ae0d-ae0b31eef736/trace/01a096d9-45c9-7053-814e-84709548f971/run/01a096d9-45c9-7053-814e-84709548f971?start_time=2026-09-12T18%3A20%3A16.713376%2B00%3A00",
+   "swe": {
+    "instance": "psf__requests-1766",
+    "difficulty": "<15 min fix",
+    "fail_to_pass": [
+     "test_requests.py::RequestsTestCase::test_DIGESTAUTH_QUOTES_QOP_VALUE",
+     "test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_ALTERNATIVE",
+     "test_requests.py::RequestsTestCase::test_cookie_sent_on_redirect",
+     "test_requests.py::RequestsTestCase::test_custom_content_type",
+     "test_requests.py::RequestsTestCase::test_params_are_merged_case_sensitive",
+     "test_requests.py::RequestsTestCase::test_user_agent_transfers"
+    ],
+    "pass_to_pass": 79,
+    "image": "swebench/sweb.eval.x86_64.psf_1776_requests-1766:latest"
+   },
+   "root_cause": "The test `test_DIGESTAUTH_QUOTES_QOP_VALUE` fails because the Digest Authorization header outputs `qop=auth` without quotes, but RFC 2617 requires the qop value to be a quoted string (e.g., `qop=\"auth\"`). In `requests/auth.py`, the `build_digest_header` method constructs the header with `qop=auth` (unquoted) instead of `qop=\"auth\"`."
+  },
+  "created_at": "2026-09-12T18:20:16.537440Z",
+  "finished_at": "2026-09-12T18:21:44.276244Z"
+ },
+ "attempts": [
+  {
+   "id": "a_3bd7bf53",
+   "mission_id": "m_c0717a9d",
+   "iteration": 1,
+   "parent_image": "b8bd725e-4943-44d2-94d1-2ef887e126b0",
+   "result_image": "65b97f4b-de93-44a5-8c9d-795411499bad",
+   "patch": "diff --git a/requests/auth.py b/requests/auth.py\nindex a3de123..48416e5 100644\n--- a/requests/auth.py\n+++ b/requests/auth.py\n@@ -144,7 +144,7 @@ class HTTPDigestAuth(AuthBase):\n         if entdig:\n             base += ', digest=\"%s\"' % entdig\n         if qop:\n-            base += ', qop=auth, nc=%s, cnonce=\"%s\"' % (ncvalue, cnonce)\n+            base += ', qop=\"auth\", nc=%s, cnonce=\"%s\"' % (ncvalue, cnonce)\n \n         return 'Digest %s' % (base)\n \n",
+   "rationale": "Fix the qop value in the Digest Authorization header to be quoted as required by RFC 2617. Change `qop=auth` to `qop=\"auth\"` in the header construction.",
+   "exit_code": 0,
+   "fail_to_pass": 1,
+   "pass_to_pass_broken": 0,
+   "patch_lines": 2,
+   "applied": true,
+   "selected": true,
+   "report": {
+    "exit_code": 0,
+    "passed": [
+     "test_requests.py::RequestsTestCase::test_BASICAUTH_TUPLE_HTTP_200_OK_GET",
+     "test_requests.py::RequestsTestCase::test_DIGESTAUTH_QUOTES_QOP_VALUE",
+     "test_requests.py::RequestsTestCase::test_DIGESTAUTH_WRONG_HTTP_401_GET",
+     "test_requests.py::RequestsTestCase::test_DIGEST_AUTH_RETURNS_COOKIE",
+     "test_requests.py::RequestsTestCase::test_DIGEST_AUTH_SETS_SESSION_COOKIES",
+     "test_requests.py::RequestsTestCase::test_DIGEST_STREAM",
+     "test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_ALTERNATIVE",
+     "test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_WITH_MIXED_PARAMS",
+     "test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_WITH_PARAMS",
+     "test_requests.py::RequestsTestCase::test_HTTP_200_OK_HEAD",
+     "test_requests.py::RequestsTestCase::test_HTTP_200_OK_PUT",
+     "test_requests.py::RequestsTestCase::test_HTTP_302_ALLOW_REDIRECT_GET",
+     "test_requests.py::RequestsTestCase::test_POSTBIN_GET_POST_FILES_WITH_DATA",
+     "test_requests.py::RequestsTestCase::test_autoset_header_values_are_native",
+     "test_requests.py::RequestsTestCase::test_basic_building",
+     "test_requests.py::RequestsTestCase::test_basicauth_with_netrc",
+     "test_requests.py::RequestsTestCase::test_can_send_nonstring_objects_with_files",
+     "test_requests.py::RequestsTestCase::test_cannot_send_unprepared_requests",
+     "test_requests.py::RequestsTestCase::test_cookie_parameters",
+     "test_requests.py::RequestsTestCase::test_cookie_persists_via_api",
+     "test_requests.py::RequestsTestCase::test_cookie_quote_wrapped",
+     "test_requests.py::RequestsTestCase::test_cookie_sent_on_redirect",
+     "test_requests.py::RequestsTestCase::test_custom_content_type",
+     "test_requests.py::RequestsTestCase::test_decompress_gzip",
+     "test_requests.py::RequestsTestCase::test_different_encodings_dont_break_post",
+     "test_requests.py::RequestsTestCase::test_entry_points",
+     "test_requests.py::RequestsTestCase::test_fixes_1329",
+     "test_requests.py::RequestsTestCase::test_generic_cookiejar_works",
+     "test_requests.py::RequestsTestCase::test_get_auth_from_url",
+     "test_requests.py::RequestsTestCase::test_header_keys_are_native",
+     "test_requests.py::RequestsTestCase::test_header_remove_is_case_insensitive",
+     "test_requests.py::RequestsTestCase::test_hook_receives_request_arguments",
+     "test_requests.py::RequestsTestCase::test_http_error",
+     "test_requests.py::RequestsTestCase::test_invalid_url",
+     "test_requests.py::RequestsTestCase::test_links",
+     "test_requests.py::RequestsTestCase::test_long_authinfo_in_url",
+     "test_requests.py::RequestsTestCase::test_mixed_case_scheme_acceptable",
+     "test_requests.py::RequestsTestCase::test_no_content_length",
+     "test_requests.py::RequestsTestCase::test_oddball_schemes_dont_check_URLs",
+     "test_requests.py::RequestsTestCase::test_params_are_added_before_fragment",
+     "test_requests.py::RequestsTestCase::test_params_are_merged_case_sensitive",
+     "test_requests.py::RequestsTestCase::test_path_is_not_double_encoded",
+     "test_requests.py::RequestsTestCase::test_prepared_request_hook",
+     "test_requests.py::RequestsTestCase::test_request_and_response_are_pickleable",
+     "test_requests.py::RequestsTestCase::test_request_cookie_overrides_session_cookie",
+     "test_requests.py::RequestsTestCase::test_request_ok_set",
+     "test_requests.py::RequestsTestCase::test_requests_in_history_are_not_overridden",
+     "test_requests.py::RequestsTestCase::test_response_is_iterable",
+     "test_requests.py::RequestsTestCase::test_session_pickling",
+     "test_requests.py::RequestsTestCase::test_set_cookie_on_301",
+     "test_requests.py::RequestsTestCase::test_status_raising",
+     "test_requests.py::RequestsTestCase::test_time_elapsed_blank",
+     "test_requests.py::RequestsTestCase::test_transport_adapter_ordering",
+     "test_requests.py::RequestsTestCase::test_unicode_get",
+     "test_requests.py::RequestsTestCase::test_unicode_header_name",
+     "test_requests.py::RequestsTestCase::test_unicode_multipart_post",
+     "test_requests.py::RequestsTestCase::test_unicode_multipart_post_fieldnames",
+     "test_requests.py::RequestsTestCase::test_uppercase_scheme_redirect",
+     "test_requests.py::RequestsTestCase::test_urlencoded_get_query_multivalued_param",
+     "test_requests.py::RequestsTestCase::test_user_agent_transfers",
+     "test_requests.py::TestCaseInsensitiveDict::test_contains",
+     "test_requests.py::TestCaseInsensitiveDict::test_delitem",
+     "test_requests.py::TestCaseInsensitiveDict::test_docstring_example",
+     "test_requests.py::TestCaseInsensitiveDict::test_equality",
+     "test_requests.py::TestCaseInsensitiveDict::test_fixes_649",
+     "test_requests.py::TestCaseInsensitiveDict::test_get",
+     "test_requests.py::TestCaseInsensitiveDict::test_getitem",
+     "test_requests.py::TestCaseInsensitiveDict::test_iter",
+     "test_requests.py::TestCaseInsensitiveDict::test_iterable_init",
+     "test_requests.py::TestCaseInsensitiveDict::test_kwargs_init",
+     "test_requests.py::TestCaseInsensitiveDict::test_len",
+     "test_requests.py::TestCaseInsensitiveDict::test_lower_items",
+     "test_requests.py::TestCaseInsensitiveDict::test_mapping_init",
+     "test_requests.py::TestCaseInsensitiveDict::test_preserve_key_case",
+     "test_requests.py::TestCaseInsensitiveDict::test_preserve_last_key_case",
+     "test_requests.py::TestCaseInsensitiveDict::test_setdefault",
+     "test_requests.py::TestCaseInsensitiveDict::test_update",
+     "test_requests.py::TestCaseInsensitiveDict::test_update_retains_unchanged",
+     "test_requests.py::TestContentEncodingDetection::test_html4_pragma",
+     "test_requests.py::TestContentEncodingDetection::test_html_charset",
+     "test_requests.py::TestContentEncodingDetection::test_none",
+     "test_requests.py::TestContentEncodingDetection::test_precedence",
+     "test_requests.py::TestContentEncodingDetection::test_xhtml_pragma",
+     "test_requests.py::TestContentEncodingDetection::test_xml",
+     "test_requests.py::UtilsTestCase::test_super_len_io_streams"
+    ],
+    "failed": [],
+    "errors": [],
+    "summary": "0 failed, 85 passed",
+    "parsed": true
+   },
+   "report_output": "........................................................................ [ 84%]\n.............                                                            [100%]\n=============================== warnings summary ===============================\nrequests/packages/urllib3/_collections.py:7\n  /testbed/requests/packages/urllib3/_collections.py:7: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working\n    from collections import MutableMapping\n\nrequests/sessions.py:12\n  /testbed/requests/sessions.py:12: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working\n    from collections import Mapping\n\ntest_requests.py::RequestsTestCase::test_DIGESTAUTH_QUOTES_QOP_VALUE\n  /testbed/requests/models.py:156: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working\n    if isinstance(hook, collections.Callable):\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n==================================== PASSES ====================================\n-------------------- generated xml file: /archon-junit.xml ---------------------\n=========================== short test summary info ============================\nPASSED test_requests.py::RequestsTestCase::test_DIGESTAUTH_QUOTES_QOP_VALUE\nPASSED test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_ALTERNATIVE\nPASSED test_requests.py::RequestsTestCase::test_cookie_sent_on_redirect\nPASSED test_requests.py::RequestsTestCase::test_custom_content_type\nPASSED test_requests.py::RequestsTestCase::test_params_are_merged_case_sensitive\nPASSED test_requests.py::RequestsTestCase::test_user_agent_transfers\nPASSED test_requests.py::RequestsTestCase::test_BASICAUTH_TUPLE_HTTP_200_OK_GET\nPASSED test_requests.py::RequestsTestCase::test_DIGESTAUTH_WRONG_HTTP_401_GET\nPASSED test_requests.py::RequestsTestCase::test_DIGEST_AUTH_RETURNS_COOKIE\nPASSED test_requests.py::RequestsTestCase::test_DIGEST_AUTH_SETS_SESSION_COOKIES\nPASSED test_requests.py::RequestsTestCase::test_DIGEST_STREAM\nPASSED test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_WITH_MIXED_PARAMS\nPASSED test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_WITH_PARAMS\nPASSED test_requests.py::RequestsTestCase::test_HTTP_200_OK_HEAD\nPASSED test_requests.py::RequestsTestCase::test_HTTP_200_OK_PUT\nPASSED test_requests.py::RequestsTestCase::test_HTTP_302_ALLOW_REDIRECT_GET\nPASSED test_requests.py::RequestsTestCase::test_POSTBIN_GET_POST_FILES_WITH_DATA\nPASSED test_requests.py::RequestsTestCase::test_autoset_header_values_are_native\nPASSED test_requests.py::RequestsTestCase::test_basic_building\nPASSED test_requests.py::RequestsTestCase::test_basicauth_with_netrc\nPASSED test_requests.py::RequestsTestCase::test_can_send_nonstring_objects_with_files\nPASSED test_requests.py::RequestsTestCase::test_cannot_send_unprepared_requests\nPASSED test_requests.py::RequestsTestCase::test_cookie_parameters\nPASSED test_requests.py::RequestsTestCase::test_cookie_persists_via_api\nPASSED test_requests.py::RequestsTestCase::test_cookie_quote_wrapped\nPASSED test_requests.py::RequestsTestCase::test_decompress_gzip\nPASSED test_requests.py::RequestsTestCase::test_different_encodings_dont_break_post\nPASSED test_requests.py::RequestsTestCase::test_entry_points\nPASSED test_requests.py::RequestsTestCase::test_fixes_1329\nPASSED test_requests.py::RequestsTestCase::test_generic_cookiejar_works\nPASSED test_requests.py::RequestsTestCase::test_get_auth_from_url\nPASSED test_requests.py::RequestsTestCase::test_header_keys_are_native\nPASSED test_requests.py::RequestsTestCase::test_header_remove_is_case_insensitive\nPASSED test_requests.py::RequestsTestCase::test_hook_receives_request_arguments\nPASSED test_requests.py::RequestsTestCase::test_http_error\nPASSED test_requests.py::RequestsTestCase::test_invalid_url\nPASSED test_requests.py::RequestsTestCase::test_links\nPASSED test_requests.py::RequestsTestCase::test_long_authinfo_in_url\nPASSED test_requests.py::RequestsTestCase::test_mixed_case_scheme_acceptable\nPASSED test_requests.py::RequestsTestCase::test_no_content_length\nPASSED test_requests.py::RequestsTestCase::test_oddball_schemes_dont_check_URLs\nPASSED test_requests.py::RequestsTestCase::test_params_are_added_before_fragment\nPASSED test_requests.py::RequestsTestCase::test_path_is_not_double_encoded\nPASSED test_requests.py::RequestsTestCase::test_prepared_request_hook\nPASSED test_requests.py::RequestsTestCase::test_request_and_response_are_pickleable\nPASSED test_requests.py::RequestsTestCase::test_request_cookie_overrides_session_cookie\nPASSED test_requests.py::RequestsTestCase::test_request_ok_set\nPASSED test_requests.py::RequestsTestCase::test_requests_in_history_are_not_overridden\nPASSED test_requests.py::RequestsTestCase::test_response_is_iterable\nPASSED test_requests.py::RequestsTestCase::test_session_pickling\nPASSED test_requests.py::RequestsTestCase::test_set_cookie_on_301\nPASSED test_requests.py::RequestsTestCase::test_status_raising\nPASSED test_requests.py::RequestsTestCase::test_time_elapsed_blank\nPASSED test_requests.py::RequestsTestCase::test_transport_adapter_ordering\nPASSED test_requests.py::RequestsTestCase::test_unicode_get\nPASSED test_requests.py::RequestsTestCase::test_unicode_header_name\nPASSED test_requests.py::RequestsTestCase::test_unicode_multipart_post\nPASSED test_requests.py::RequestsTestCase::test_unicode_multipart_post_fieldnames\nPASSED test_requests.py::RequestsTestCase::test_uppercase_scheme_redirect\nPASSED test_requests.py::RequestsTestCase::test_urlencoded_get_query_multivalued_param\nPASSED test_requests.py::TestContentEncodingDetection::test_html4_pragma\nPASSED test_requests.py::TestContentEncodingDetection::test_html_charset\nPASSED test_requests.py::TestContentEncodingDetection::test_none\nPASSED test_requests.py::TestContentEncodingDetection::test_precedence\nPASSED test_requests.py::TestContentEncodingDetection::test_xhtml_pragma\nPASSED test_requests.py::TestContentEncodingDetection::test_xml\nPASSED test_requests.py::TestCaseInsensitiveDict::test_contains\nPASSED test_requests.py::TestCaseInsensitiveDict::test_delitem\nPASSED test_requests.py::TestCaseInsensitiveDict::test_docstring_example\nPASSED test_requests.py::TestCaseInsensitiveDict::test_equality\nPASSED test_requests.py::TestCaseInsensitiveDict::test_fixes_649\nPASSED test_requests.py::TestCaseInsensitiveDict::test_get\nPASSED test_requests.py::TestCaseInsensitiveDict::test_getitem\nPASSED test_requests.py::TestCaseInsensitiveDict::test_iter\nPASSED test_requests.py::TestCaseInsensitiveDict::test_iterable_init\nPASSED test_requests.py::TestCaseInsensitiveDict::test_kwargs_init\nPASSED test_requests.py::TestCaseInsensitiveDict::test_len\nPASSED test_requests.py::TestCaseInsensitiveDict::test_lower_items\nPASSED test_requests.py::TestCaseInsensitiveDict::test_mapping_init\nPASSED test_requests.py::TestCaseInsensitiveDict::test_preserve_key_case\nPASSED test_requests.py::TestCaseInsensitiveDict::test_preserve_last_key_case\nPASSED test_requests.py::TestCaseInsensitiveDict::test_setdefault\nPASSED test_requests.py::TestCaseInsensitiveDict::test_update\nPASSED test_requests.py::TestCaseInsensitiveDict::test_update_retains_unchanged\nPASSED test_requests.py::UtilsTestCase::test_super_len_io_streams\n85 passed, 3 warnings in 22.85s\n",
+   "error": null
+  }
+ ],
+ "usage": [
+  {
+   "mission_id": "m_c0717a9d",
+   "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+   "prompt_tokens": 26782,
+   "completion_tokens": 2598,
+   "cost_usd": 0.034576,
+   "task": ""
+  },
+  {
+   "mission_id": "m_c0717a9d",
+   "model": "nvidia/nemotron-3-super-120b-a12b",
+   "prompt_tokens": 5783,
+   "completion_tokens": 226,
+   "cost_usd": 0.0019383,
+   "task": ""
+  }
+ ],
+ "events": [
+  {
+   "id": 1,
+   "kind": "status",
+   "payload": {
+    "status": "PROVISIONING",
+    "iteration": 0
+   },
+   "ts": "2026-09-12T18:20:18.294353+00:00"
+  },
+  {
+   "id": 2,
+   "kind": "thought",
+   "payload": {
+    "stage": "PROVISIONING",
+    "model": "archon",
+    "text": "Cloning the repository and installing dependencies in a fresh sandbox."
+   },
+   "ts": "2026-09-12T18:20:18.295487+00:00"
+  },
+  {
+   "id": 3,
+   "kind": "thought",
+   "payload": {
+    "stage": "PROVISIONING",
+    "model": "archon",
+    "text": "SWE-bench Verified psf__requests-1766 (<15 min fix): starting from the preloaded sandbox image and applying the instance's test patch."
+   },
+   "ts": "2026-09-12T18:20:18.297210+00:00"
+  },
+  {
+   "id": 4,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "cmd",
+    "line": "$ git apply --whitespace=nowarn ../archon.patch && git status --short | head -20"
+   },
+   "ts": "2026-09-12T18:20:25.267386+00:00"
+  },
+  {
+   "id": 5,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": " M test_requests.py"
+   },
+   "ts": "2026-09-12T18:20:28.285496+00:00"
+  },
+  {
+   "id": 6,
+   "kind": "status",
+   "payload": {
+    "status": "REPRODUCING",
+    "iteration": 0
+   },
+   "ts": "2026-09-12T18:20:28.289489+00:00"
+  },
+  {
+   "id": 7,
+   "kind": "thought",
+   "payload": {
+    "stage": "REPRODUCING",
+    "model": "archon",
+    "text": "Running the test suite on the untouched checkout to record the baseline."
+   },
+   "ts": "2026-09-12T18:20:28.290606+00:00"
+  },
+  {
+   "id": 8,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "cmd",
+    "line": "$ source /opt/miniconda3/bin/activate && conda activate testbed && pytest -q 'test_requests.py::RequestsTestCase::test_DIGESTAUTH_QUOTES_QOP_VALUE' 'test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_ALTERNATIVE' 'test_requests.py::RequestsTestCase::test_cookie_sent_on_redirect' 'test_requests.py::RequestsTestCase::test_custom_content_type' 'test_requests.py::RequestsTestCase::test_params_are_merged_case_sensitive' 'test_requests.py::RequestsTestCase::test_user_agent_transfers' 'test_requests.py::RequestsTestCase::test_BASICAUTH_TUPLE_HTTP_200_OK_GET' 'test_requests.py::RequestsTestCase::test_DIGESTAUTH_WRONG_HTTP_401_GET' 'test_requests.py::RequestsTestCase::test_DIGEST_AUTH_RETURNS_COOKIE' 'test_requests.py::RequestsTestCase::test_DIGEST_AUTH_SETS_SESSION_COOKIES' 'test_requests.py::RequestsTestCase::test_DIGEST_STREAM' 'test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_WITH_MIXED_PARAMS' 'test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_WITH_PARAMS' 'test_requests.py::RequestsTestCase::test_HTTP_200_OK_HEAD' 'test_requests.py::RequestsTestCase::test_HTTP_200_OK_PUT' 'test_requests.py::RequestsTestCase::test_HTTP_302_ALLOW_REDIRECT_GET' 'test_requests.py::RequestsTestCase::test_POSTBIN_GET_POST_FILES_WITH_DATA' 'test_requests.py::RequestsTestCase::test_autoset_header_values_are_native' 'test_requests.py::RequestsTestCase::test_basic_building' 'test_requests.py::RequestsTestCase::test_basicauth_with_netrc' 'test_requests.py::RequestsTestCase::test_can_send_nonstring_objects_with_files' 'test_requests.py::RequestsTestCase::test_cannot_send_unprepared_requests' 'test_requests.py::RequestsTestCase::test_cookie_parameters' 'test_requests.py::RequestsTestCase::test_cookie_persists_via_api' 'test_requests.py::RequestsTestCase::test_cookie_quote_wrapped' 'test_requests.py::RequestsTestCase::test_decompress_gzip' 'test_requests.py::RequestsTestCase::test_different_encodings_dont_break_post' 'test_requests.py::RequestsTestCase::test_entry_points' 'test_"
+   },
+   "ts": "2026-09-12T18:20:28.295790+00:00"
+  },
+  {
+   "id": 9,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "F....................................................................... [ 84%]"
+   },
+   "ts": "2026-09-12T18:20:53.329149+00:00"
+  },
+  {
+   "id": 10,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ".............                                                            [100%]"
+   },
+   "ts": "2026-09-12T18:20:53.333534+00:00"
+  },
+  {
+   "id": 11,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "=================================== FAILURES ==================================="
+   },
+   "ts": "2026-09-12T18:20:53.334989+00:00"
+  },
+  {
+   "id": 12,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "______________ RequestsTestCase.test_DIGESTAUTH_QUOTES_QOP_VALUE _______________"
+   },
+   "ts": "2026-09-12T18:20:53.336141+00:00"
+  },
+  {
+   "id": 13,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-12T18:20:53.337044+00:00"
+  },
+  {
+   "id": 14,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "self = <test_requests.RequestsTestCase testMethod=test_DIGESTAUTH_QUOTES_QOP_VALUE>"
+   },
+   "ts": "2026-09-12T18:20:53.338595+00:00"
+  },
+  {
+   "id": 15,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-12T18:20:53.340176+00:00"
+  },
+  {
+   "id": 16,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    def test_DIGESTAUTH_QUOTES_QOP_VALUE(self):"
+   },
+   "ts": "2026-09-12T18:20:53.341205+00:00"
+  },
+  {
+   "id": 17,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    "
+   },
+   "ts": "2026-09-12T18:20:53.342140+00:00"
+  },
+  {
+   "id": 18,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        auth = HTTPDigestAuth('user', 'pass')"
+   },
+   "ts": "2026-09-12T18:20:53.343127+00:00"
+  },
+  {
+   "id": 19,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        url = httpbin('digest-auth', 'auth', 'user', 'pass')"
+   },
+   "ts": "2026-09-12T18:20:53.344459+00:00"
+  },
+  {
+   "id": 20,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    "
+   },
+   "ts": "2026-09-12T18:20:53.345467+00:00"
+  },
+  {
+   "id": 21,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        r = requests.get(url, auth=auth)"
+   },
+   "ts": "2026-09-12T18:20:53.346270+00:00"
+  },
+  {
+   "id": 22,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ">       assert '\"auth\"' in r.request.headers['Authorization']"
+   },
+   "ts": "2026-09-12T18:20:53.347277+00:00"
+  },
+  {
+   "id": 23,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "E       assert '\"auth\"' in 'Digest username=\"user\", realm=\"me@kennethreitz.com\", nonce=\"43547bd13f66967b85234abbee96f20c\", uri=\"/digest-auth/auth...ca1583b\", opaque=\"71cd9cb703c1da8f3e1c37cbd56ca6d4\", algorithm=\"MD5\", qop=auth, nc=00000001, cnonce=\"92230fdf9a410f6b\"'"
+   },
+   "ts": "2026-09-12T18:20:53.347950+00:00"
+  },
+  {
+   "id": 24,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-12T18:20:53.348627+00:00"
+  },
+  {
+   "id": 25,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "test_requests.py:329: AssertionError"
+   },
+   "ts": "2026-09-12T18:20:53.349222+00:00"
+  },
+  {
+   "id": 26,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "=============================== warnings summary ==============================="
+   },
+   "ts": "2026-09-12T18:20:53.349812+00:00"
+  },
+  {
+   "id": 27,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "requests/packages/urllib3/_collections.py:7"
+   },
+   "ts": "2026-09-12T18:20:53.350360+00:00"
+  },
+  {
+   "id": 28,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "  /testbed/requests/packages/urllib3/_collections.py:7: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working"
+   },
+   "ts": "2026-09-12T18:20:53.351050+00:00"
+  },
+  {
+   "id": 29,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    from collections import MutableMapping"
+   },
+   "ts": "2026-09-12T18:20:53.351736+00:00"
+  },
+  {
+   "id": 30,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-12T18:20:53.352427+00:00"
+  },
+  {
+   "id": 31,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "requests/sessions.py:12"
+   },
+   "ts": "2026-09-12T18:20:53.353034+00:00"
+  },
+  {
+   "id": 32,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "  /testbed/requests/sessions.py:12: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working"
+   },
+   "ts": "2026-09-12T18:20:53.353560+00:00"
+  },
+  {
+   "id": 33,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    from collections import Mapping"
+   },
+   "ts": "2026-09-12T18:20:53.354183+00:00"
+  },
+  {
+   "id": 34,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-12T18:20:53.354681+00:00"
+  },
+  {
+   "id": 35,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "test_requests.py::RequestsTestCase::test_DIGESTAUTH_QUOTES_QOP_VALUE"
+   },
+   "ts": "2026-09-12T18:20:53.355151+00:00"
+  },
+  {
+   "id": 36,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "  /testbed/requests/models.py:156: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working"
+   },
+   "ts": "2026-09-12T18:20:53.355640+00:00"
+  },
+  {
+   "id": 37,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    if isinstance(hook, collections.Callable):"
+   },
+   "ts": "2026-09-12T18:20:53.356155+00:00"
+  },
+  {
+   "id": 38,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-12T18:20:53.356668+00:00"
+  },
+  {
+   "id": 39,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html"
+   },
+   "ts": "2026-09-12T18:20:53.357165+00:00"
+  },
+  {
+   "id": 40,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "==================================== PASSES ===================================="
+   },
+   "ts": "2026-09-12T18:20:53.357635+00:00"
+  },
+  {
+   "id": 41,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "-------------------- generated xml file: /archon-junit.xml ---------------------"
+   },
+   "ts": "2026-09-12T18:20:53.358107+00:00"
+  },
+  {
+   "id": 42,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "=========================== short test summary info ============================"
+   },
+   "ts": "2026-09-12T18:20:53.358574+00:00"
+  },
+  {
+   "id": 43,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_ALTERNATIVE"
+   },
+   "ts": "2026-09-12T18:20:53.359040+00:00"
+  },
+  {
+   "id": 44,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_cookie_sent_on_redirect"
+   },
+   "ts": "2026-09-12T18:20:53.359492+00:00"
+  },
+  {
+   "id": 45,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_custom_content_type"
+   },
+   "ts": "2026-09-12T18:20:53.359943+00:00"
+  },
+  {
+   "id": 46,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_params_are_merged_case_sensitive"
+   },
+   "ts": "2026-09-12T18:20:53.360396+00:00"
+  },
+  {
+   "id": 47,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_user_agent_transfers"
+   },
+   "ts": "2026-09-12T18:20:53.360827+00:00"
+  },
+  {
+   "id": 48,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_BASICAUTH_TUPLE_HTTP_200_OK_GET"
+   },
+   "ts": "2026-09-12T18:20:53.361277+00:00"
+  },
+  {
+   "id": 49,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_DIGESTAUTH_WRONG_HTTP_401_GET"
+   },
+   "ts": "2026-09-12T18:20:53.361732+00:00"
+  },
+  {
+   "id": 50,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_DIGEST_AUTH_RETURNS_COOKIE"
+   },
+   "ts": "2026-09-12T18:20:53.362248+00:00"
+  },
+  {
+   "id": 51,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_DIGEST_AUTH_SETS_SESSION_COOKIES"
+   },
+   "ts": "2026-09-12T18:20:53.362734+00:00"
+  },
+  {
+   "id": 52,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_DIGEST_STREAM"
+   },
+   "ts": "2026-09-12T18:20:53.363321+00:00"
+  },
+  {
+   "id": 53,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_WITH_MIXED_PARAMS"
+   },
+   "ts": "2026-09-12T18:20:53.363810+00:00"
+  },
+  {
+   "id": 54,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_WITH_PARAMS"
+   },
+   "ts": "2026-09-12T18:20:53.364254+00:00"
+  },
+  {
+   "id": 55,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_HTTP_200_OK_HEAD"
+   },
+   "ts": "2026-09-12T18:20:53.364712+00:00"
+  },
+  {
+   "id": 56,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_HTTP_200_OK_PUT"
+   },
+   "ts": "2026-09-12T18:20:53.365139+00:00"
+  },
+  {
+   "id": 57,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_HTTP_302_ALLOW_REDIRECT_GET"
+   },
+   "ts": "2026-09-12T18:20:53.365540+00:00"
+  },
+  {
+   "id": 58,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_POSTBIN_GET_POST_FILES_WITH_DATA"
+   },
+   "ts": "2026-09-12T18:20:53.365963+00:00"
+  },
+  {
+   "id": 59,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_autoset_header_values_are_native"
+   },
+   "ts": "2026-09-12T18:20:53.366397+00:00"
+  },
+  {
+   "id": 60,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_basic_building"
+   },
+   "ts": "2026-09-12T18:20:53.366788+00:00"
+  },
+  {
+   "id": 61,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_basicauth_with_netrc"
+   },
+   "ts": "2026-09-12T18:20:53.367194+00:00"
+  },
+  {
+   "id": 62,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_can_send_nonstring_objects_with_files"
+   },
+   "ts": "2026-09-12T18:20:53.367599+00:00"
+  },
+  {
+   "id": 63,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_cannot_send_unprepared_requests"
+   },
+   "ts": "2026-09-12T18:20:53.367997+00:00"
+  },
+  {
+   "id": 64,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_cookie_parameters"
+   },
+   "ts": "2026-09-12T18:20:53.368392+00:00"
+  },
+  {
+   "id": 65,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_cookie_persists_via_api"
+   },
+   "ts": "2026-09-12T18:20:53.368792+00:00"
+  },
+  {
+   "id": 66,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_cookie_quote_wrapped"
+   },
+   "ts": "2026-09-12T18:20:53.369198+00:00"
+  },
+  {
+   "id": 67,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_decompress_gzip"
+   },
+   "ts": "2026-09-12T18:20:53.369608+00:00"
+  },
+  {
+   "id": 68,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_different_encodings_dont_break_post"
+   },
+   "ts": "2026-09-12T18:20:53.370018+00:00"
+  },
+  {
+   "id": 69,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_entry_points"
+   },
+   "ts": "2026-09-12T18:20:53.370423+00:00"
+  },
+  {
+   "id": 70,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_fixes_1329"
+   },
+   "ts": "2026-09-12T18:20:53.370838+00:00"
+  },
+  {
+   "id": 71,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_generic_cookiejar_works"
+   },
+   "ts": "2026-09-12T18:20:53.371329+00:00"
+  },
+  {
+   "id": 72,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_get_auth_from_url"
+   },
+   "ts": "2026-09-12T18:20:53.371776+00:00"
+  },
+  {
+   "id": 73,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_header_keys_are_native"
+   },
+   "ts": "2026-09-12T18:20:53.372137+00:00"
+  },
+  {
+   "id": 74,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_header_remove_is_case_insensitive"
+   },
+   "ts": "2026-09-12T18:20:53.372575+00:00"
+  },
+  {
+   "id": 75,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_hook_receives_request_arguments"
+   },
+   "ts": "2026-09-12T18:20:53.372971+00:00"
+  },
+  {
+   "id": 76,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_http_error"
+   },
+   "ts": "2026-09-12T18:20:53.373412+00:00"
+  },
+  {
+   "id": 77,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_invalid_url"
+   },
+   "ts": "2026-09-12T18:20:53.373993+00:00"
+  },
+  {
+   "id": 78,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_links"
+   },
+   "ts": "2026-09-12T18:20:53.374406+00:00"
+  },
+  {
+   "id": 79,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_long_authinfo_in_url"
+   },
+   "ts": "2026-09-12T18:20:53.374808+00:00"
+  },
+  {
+   "id": 80,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_mixed_case_scheme_acceptable"
+   },
+   "ts": "2026-09-12T18:20:53.375212+00:00"
+  },
+  {
+   "id": 81,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_no_content_length"
+   },
+   "ts": "2026-09-12T18:20:53.375591+00:00"
+  },
+  {
+   "id": 82,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_oddball_schemes_dont_check_URLs"
+   },
+   "ts": "2026-09-12T18:20:53.376002+00:00"
+  },
+  {
+   "id": 83,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_params_are_added_before_fragment"
+   },
+   "ts": "2026-09-12T18:20:53.376391+00:00"
+  },
+  {
+   "id": 84,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_path_is_not_double_encoded"
+   },
+   "ts": "2026-09-12T18:20:53.376789+00:00"
+  },
+  {
+   "id": 85,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_prepared_request_hook"
+   },
+   "ts": "2026-09-12T18:20:53.377179+00:00"
+  },
+  {
+   "id": 86,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_request_and_response_are_pickleable"
+   },
+   "ts": "2026-09-12T18:20:53.377557+00:00"
+  },
+  {
+   "id": 87,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_request_cookie_overrides_session_cookie"
+   },
+   "ts": "2026-09-12T18:20:53.377936+00:00"
+  },
+  {
+   "id": 88,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_request_ok_set"
+   },
+   "ts": "2026-09-12T18:20:53.378307+00:00"
+  },
+  {
+   "id": 89,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_requests_in_history_are_not_overridden"
+   },
+   "ts": "2026-09-12T18:20:53.378653+00:00"
+  },
+  {
+   "id": 90,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_response_is_iterable"
+   },
+   "ts": "2026-09-12T18:20:53.379106+00:00"
+  },
+  {
+   "id": 91,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_session_pickling"
+   },
+   "ts": "2026-09-12T18:20:53.379564+00:00"
+  },
+  {
+   "id": 92,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_set_cookie_on_301"
+   },
+   "ts": "2026-09-12T18:20:53.379963+00:00"
+  },
+  {
+   "id": 93,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_status_raising"
+   },
+   "ts": "2026-09-12T18:20:53.380329+00:00"
+  },
+  {
+   "id": 94,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_time_elapsed_blank"
+   },
+   "ts": "2026-09-12T18:20:53.380697+00:00"
+  },
+  {
+   "id": 95,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_transport_adapter_ordering"
+   },
+   "ts": "2026-09-12T18:20:53.381093+00:00"
+  },
+  {
+   "id": 96,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_unicode_get"
+   },
+   "ts": "2026-09-12T18:20:53.381476+00:00"
+  },
+  {
+   "id": 97,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_unicode_header_name"
+   },
+   "ts": "2026-09-12T18:20:53.381833+00:00"
+  },
+  {
+   "id": 98,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_unicode_multipart_post"
+   },
+   "ts": "2026-09-12T18:20:53.382213+00:00"
+  },
+  {
+   "id": 99,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_unicode_multipart_post_fieldnames"
+   },
+   "ts": "2026-09-12T18:20:53.382573+00:00"
+  },
+  {
+   "id": 100,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_uppercase_scheme_redirect"
+   },
+   "ts": "2026-09-12T18:20:53.382963+00:00"
+  },
+  {
+   "id": 101,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_urlencoded_get_query_multivalued_param"
+   },
+   "ts": "2026-09-12T18:20:53.383322+00:00"
+  },
+  {
+   "id": 102,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestContentEncodingDetection::test_html4_pragma"
+   },
+   "ts": "2026-09-12T18:20:53.383676+00:00"
+  },
+  {
+   "id": 103,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestContentEncodingDetection::test_html_charset"
+   },
+   "ts": "2026-09-12T18:20:53.384027+00:00"
+  },
+  {
+   "id": 104,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestContentEncodingDetection::test_none"
+   },
+   "ts": "2026-09-12T18:20:53.384400+00:00"
+  },
+  {
+   "id": 105,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestContentEncodingDetection::test_precedence"
+   },
+   "ts": "2026-09-12T18:20:53.384752+00:00"
+  },
+  {
+   "id": 106,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestContentEncodingDetection::test_xhtml_pragma"
+   },
+   "ts": "2026-09-12T18:20:53.385082+00:00"
+  },
+  {
+   "id": 107,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestContentEncodingDetection::test_xml"
+   },
+   "ts": "2026-09-12T18:20:53.385431+00:00"
+  },
+  {
+   "id": 108,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_contains"
+   },
+   "ts": "2026-09-12T18:20:53.385784+00:00"
+  },
+  {
+   "id": 109,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_delitem"
+   },
+   "ts": "2026-09-12T18:20:53.386147+00:00"
+  },
+  {
+   "id": 110,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_docstring_example"
+   },
+   "ts": "2026-09-12T18:20:53.386483+00:00"
+  },
+  {
+   "id": 111,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_equality"
+   },
+   "ts": "2026-09-12T18:20:53.386826+00:00"
+  },
+  {
+   "id": 112,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_fixes_649"
+   },
+   "ts": "2026-09-12T18:20:53.387170+00:00"
+  },
+  {
+   "id": 113,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_get"
+   },
+   "ts": "2026-09-12T18:20:53.387533+00:00"
+  },
+  {
+   "id": 114,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_getitem"
+   },
+   "ts": "2026-09-12T18:20:53.387854+00:00"
+  },
+  {
+   "id": 115,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_iter"
+   },
+   "ts": "2026-09-12T18:20:53.388150+00:00"
+  },
+  {
+   "id": 116,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_iterable_init"
+   },
+   "ts": "2026-09-12T18:20:53.388466+00:00"
+  },
+  {
+   "id": 117,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_kwargs_init"
+   },
+   "ts": "2026-09-12T18:20:53.388784+00:00"
+  },
+  {
+   "id": 118,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_len"
+   },
+   "ts": "2026-09-12T18:20:53.389086+00:00"
+  },
+  {
+   "id": 119,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_lower_items"
+   },
+   "ts": "2026-09-12T18:20:53.389398+00:00"
+  },
+  {
+   "id": 120,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_mapping_init"
+   },
+   "ts": "2026-09-12T18:20:53.389726+00:00"
+  },
+  {
+   "id": 121,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_preserve_key_case"
+   },
+   "ts": "2026-09-12T18:20:53.390045+00:00"
+  },
+  {
+   "id": 122,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_preserve_last_key_case"
+   },
+   "ts": "2026-09-12T18:20:53.390362+00:00"
+  },
+  {
+   "id": 123,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_setdefault"
+   },
+   "ts": "2026-09-12T18:20:53.390659+00:00"
+  },
+  {
+   "id": 124,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_update"
+   },
+   "ts": "2026-09-12T18:20:53.390957+00:00"
+  },
+  {
+   "id": 125,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_update_retains_unchanged"
+   },
+   "ts": "2026-09-12T18:20:53.391274+00:00"
+  },
+  {
+   "id": 126,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::UtilsTestCase::test_super_len_io_streams"
+   },
+   "ts": "2026-09-12T18:20:53.391573+00:00"
+  },
+  {
+   "id": 127,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "FAILED test_requests.py::RequestsTestCase::test_DIGESTAUTH_QUOTES_QOP_VALUE"
+   },
+   "ts": "2026-09-12T18:20:53.391875+00:00"
+  },
+  {
+   "id": 128,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "1 failed, 84 passed, 3 warnings in 21.89s"
+   },
+   "ts": "2026-09-12T18:20:53.392167+00:00"
+  },
+  {
+   "id": 129,
+   "kind": "tests",
+   "payload": {
+    "attempt": "baseline",
+    "exit_code": 1,
+    "passed": 84,
+    "failed": 1,
+    "total": 85,
+    "fail_to_pass": 0,
+    "pass_to_pass_broken": 0,
+    "summary": "1 failed, 84 passed"
+   },
+   "ts": "2026-09-12T18:20:53.943625+00:00"
+  },
+  {
+   "id": 130,
+   "kind": "status",
+   "payload": {
+    "status": "GROUNDING",
+    "iteration": 0
+   },
+   "ts": "2026-09-12T18:20:53.951323+00:00"
+  },
+  {
+   "id": 131,
+   "kind": "thought",
+   "payload": {
+    "stage": "GROUNDING",
+    "model": "archon",
+    "text": "Searching current documentation and issue threads for the failure signature."
+   },
+   "ts": "2026-09-12T18:20:53.952970+00:00"
+  },
+  {
+   "id": 132,
+   "kind": "usage",
+   "payload": {
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "task": "research_queries",
+    "prompt_tokens": 2586,
+    "completion_tokens": 84,
+    "cost_usd": 0.000851
+   },
+   "ts": "2026-09-12T18:20:57.291587+00:00"
+  },
+  {
+   "id": 133,
+   "kind": "usage",
+   "payload": {
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "task": "research_queries",
+    "prompt_tokens": 2697,
+    "completion_tokens": 84,
+    "cost_usd": 0.000885
+   },
+   "ts": "2026-09-12T18:20:58.342111+00:00"
+  },
+  {
+   "id": 134,
+   "kind": "thought",
+   "payload": {
+    "stage": "GROUNDING",
+    "model": "archon",
+    "text": "Continuing without web grounding: query synthesis failed: invalid JSON twice: model output is not valid JSON: Expecting value: line 3 column 5 (char 21); model output is not valid JSON: Expecting value: line 3 column 5 (char 21)"
+   },
+   "ts": "2026-09-12T18:20:58.343084+00:00"
+  },
+  {
+   "id": 135,
+   "kind": "status",
+   "payload": {
+    "status": "REASONING",
+    "iteration": 1
+   },
+   "ts": "2026-09-12T18:21:00.714977+00:00"
+  },
+  {
+   "id": 136,
+   "kind": "thought",
+   "payload": {
+    "stage": "REASONING",
+    "model": "archon",
+    "text": "Asking Nemotron 3 Ultra for a root cause and candidate patches. Iteration 1 of 5."
+   },
+   "ts": "2026-09-12T18:21:00.716173+00:00"
+  },
+  {
+   "id": 137,
+   "kind": "usage",
+   "payload": {
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "task": "diagnose_and_patch",
+    "prompt_tokens": 12569,
+    "completion_tokens": 396,
+    "cost_usd": 0.013757
+   },
+   "ts": "2026-09-12T18:21:03.922346+00:00"
+  },
+  {
+   "id": 138,
+   "kind": "usage",
+   "payload": {
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "task": "diagnose_and_patch",
+    "prompt_tokens": 14213,
+    "completion_tokens": 2202,
+    "cost_usd": 0.020819
+   },
+   "ts": "2026-09-12T18:21:12.117223+00:00"
+  },
+  {
+   "id": 139,
+   "kind": "thought",
+   "payload": {
+    "stage": "REASONING",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "text": "Root cause: The test `test_DIGESTAUTH_QUOTES_QOP_VALUE` fails because the Digest Authorization header outputs `qop=auth` without quotes, but RFC 2617 requires the qop value to be a quoted string (e.g., `qop=\"auth\"`). In `requests/auth.py`, the `build_digest_header` method constructs the header with `qop=auth` (unquoted) instead of `qop=\"auth\"`."
+   },
+   "ts": "2026-09-12T18:21:12.121960+00:00"
+  },
+  {
+   "id": 140,
+   "kind": "status",
+   "payload": {
+    "status": "TESTING",
+    "iteration": 1
+   },
+   "ts": "2026-09-12T18:21:12.124996+00:00"
+  },
+  {
+   "id": 141,
+   "kind": "thought",
+   "payload": {
+    "stage": "TESTING",
+    "model": "archon",
+    "text": "Applying each candidate on its own sandbox fork and re-running the tests. 1 candidate(s)."
+   },
+   "ts": "2026-09-12T18:21:12.125982+00:00"
+  },
+  {
+   "id": 142,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "cmd",
+    "line": "$ git add -- requests/auth.py && git diff --cached --no-color -- requests/auth.py"
+   },
+   "ts": "2026-09-12T18:21:12.915563+00:00"
+  },
+  {
+   "id": 143,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "diff --git a/requests/auth.py b/requests/auth.py"
+   },
+   "ts": "2026-09-12T18:21:14.759008+00:00"
+  },
+  {
+   "id": 144,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "index a3de123..48416e5 100644"
+   },
+   "ts": "2026-09-12T18:21:14.761006+00:00"
+  },
+  {
+   "id": 145,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "--- a/requests/auth.py"
+   },
+   "ts": "2026-09-12T18:21:14.762579+00:00"
+  },
+  {
+   "id": 146,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "+++ b/requests/auth.py"
+   },
+   "ts": "2026-09-12T18:21:14.764553+00:00"
+  },
+  {
+   "id": 147,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "@@ -144,7 +144,7 @@ class HTTPDigestAuth(AuthBase):"
+   },
+   "ts": "2026-09-12T18:21:14.766531+00:00"
+  },
+  {
+   "id": 148,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "         if entdig:"
+   },
+   "ts": "2026-09-12T18:21:14.768153+00:00"
+  },
+  {
+   "id": 149,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "             base += ', digest=\"%s\"' % entdig"
+   },
+   "ts": "2026-09-12T18:21:14.769600+00:00"
+  },
+  {
+   "id": 150,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "         if qop:"
+   },
+   "ts": "2026-09-12T18:21:14.770969+00:00"
+  },
+  {
+   "id": 151,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "-            base += ', qop=auth, nc=%s, cnonce=\"%s\"' % (ncvalue, cnonce)"
+   },
+   "ts": "2026-09-12T18:21:14.772426+00:00"
+  },
+  {
+   "id": 152,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "+            base += ', qop=\"auth\", nc=%s, cnonce=\"%s\"' % (ncvalue, cnonce)"
+   },
+   "ts": "2026-09-12T18:21:14.773459+00:00"
+  },
+  {
+   "id": 153,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": " "
+   },
+   "ts": "2026-09-12T18:21:14.774381+00:00"
+  },
+  {
+   "id": 154,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "         return 'Digest %s' % (base)"
+   },
+   "ts": "2026-09-12T18:21:14.775199+00:00"
+  },
+  {
+   "id": 155,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": " "
+   },
+   "ts": "2026-09-12T18:21:14.775832+00:00"
+  },
+  {
+   "id": 156,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "cmd",
+    "line": "$ source /opt/miniconda3/bin/activate && conda activate testbed && pytest -q 'test_requests.py::RequestsTestCase::test_DIGESTAUTH_QUOTES_QOP_VALUE' 'test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_ALTERNATIVE' 'test_requests.py::RequestsTestCase::test_cookie_sent_on_redirect' 'test_requests.py::RequestsTestCase::test_custom_content_type' 'test_requests.py::RequestsTestCase::test_params_are_merged_case_sensitive' 'test_requests.py::RequestsTestCase::test_user_agent_transfers' 'test_requests.py::RequestsTestCase::test_BASICAUTH_TUPLE_HTTP_200_OK_GET' 'test_requests.py::RequestsTestCase::test_DIGESTAUTH_WRONG_HTTP_401_GET' 'test_requests.py::RequestsTestCase::test_DIGEST_AUTH_RETURNS_COOKIE' 'test_requests.py::RequestsTestCase::test_DIGEST_AUTH_SETS_SESSION_COOKIES' 'test_requests.py::RequestsTestCase::test_DIGEST_STREAM' 'test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_WITH_MIXED_PARAMS' 'test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_WITH_PARAMS' 'test_requests.py::RequestsTestCase::test_HTTP_200_OK_HEAD' 'test_requests.py::RequestsTestCase::test_HTTP_200_OK_PUT' 'test_requests.py::RequestsTestCase::test_HTTP_302_ALLOW_REDIRECT_GET' 'test_requests.py::RequestsTestCase::test_POSTBIN_GET_POST_FILES_WITH_DATA' 'test_requests.py::RequestsTestCase::test_autoset_header_values_are_native' 'test_requests.py::RequestsTestCase::test_basic_building' 'test_requests.py::RequestsTestCase::test_basicauth_with_netrc' 'test_requests.py::RequestsTestCase::test_can_send_nonstring_objects_with_files' 'test_requests.py::RequestsTestCase::test_cannot_send_unprepared_requests' 'test_requests.py::RequestsTestCase::test_cookie_parameters' 'test_requests.py::RequestsTestCase::test_cookie_persists_via_api' 'test_requests.py::RequestsTestCase::test_cookie_quote_wrapped' 'test_requests.py::RequestsTestCase::test_decompress_gzip' 'test_requests.py::RequestsTestCase::test_different_encodings_dont_break_post' 'test_requests.py::RequestsTestCase::test_entry_points' 'test_"
+   },
+   "ts": "2026-09-12T18:21:14.777414+00:00"
+  },
+  {
+   "id": 157,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "........................................................................ [ 84%]"
+   },
+   "ts": "2026-09-12T18:21:40.658446+00:00"
+  },
+  {
+   "id": 158,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": ".............                                                            [100%]"
+   },
+   "ts": "2026-09-12T18:21:40.660523+00:00"
+  },
+  {
+   "id": 159,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "=============================== warnings summary ==============================="
+   },
+   "ts": "2026-09-12T18:21:40.661603+00:00"
+  },
+  {
+   "id": 160,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "requests/packages/urllib3/_collections.py:7"
+   },
+   "ts": "2026-09-12T18:21:40.662600+00:00"
+  },
+  {
+   "id": 161,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "  /testbed/requests/packages/urllib3/_collections.py:7: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working"
+   },
+   "ts": "2026-09-12T18:21:40.663579+00:00"
+  },
+  {
+   "id": 162,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "    from collections import MutableMapping"
+   },
+   "ts": "2026-09-12T18:21:40.664986+00:00"
+  },
+  {
+   "id": 163,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-12T18:21:40.665849+00:00"
+  },
+  {
+   "id": 164,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "requests/sessions.py:12"
+   },
+   "ts": "2026-09-12T18:21:40.666559+00:00"
+  },
+  {
+   "id": 165,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "  /testbed/requests/sessions.py:12: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working"
+   },
+   "ts": "2026-09-12T18:21:40.667320+00:00"
+  },
+  {
+   "id": 166,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "    from collections import Mapping"
+   },
+   "ts": "2026-09-12T18:21:40.668056+00:00"
+  },
+  {
+   "id": 167,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-12T18:21:40.668903+00:00"
+  },
+  {
+   "id": 168,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "test_requests.py::RequestsTestCase::test_DIGESTAUTH_QUOTES_QOP_VALUE"
+   },
+   "ts": "2026-09-12T18:21:40.669744+00:00"
+  },
+  {
+   "id": 169,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "  /testbed/requests/models.py:156: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working"
+   },
+   "ts": "2026-09-12T18:21:40.670554+00:00"
+  },
+  {
+   "id": 170,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "    if isinstance(hook, collections.Callable):"
+   },
+   "ts": "2026-09-12T18:21:40.671419+00:00"
+  },
+  {
+   "id": 171,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-12T18:21:40.672571+00:00"
+  },
+  {
+   "id": 172,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html"
+   },
+   "ts": "2026-09-12T18:21:40.673872+00:00"
+  },
+  {
+   "id": 173,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "==================================== PASSES ===================================="
+   },
+   "ts": "2026-09-12T18:21:40.674868+00:00"
+  },
+  {
+   "id": 174,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "-------------------- generated xml file: /archon-junit.xml ---------------------"
+   },
+   "ts": "2026-09-12T18:21:40.675699+00:00"
+  },
+  {
+   "id": 175,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "=========================== short test summary info ============================"
+   },
+   "ts": "2026-09-12T18:21:40.676503+00:00"
+  },
+  {
+   "id": 176,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_DIGESTAUTH_QUOTES_QOP_VALUE"
+   },
+   "ts": "2026-09-12T18:21:40.677131+00:00"
+  },
+  {
+   "id": 177,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_ALTERNATIVE"
+   },
+   "ts": "2026-09-12T18:21:40.677710+00:00"
+  },
+  {
+   "id": 178,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_cookie_sent_on_redirect"
+   },
+   "ts": "2026-09-12T18:21:40.678305+00:00"
+  },
+  {
+   "id": 179,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_custom_content_type"
+   },
+   "ts": "2026-09-12T18:21:40.678882+00:00"
+  },
+  {
+   "id": 180,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_params_are_merged_case_sensitive"
+   },
+   "ts": "2026-09-12T18:21:40.679452+00:00"
+  },
+  {
+   "id": 181,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_user_agent_transfers"
+   },
+   "ts": "2026-09-12T18:21:40.680053+00:00"
+  },
+  {
+   "id": 182,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_BASICAUTH_TUPLE_HTTP_200_OK_GET"
+   },
+   "ts": "2026-09-12T18:21:40.681128+00:00"
+  },
+  {
+   "id": 183,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_DIGESTAUTH_WRONG_HTTP_401_GET"
+   },
+   "ts": "2026-09-12T18:21:40.681701+00:00"
+  },
+  {
+   "id": 184,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_DIGEST_AUTH_RETURNS_COOKIE"
+   },
+   "ts": "2026-09-12T18:21:40.682272+00:00"
+  },
+  {
+   "id": 185,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_DIGEST_AUTH_SETS_SESSION_COOKIES"
+   },
+   "ts": "2026-09-12T18:21:40.682811+00:00"
+  },
+  {
+   "id": 186,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_DIGEST_STREAM"
+   },
+   "ts": "2026-09-12T18:21:40.683280+00:00"
+  },
+  {
+   "id": 187,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_WITH_MIXED_PARAMS"
+   },
+   "ts": "2026-09-12T18:21:40.683776+00:00"
+  },
+  {
+   "id": 188,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_HTTP_200_OK_GET_WITH_PARAMS"
+   },
+   "ts": "2026-09-12T18:21:40.684323+00:00"
+  },
+  {
+   "id": 189,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_HTTP_200_OK_HEAD"
+   },
+   "ts": "2026-09-12T18:21:40.684770+00:00"
+  },
+  {
+   "id": 190,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_HTTP_200_OK_PUT"
+   },
+   "ts": "2026-09-12T18:21:40.685204+00:00"
+  },
+  {
+   "id": 191,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_HTTP_302_ALLOW_REDIRECT_GET"
+   },
+   "ts": "2026-09-12T18:21:40.685831+00:00"
+  },
+  {
+   "id": 192,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_POSTBIN_GET_POST_FILES_WITH_DATA"
+   },
+   "ts": "2026-09-12T18:21:40.686313+00:00"
+  },
+  {
+   "id": 193,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_autoset_header_values_are_native"
+   },
+   "ts": "2026-09-12T18:21:40.686793+00:00"
+  },
+  {
+   "id": 194,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_basic_building"
+   },
+   "ts": "2026-09-12T18:21:40.687354+00:00"
+  },
+  {
+   "id": 195,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_basicauth_with_netrc"
+   },
+   "ts": "2026-09-12T18:21:40.687882+00:00"
+  },
+  {
+   "id": 196,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_can_send_nonstring_objects_with_files"
+   },
+   "ts": "2026-09-12T18:21:40.688425+00:00"
+  },
+  {
+   "id": 197,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_cannot_send_unprepared_requests"
+   },
+   "ts": "2026-09-12T18:21:40.688957+00:00"
+  },
+  {
+   "id": 198,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_cookie_parameters"
+   },
+   "ts": "2026-09-12T18:21:40.689431+00:00"
+  },
+  {
+   "id": 199,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_cookie_persists_via_api"
+   },
+   "ts": "2026-09-12T18:21:40.689915+00:00"
+  },
+  {
+   "id": 200,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_cookie_quote_wrapped"
+   },
+   "ts": "2026-09-12T18:21:40.690343+00:00"
+  },
+  {
+   "id": 201,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_decompress_gzip"
+   },
+   "ts": "2026-09-12T18:21:40.690779+00:00"
+  },
+  {
+   "id": 202,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_different_encodings_dont_break_post"
+   },
+   "ts": "2026-09-12T18:21:40.691195+00:00"
+  },
+  {
+   "id": 203,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_entry_points"
+   },
+   "ts": "2026-09-12T18:21:40.691615+00:00"
+  },
+  {
+   "id": 204,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_fixes_1329"
+   },
+   "ts": "2026-09-12T18:21:40.692049+00:00"
+  },
+  {
+   "id": 205,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_generic_cookiejar_works"
+   },
+   "ts": "2026-09-12T18:21:40.692478+00:00"
+  },
+  {
+   "id": 206,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_get_auth_from_url"
+   },
+   "ts": "2026-09-12T18:21:40.692913+00:00"
+  },
+  {
+   "id": 207,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_header_keys_are_native"
+   },
+   "ts": "2026-09-12T18:21:40.693356+00:00"
+  },
+  {
+   "id": 208,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_header_remove_is_case_insensitive"
+   },
+   "ts": "2026-09-12T18:21:40.693846+00:00"
+  },
+  {
+   "id": 209,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_hook_receives_request_arguments"
+   },
+   "ts": "2026-09-12T18:21:40.694345+00:00"
+  },
+  {
+   "id": 210,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_http_error"
+   },
+   "ts": "2026-09-12T18:21:40.694940+00:00"
+  },
+  {
+   "id": 211,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_invalid_url"
+   },
+   "ts": "2026-09-12T18:21:40.695373+00:00"
+  },
+  {
+   "id": 212,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_links"
+   },
+   "ts": "2026-09-12T18:21:40.695796+00:00"
+  },
+  {
+   "id": 213,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_long_authinfo_in_url"
+   },
+   "ts": "2026-09-12T18:21:40.696180+00:00"
+  },
+  {
+   "id": 214,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_mixed_case_scheme_acceptable"
+   },
+   "ts": "2026-09-12T18:21:40.696550+00:00"
+  },
+  {
+   "id": 215,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_no_content_length"
+   },
+   "ts": "2026-09-12T18:21:40.697010+00:00"
+  },
+  {
+   "id": 216,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_oddball_schemes_dont_check_URLs"
+   },
+   "ts": "2026-09-12T18:21:40.697434+00:00"
+  },
+  {
+   "id": 217,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_params_are_added_before_fragment"
+   },
+   "ts": "2026-09-12T18:21:40.698002+00:00"
+  },
+  {
+   "id": 218,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_path_is_not_double_encoded"
+   },
+   "ts": "2026-09-12T18:21:40.698582+00:00"
+  },
+  {
+   "id": 219,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_prepared_request_hook"
+   },
+   "ts": "2026-09-12T18:21:40.699069+00:00"
+  },
+  {
+   "id": 220,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_request_and_response_are_pickleable"
+   },
+   "ts": "2026-09-12T18:21:40.699498+00:00"
+  },
+  {
+   "id": 221,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_request_cookie_overrides_session_cookie"
+   },
+   "ts": "2026-09-12T18:21:40.699878+00:00"
+  },
+  {
+   "id": 222,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_request_ok_set"
+   },
+   "ts": "2026-09-12T18:21:40.700271+00:00"
+  },
+  {
+   "id": 223,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_requests_in_history_are_not_overridden"
+   },
+   "ts": "2026-09-12T18:21:40.700628+00:00"
+  },
+  {
+   "id": 224,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_response_is_iterable"
+   },
+   "ts": "2026-09-12T18:21:40.700974+00:00"
+  },
+  {
+   "id": 225,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_session_pickling"
+   },
+   "ts": "2026-09-12T18:21:40.701339+00:00"
+  },
+  {
+   "id": 226,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_set_cookie_on_301"
+   },
+   "ts": "2026-09-12T18:21:40.701700+00:00"
+  },
+  {
+   "id": 227,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_status_raising"
+   },
+   "ts": "2026-09-12T18:21:40.702031+00:00"
+  },
+  {
+   "id": 228,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_time_elapsed_blank"
+   },
+   "ts": "2026-09-12T18:21:40.702376+00:00"
+  },
+  {
+   "id": 229,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_transport_adapter_ordering"
+   },
+   "ts": "2026-09-12T18:21:40.702703+00:00"
+  },
+  {
+   "id": 230,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_unicode_get"
+   },
+   "ts": "2026-09-12T18:21:40.703113+00:00"
+  },
+  {
+   "id": 231,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_unicode_header_name"
+   },
+   "ts": "2026-09-12T18:21:40.703466+00:00"
+  },
+  {
+   "id": 232,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_unicode_multipart_post"
+   },
+   "ts": "2026-09-12T18:21:40.703826+00:00"
+  },
+  {
+   "id": 233,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_unicode_multipart_post_fieldnames"
+   },
+   "ts": "2026-09-12T18:21:40.704297+00:00"
+  },
+  {
+   "id": 234,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_uppercase_scheme_redirect"
+   },
+   "ts": "2026-09-12T18:21:40.704651+00:00"
+  },
+  {
+   "id": 235,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_urlencoded_get_query_multivalued_param"
+   },
+   "ts": "2026-09-12T18:21:40.705107+00:00"
+  },
+  {
+   "id": 236,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestContentEncodingDetection::test_html4_pragma"
+   },
+   "ts": "2026-09-12T18:21:40.705491+00:00"
+  },
+  {
+   "id": 237,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestContentEncodingDetection::test_html_charset"
+   },
+   "ts": "2026-09-12T18:21:40.705882+00:00"
+  },
+  {
+   "id": 238,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestContentEncodingDetection::test_none"
+   },
+   "ts": "2026-09-12T18:21:40.706262+00:00"
+  },
+  {
+   "id": 239,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestContentEncodingDetection::test_precedence"
+   },
+   "ts": "2026-09-12T18:21:40.706595+00:00"
+  },
+  {
+   "id": 240,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestContentEncodingDetection::test_xhtml_pragma"
+   },
+   "ts": "2026-09-12T18:21:40.706927+00:00"
+  },
+  {
+   "id": 241,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestContentEncodingDetection::test_xml"
+   },
+   "ts": "2026-09-12T18:21:40.707270+00:00"
+  },
+  {
+   "id": 242,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_contains"
+   },
+   "ts": "2026-09-12T18:21:40.707595+00:00"
+  },
+  {
+   "id": 243,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_delitem"
+   },
+   "ts": "2026-09-12T18:21:40.707925+00:00"
+  },
+  {
+   "id": 244,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_docstring_example"
+   },
+   "ts": "2026-09-12T18:21:40.708244+00:00"
+  },
+  {
+   "id": 245,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_equality"
+   },
+   "ts": "2026-09-12T18:21:40.708563+00:00"
+  },
+  {
+   "id": 246,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_fixes_649"
+   },
+   "ts": "2026-09-12T18:21:40.708899+00:00"
+  },
+  {
+   "id": 247,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_get"
+   },
+   "ts": "2026-09-12T18:21:40.709221+00:00"
+  },
+  {
+   "id": 248,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_getitem"
+   },
+   "ts": "2026-09-12T18:21:40.709543+00:00"
+  },
+  {
+   "id": 249,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_iter"
+   },
+   "ts": "2026-09-12T18:21:40.709850+00:00"
+  },
+  {
+   "id": 250,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_iterable_init"
+   },
+   "ts": "2026-09-12T18:21:40.710165+00:00"
+  },
+  {
+   "id": 251,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_kwargs_init"
+   },
+   "ts": "2026-09-12T18:21:40.710537+00:00"
+  },
+  {
+   "id": 252,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_len"
+   },
+   "ts": "2026-09-12T18:21:40.710848+00:00"
+  },
+  {
+   "id": 253,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_lower_items"
+   },
+   "ts": "2026-09-12T18:21:40.711171+00:00"
+  },
+  {
+   "id": 254,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_mapping_init"
+   },
+   "ts": "2026-09-12T18:21:40.711646+00:00"
+  },
+  {
+   "id": 255,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_preserve_key_case"
+   },
+   "ts": "2026-09-12T18:21:40.711982+00:00"
+  },
+  {
+   "id": 256,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_preserve_last_key_case"
+   },
+   "ts": "2026-09-12T18:21:40.712345+00:00"
+  },
+  {
+   "id": 257,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_setdefault"
+   },
+   "ts": "2026-09-12T18:21:40.712726+00:00"
+  },
+  {
+   "id": 258,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_update"
+   },
+   "ts": "2026-09-12T18:21:40.713031+00:00"
+  },
+  {
+   "id": 259,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::TestCaseInsensitiveDict::test_update_retains_unchanged"
+   },
+   "ts": "2026-09-12T18:21:40.713347+00:00"
+  },
+  {
+   "id": 260,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::UtilsTestCase::test_super_len_io_streams"
+   },
+   "ts": "2026-09-12T18:21:40.713687+00:00"
+  },
+  {
+   "id": 261,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "stream": "stdout",
+    "line": "85 passed, 3 warnings in 22.85s"
+   },
+   "ts": "2026-09-12T18:21:40.714211+00:00"
+  },
+  {
+   "id": 262,
+   "kind": "patch",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "iteration": 1,
+    "rationale": "Fix the qop value in the Digest Authorization header to be quoted as required by RFC 2617. Change `qop=auth` to `qop=\"auth\"` in the header construction.",
+    "applied": true,
+    "error": "",
+    "files": [
+     {
+      "path": "requests/auth.py",
+      "added": 1,
+      "removed": 1
+     }
+    ]
+   },
+   "ts": "2026-09-12T18:21:41.683511+00:00"
+  },
+  {
+   "id": 263,
+   "kind": "tests",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "exit_code": 0,
+    "passed": 85,
+    "failed": 0,
+    "total": 85,
+    "fail_to_pass": 1,
+    "pass_to_pass_broken": 0,
+    "summary": "0 failed, 85 passed"
+   },
+   "ts": "2026-09-12T18:21:41.684870+00:00"
+  },
+  {
+   "id": 264,
+   "kind": "status",
+   "payload": {
+    "status": "REVIEWING",
+    "iteration": 1
+   },
+   "ts": "2026-09-12T18:21:41.685802+00:00"
+  },
+  {
+   "id": 265,
+   "kind": "thought",
+   "payload": {
+    "stage": "REVIEWING",
+    "model": "archon",
+    "text": "Checking the winning patch for deleted tests, unrelated changes, and secrets."
+   },
+   "ts": "2026-09-12T18:21:41.686339+00:00"
+  },
+  {
+   "id": 266,
+   "kind": "usage",
+   "payload": {
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "task": "review",
+    "prompt_tokens": 500,
+    "completion_tokens": 58,
+    "cost_usd": 0.000202
+   },
+   "ts": "2026-09-12T18:21:43.709667+00:00"
+  },
+  {
+   "id": 267,
+   "kind": "review",
+   "payload": {
+    "attempt": "a_3bd7bf53",
+    "verdict": "APPROVE",
+    "reasons": [
+     "The patch correctly fixes the quoted qop value in the Digest Authorization header as per RFC 2617, addressing the stated test failure. The change is minimal and scoped to the relevant file and logic."
+    ]
+   },
+   "ts": "2026-09-12T18:21:43.710996+00:00"
+  },
+  {
+   "id": 268,
+   "kind": "done",
+   "payload": {
+    "status": "VERIFIED",
+    "selected_attempt": "a_3bd7bf53",
+    "iterations": 1,
+    "spend_usd": 0.0365,
+    "trace_url": "https://smith.langchain.com/o/ed80d820-b9cd-4bf6-9272-8f173cc1e037/projects/p/2ae55e09-4894-487d-ae0d-ae0b31eef736/trace/01a096d9-45c9-7053-814e-84709548f971/run/01a096d9-45c9-7053-814e-84709548f971?start_time=2026-09-12T18%3A20%3A16.713376%2B00%3A00",
+    "fail_to_pass": 1,
+    "pass_to_pass_broken": 0
+   },
+   "ts": "2026-09-12T18:21:44.279681+00:00"
+  }
+ ],
+ "note": "Live run 2026-09-12: SWE-bench Verified psf__requests-1766 resolved inside a Nebius Token Factory Sandbox by Nemotron 3 (Ultra patch, Super research/review, Nano). Tavily grounding, LangSmith trace. VERIFIED in 1 iteration(s), $0.037."
+}

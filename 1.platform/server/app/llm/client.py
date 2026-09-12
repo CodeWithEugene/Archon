@@ -173,14 +173,23 @@ class NebiusLLM:
                 )
                 choice = resp.choices[0]
                 text = (choice.message.content or "").strip()
-                if not text and choice.finish_reason == "length":
+                truncated = choice.finish_reason == "length"
+                no_answer = not text or (json_mode and "{" not in text)
+                if truncated and no_answer:
+                    # Reasoning (sometimes emitted into `content`) consumed the budget before the answer.
                     if think and max_tokens < MAX_THINKING_TOKENS:
                         max_tokens = min(max_tokens * 2, MAX_THINKING_TOKENS)
                         logger.warning(
-                            "%s spent the whole budget reasoning; retrying with max_tokens=%d", model, max_tokens
+                            "%s hit max_tokens while reasoning; retrying with max_tokens=%d", model, max_tokens
                         )
                         continue
-                    raise LLMError(f"{model}: empty answer, reasoning hit max_tokens={max_tokens}")
+                    if think:
+                        think = False
+                        logger.warning(
+                            "%s still truncated at max_tokens=%d; retrying with thinking off", model, max_tokens
+                        )
+                        continue
+                    raise LLMError(f"{model}: no answer, output hit max_tokens={max_tokens}")
                 pt = resp.usage.prompt_tokens if resp.usage else 0
                 ct = resp.usage.completion_tokens if resp.usage else 0
                 cost = self._prices.cost(model, pt, ct)

@@ -29,6 +29,7 @@ async def create_mission(body: MissionCreate, state: AppState = Depends(get_stat
         test_command=body.test_command,
         install_command=body.install_command,
         swe_instance_id=body.swe_instance_id,
+        subdir=body.subdir,
         hint=body.hint,
     )
     await state.store.save_mission(mission)

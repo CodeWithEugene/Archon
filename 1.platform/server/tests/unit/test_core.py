@@ -13,7 +13,7 @@ from app.core.models import Attempt, EngineerOutput, EventKind, MissionCreate, T
 from app.core.patches import EditError, apply_edits, check_patch_safety, inspect_patch, normalize_patch
 from app.core.pricing import PriceTable
 from app.core.router import ModelRouter, Task
-from app.core.scoring import best_attempt, is_resolved, score_attempt
+from app.core.scoring import best_attempt, is_resolved, matches_any, score_attempt
 from app.llm.client import LLMError, extract_json_object, strip_reasoning
 from app.llm.prompts import UNTRUSTED_CLOSE, UNTRUSTED_OPEN, engineer_messages, review_messages
 from app.sandbox.pytest_parser import (
@@ -308,7 +308,7 @@ def test_apply_edits_rejects_ambiguous_and_missing() -> None:
         apply_edits(src, [("= 1\n", "= 2\n")], "x.py")
     with pytest.raises(EditError, match="does not appear anywhere"):
         apply_edits(src, [("z = 9\n", "z = 0\n")], "x.py")
-    with pytest.raises(EditError, match="appears at line 1; the following lines differ"):
+    with pytest.raises(EditError, match="appears at line 1 but the following lines differ"):
         apply_edits(src, [("x = 1\nq = 5\n", "x = 2\n")], "x.py")
 
 
@@ -316,3 +316,57 @@ def test_apply_edits_tolerates_trailing_whitespace() -> None:
     src = "def f():   \n    return 1\n"
     out = apply_edits(src, [("def f():\n    return 1\n", "def f():\n    return 2\n")], "x.py")
     assert out == "def f():\n    return 2\n"
+
+
+def test_instance_scoped_scoring_with_truncated_ids() -> None:
+    """SWE-bench ids may be truncated at a space; unrelated failures in the same file must not block resolution."""
+    base = TestReport(
+        exit_code=1, failed=["t.py::T::target[a b]", "t.py::T::flaky_network"], passed=["t.py::T::keep[x y]"]
+    )
+    targets = {"t.py::T::target[a"}  # truncated in the dataset
+    protected = {"t.py::T::keep[x"}
+    assert matches_any("t.py::T::target[a b]", targets) and not matches_any("t.py::T::other", targets)
+    fixed = TestReport(
+        exit_code=1, passed=["t.py::T::target[a b]", "t.py::T::keep[x y]"], failed=["t.py::T::flaky_network"]
+    )
+    a = score_attempt(base, _attempt(fixed), targets, protected)
+    assert (a.fail_to_pass, a.pass_to_pass_broken) == (1, 0)
+    assert is_resolved(base, a, targets, protected)  # exit code 1 from the flaky test is not held against it
+    broke = TestReport(
+        exit_code=1, passed=["t.py::T::target[a b]"], failed=["t.py::T::keep[x y]", "t.py::T::flaky_network"]
+    )
+    b = score_attempt(base, _attempt(broke), targets, protected)
+    assert b.pass_to_pass_broken == 1 and not is_resolved(base, b, targets, protected)
+
+
+def test_coerce_engineer_output_shapes() -> None:
+    from app.core.models import EngineerOutput
+    from app.core.runner import rank_listing
+    from app.roles.engineer import coerce_engineer_output
+
+    known = {"pkg/a.py", "pkg/b.py"}
+    top_edits = coerce_engineer_output(
+        {"edits": [{"path": "pkg/a.py", "search": "x = 1\n", "replace": "x = 2\n"}]}, known
+    )
+    out = EngineerOutput.model_validate(top_edits)
+    assert out.candidates[0].edits[0].path == "pkg/a.py"
+    by_name = coerce_engineer_output({"a.py": "print(1)\n", "b.py": "print(2)\n"}, known)
+    out2 = EngineerOutput.model_validate(by_name)
+    assert {f.path for f in out2.candidates[0].files} == {"pkg/a.py", "pkg/b.py"}
+    tool = coerce_engineer_output({"tool": "read", "path": "pkg/a.py", "offset": 0, "limit": 100}, known)
+    assert EngineerOutput.model_validate(tool).files_to_read == ["pkg/a.py"]
+    single = coerce_engineer_output(
+        {"root_cause": "r", "candidates": {"rationale": "x", "patch": "diff --git a/x b/x\n--- a/x\n+++ b/x\n"}}, known
+    )
+    assert len(EngineerOutput.model_validate(single).candidates) == 1
+    ranked = rank_listing(
+        [
+            "client/src/app.ts",
+            "server/fixtures/demo/userkit/schemas.py",
+            "server/fixtures/demo/tests/test_s.py",
+            "README.md",
+        ],
+        ["server/fixtures/demo/tests/test_s.py"],
+    )
+    assert ranked[:2] == ["server/fixtures/demo/tests/test_s.py", "server/fixtures/demo/userkit/schemas.py"]
+    assert ranked[-1] == "client/src/app.ts" or ranked[-1] == "README.md"

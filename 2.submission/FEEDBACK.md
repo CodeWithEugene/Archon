@@ -34,17 +34,23 @@ Format per entry: date, surface, what happened, what you expected, suggestion.
 | 2026-09-12 | The preloaded SWE-bench Verified images are excellent: `swebench/sweb.eval.x86_64.<owner>_1776_<repo>-<n>:latest` resolves by tag with `images.use(tag, strict=True)`, boots in seconds, and has the repo at `/testbed` with the `testbed` conda env. The tag convention and the `/testbed` layout are not documented anywhere I could find. | A page listing the tag pattern, the repo path, the env name, and how to apply the instance test patch. | Add a "using the SWE-bench catalog" page with one worked example. |
 | 2026-09-12 | `python:3.12-slim` has no `git`, so every SWE-style workflow must `apt-get install git` first. | A documented "recommended base images for code agents" list, or a Nebius-published image with git, build tools, and common runtimes. | Publish `nebius/agent-python:3.12` or similar. |
 
+| 2026-09-12 | Not a Nebius bug, but worth knowing for anyone using the preloaded SWE-bench Verified images: the upstream dataset stores some parametrized test ids truncated at the first space (`psf__requests-5414`: `test_basic_auth_str_is_always_native[test-test-Basic`). Passing them to pytest aborts the whole run with exit 4. | A note on the SWE agents page. | Mention the id quirk and suggest running test files or prefix-matching ids. |
+
 ## NVIDIA Nemotron models
 
 | Date | Observation | Expected | Suggestion |
 | :--- | :--- | :--- | :--- |
-| | | | |
+| 2026-09-12 | Nemotron 3 Ultra's diagnoses were correct on every live run, and with search-and-replace edits its fixes applied first time. Its hand-written unified diffs never applied (five of five). | Guidance in the model card that agents should use edit blocks, not diffs. | Add an "agentic editing" recommendation to the Nemotron 3 docs. |
+| 2026-09-12 | Ultra sometimes drops required top-level JSON keys (`root_cause`) or emits tool-call shaped JSON (`{"tool": "read", ...}`) when asked for a schema, even with `response_format=json_object`. Super and Nano followed the schema reliably. | Structured outputs with a JSON schema on Token Factory for Nemotron 3 Ultra. | Support `response_format={"type": "json_schema", ...}` server-side. |
+| 2026-09-12 | In long prompts (a monorepo subproject with the test file, two sources, and a file list), Ultra paraphrased the source instead of copying it: search blocks referenced a `UserCreate` class and a `name` field that do not exist, on four separate runs, even after the real text was quoted back. On the same files as a standalone repository it copied correctly first try. | Better long-context faithfulness, or a documented recommendation to keep edit prompts short and put sources last. | Publish prompt-shape guidance for edit-style agent tasks. |
+| 2026-09-12 | Thinking on by default with reasoning tokens counted against `max_tokens` is easy to trip over; `chat_template_kwargs.enable_thinking=false` fixes it and should be documented. | | See the Token Factory note above. |
 
 ## Tavily
 
 | Date | Observation | Expected | Suggestion |
 | :--- | :--- | :--- | :--- |
-| | | | |
+| 2026-09-12 | Search quality for stack-trace style queries is good: three queries synthesized from a Pydantic deprecation failure returned the official migration guide first. Latency 0.2 to 4 s per `advanced` search. | | Nothing to fix. |
+| 2026-09-12 | The `tavily-python` async client has no per-request timeout parameter; I wrap it in `asyncio.wait_for`. | A `timeout=` argument on `search()`. | Add a timeout parameter. |
 
 ## Things that worked well
 

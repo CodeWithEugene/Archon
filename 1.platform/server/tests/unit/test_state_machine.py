@@ -283,3 +283,22 @@ async def test_bad_search_block_is_reported_to_next_iteration(make_runner, backe
     second = [msgs for t, msgs in llm.calls if t == Task.DIAGNOSE_AND_PATCH][1][1]["content"]
     assert "search block not found" in second and "could not be applied" in second
     assert sum("git add --" in c.shell for c in backend.calls) == 1
+
+
+async def test_engineer_garbage_costs_one_iteration_not_the_mission(make_runner, backend: FakeBackend) -> None:  # type: ignore[no-untyped-def]
+    backend.on(r"pytest", stdout=BASELINE_FAIL, exit_code=1, once=True)
+    backend.on(r"git add --", stdout=GOOD_PATCH)
+    backend.on(r"pytest", stdout=ALL_PASS, exit_code=0, when=edited_core_present)
+    scripts = research_scripts()
+    scripts[Task.DIAGNOSE_AND_PATCH] = [
+        "I think the fix is obvious, just remove c.",  # not JSON; FakeLLM does not retry, so each costs one iteration
+        "still prose",
+        edits_json("    return a + b + c\n", "    return a + b\n"),
+    ]
+    scripts[Task.REVIEW] = [approve()]
+    runner, llm, _ = make_runner(scripts=scripts)
+    m = await runner.run()
+    assert m.status == MissionStatus.VERIFIED, m.failure_report
+    assert m.iteration == 3
+    third = [msgs for t, msgs in llm.calls if t == Task.DIAGNOSE_AND_PATCH][2][1]["content"]
+    assert "previous reply was unusable" in third

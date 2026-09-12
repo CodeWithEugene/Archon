@@ -116,3 +116,70 @@ async def test_swe_mission_reads_files_from_instance_workdir(make_runner, backen
     # provisioning applied the instance test patch in /testbed
     assert any(c.cwd == "/testbed" and "/archon.patch" in c.files for c in backend.calls)
     assert m.summary["swe"]["instance"] == "acme__lib-1"
+
+
+def test_resolve_path_suffix_and_basename() -> None:
+    svc = SandboxService(FakeBackend(), base_image_ref="x", command_timeout_s=10)
+    known = {"1.platform/server/app/x.py", "1.platform/server/tests/test_x.py", "README.md"}
+    assert svc.resolve_path("platform/server/app/x.py", known) == "1.platform/server/app/x.py"
+    assert svc.resolve_path("./1.platform/server/app/x.py", known) == "1.platform/server/app/x.py"
+    assert svc.resolve_path("x.py", known) == "1.platform/server/app/x.py"  # unique basename
+    assert svc.resolve_path("nope.py", known) == "nope.py"
+    assert svc.resolve_path("/work/repo/README.md", known) == "README.md"
+
+
+async def test_subdir_scopes_install_and_paths(make_runner, backend: FakeBackend) -> None:  # type: ignore[no-untyped-def]
+    from app.core.models import Mission, MissionType, new_id
+
+    backend.default_files["/work/repo/apps/svc/pyproject.toml"] = b"[project]"
+    backend.default_files["/work/repo/apps/svc/svc/core.py"] = b"def x():\n    return 1\n"
+    backend.on(
+        r"pytest", stdout="FAILED tests/test_a.py::test_x - assert 1 == 2\n1 failed in 0.01s\n", exit_code=1, once=True
+    )
+    backend.on(r"git ls-files", stdout="svc/core.py\ntests/test_a.py\n")
+    backend.on(
+        r"git add --",
+        stdout="diff --git a/apps/svc/svc/core.py b/apps/svc/svc/core.py\n--- a/apps/svc/svc/core.py\n+++ b/apps/svc/svc/core.py\n@@ -1,2 +1,2 @@\n def x():\n-    return 1\n+    return 2\n",
+    )
+    backend.on(
+        r"pytest",
+        stdout="PASSED tests/test_a.py::test_x\n1 passed in 0.01s\n",
+        exit_code=0,
+        when=lambda _s, f: f.get("/work/repo/apps/svc/svc/core.py", b"").endswith(b"return 2\n"),
+    )
+    scripts = {
+        Task.RESEARCH_QUERIES: [json.dumps({"queries": ["q"]})],
+        Task.RESEARCH_BRIEF: [json.dumps({"brief": "n/a", "sources": []})],
+        Task.DIAGNOSE_AND_PATCH: [
+            json.dumps(
+                {
+                    "root_cause": "r",
+                    "files_to_read": [],
+                    "candidates": [
+                        {
+                            "rationale": "fix",
+                            "edits": [{"path": "svc/core.py", "search": "    return 1\n", "replace": "    return 2\n"}],
+                        }
+                    ],
+                }
+            )
+        ],
+        Task.REVIEW: [json.dumps({"verdict": "APPROVE", "reasons": ["ok"]})],
+    }
+    runner, _, _ = make_runner(scripts=scripts)
+    runner.m = Mission(
+        id=new_id("m"),
+        type=MissionType.BUG_HEALING,
+        repo_url="https://github.com/acme/mono",
+        git_ref="main",
+        test_command="pytest -q",
+        swe_instance_id=None,
+        subdir="apps/svc",
+    )
+    m = await runner.run()
+    assert m.status == MissionStatus.VERIFIED, m.failure_report
+    install = next(c for c in backend.calls if "pip install" in c.shell)
+    assert install.cwd == "/work/repo/apps/svc"
+    tests_run = [c for c in backend.calls if "pytest" in c.shell]
+    assert all(c.cwd == "/work/repo/apps/svc" for c in tests_run)
+    assert "/work/repo/apps/svc/svc/core.py" in next(c for c in backend.calls if "git add --" in c.shell).files
