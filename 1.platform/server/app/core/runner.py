@@ -43,6 +43,8 @@ from app.store.db import Store
 logger = logging.getLogger(__name__)
 LLMFactory = Callable[[UsageHook], LLM]
 TRACEBACK_PATH = re.compile(r'File "([^"]+)", line \d+')
+SHORT_TB_PATH = re.compile(r"^([\w./-]+\.py):\d+:", re.MULTILINE)
+DIFF_FILE = re.compile(r"^\+\+\+ b/(\S+)", re.MULTILINE)
 LANG_BY_EXT = {
     ".py": "python",
     ".ts": "typescript",
@@ -264,6 +266,7 @@ class MissionRunner:
 
         # 4. iterate
         excerpts = await self._initial_excerpts(base.image_id, base.output, migration)
+        file_listing = await self.d.sandbox.list_files(base.image_id)
         previous: Attempt | None = None
         previous_output: str | None = None
         for iteration in range(1, s.max_iterations + 1):
@@ -280,6 +283,7 @@ class MissionRunner:
                 hint=self.m.hint,
                 n_candidates=s.candidates_per_iteration,
                 migration=migration,
+                file_listing=file_listing,
             )
             out = await self.engineer.propose(req)
             self._check_abort()
@@ -287,7 +291,7 @@ class MissionRunner:
 
             await self._status(MissionStatus.TESTING)
             await self._narrate("TESTING", f"{len(out.candidates)} candidate(s).")
-            attempts = await self._test_candidates(base, iteration, out.candidates, test_cmd)
+            attempts = await self._test_candidates(base, iteration, out.candidates, test_cmd, excerpts)
             self._check_abort()
 
             best = best_attempt(attempts)
@@ -317,11 +321,12 @@ class MissionRunner:
                 continue
 
             previous = best
-            previous_output = (
-                await self.compactor.compact(best.report_output)
-                if best and best.report_output
-                else (best.error if best else None)
-            )
+            if best is not None and best.report_output:
+                previous_output = await self.compactor.compact(best.report_output)
+            elif best is not None and best.error:
+                previous_output = f"The candidate could not be applied: {best.error}"
+            else:
+                previous_output = None
 
         self.m.failure_report = f"No candidate resolved the failure within {s.max_iterations} iterations."
         await self._emit(EventKind.ERROR, {"message": self.m.failure_report})
@@ -336,7 +341,23 @@ class MissionRunner:
                 raise SandboxError(f"unknown SWE-bench instance {self.m.swe_instance_id}")
             self.m.test_command = inst.test_command
             self.m.repo_url = inst.repo
-            return await self.d.sandbox.provision_prebuilt(inst.image)
+            if not self.m.hint and inst.problem_statement:
+                self.m.hint = inst.problem_statement[:20_000]
+            self.m.summary["swe"] = {
+                "instance": inst.id,
+                "difficulty": inst.difficulty,
+                "fail_to_pass": list(inst.fail_to_pass),
+                "pass_to_pass": len(inst.pass_to_pass),
+                "image": inst.image,
+            }
+            self.d.sandbox = self.d.sandbox.with_repo_dir(inst.workdir)
+            self.engineer = Engineer(self.llm, self.d.sandbox)  # roles must read from the instance's repo dir
+            await self._thought(
+                "PROVISIONING",
+                f"SWE-bench Verified {inst.id} ({inst.difficulty or 'unrated'}): starting from the preloaded "
+                f"sandbox image and applying the instance's test patch.",
+            )
+            return await self.d.sandbox.provision_prebuilt(inst.image, inst.test_patch, self._terminal("baseline"))
         assert self.m.repo_url is not None
         return await self.d.sandbox.provision_repo(
             self.m.repo_url, self.m.git_ref, self.m.install_command, self._terminal("baseline")
@@ -380,37 +401,86 @@ class MissionRunner:
             )
             for p in scan_files:
                 paths.setdefault(str(p), None)
+        repo_prefix = self.d.sandbox.repo_dir.rstrip("/") + "/"
+        swe = self.m.summary.get("swe")
+        if isinstance(swe, dict):
+            inst = self.d.swe.get(str(swe.get("instance", "")))
+            if inst is not None:
+                for f in DIFF_FILE.findall(inst.test_patch):
+                    paths.setdefault(f, None)
+        for m in SHORT_TB_PATH.finditer(output):
+            paths.setdefault(m.group(1), None)
         for m in TRACEBACK_PATH.finditer(output):
             p = m.group(1)
-            if "site-packages" in p or p.startswith("<"):
+            if "site-packages" in p or p.startswith("<") or "/miniconda" in p or "/.venv/" in p:
                 continue
-            rel = p.split("/repo/", 1)[1] if "/repo/" in p else p.lstrip("./")
+            if p.startswith(repo_prefix):
+                rel = p[len(repo_prefix) :]
+            elif "/repo/" in p:
+                rel = p.split("/repo/", 1)[1]
+            else:
+                rel = p.lstrip("./")
             paths.setdefault(rel, None)
         return await self.d.sandbox.read_many(image_id, list(paths)[:8])
 
     async def _test_candidates(
-        self, base: Baseline, iteration: int, candidates: list[Candidate], test_cmd: str
+        self,
+        base: Baseline,
+        iteration: int,
+        candidates: list[Candidate],
+        test_cmd: str,
+        originals: dict[str, str],
     ) -> list[Attempt]:
         attempts: list[Attempt] = []
         for c in candidates:
-            patch = c.patch
-            info = inspect_patch(patch)
             a = Attempt(
                 id=new_id("a"),
                 mission_id=self.m.id,
                 iteration=iteration,
                 parent_image=base.image_id,
-                patch=patch,
+                patch=c.patch,
                 rationale=c.rationale,
-                patch_lines=info.lines,
             )
             attempts.append(a)
+
+        async def run_one(a: Attempt, c: Candidate) -> None:
+            if not c.uses_edits:
+                safety = check_patch_safety(c.patch)
+                if not safety.ok:
+                    a.error = "rejected before execution: " + "; ".join(safety.problems)
+                    await self._emit(EventKind.TERMINAL, {"attempt": a.id, "stream": "stderr", "line": a.error})
+                    return
+            try:
+                applied = await self.d.sandbox.apply_candidate(base.image_id, c, originals, self._terminal(a.id))
+            except SandboxError as exc:
+                a.error = str(exc)
+                return
+            if applied.error or applied.image_id is None:
+                a.error = applied.error or "could not apply candidate"
+                await self._emit(EventKind.TERMINAL, {"attempt": a.id, "stream": "stderr", "line": a.error[:2000]})
+                return
+            a.patch = applied.patch_text
+            a.patch_lines = inspect_patch(a.patch).lines
+            safety = check_patch_safety(a.patch)
+            if not safety.ok:
+                a.error = "rejected after applying: " + "; ".join(safety.problems)
+                await self._emit(EventKind.TERMINAL, {"attempt": a.id, "stream": "stderr", "line": a.error})
+                return
+            a.applied, a.result_image = True, applied.image_id
+            res, report = await self.d.sandbox.run_tests(applied.image_id, test_cmd, self._terminal(a.id))
+            a.exit_code, a.report, a.report_output = res.exit_code, report, res.combined
+
+        await asyncio.gather(*(run_one(a, c) for a, c in zip(attempts, candidates, strict=True)))
+        for a in attempts:
+            info = inspect_patch(a.patch) if a.patch else inspect_patch("")
             await self._emit(
                 EventKind.PATCH,
                 {
                     "attempt": a.id,
                     "iteration": iteration,
                     "rationale": a.rationale[:500],
+                    "applied": a.applied,
+                    "error": (a.error or "")[:500],
                     "files": [
                         {
                             "path": f,
@@ -421,30 +491,6 @@ class MissionRunner:
                     ],
                 },
             )
-
-        async def run_one(a: Attempt) -> None:
-            safety = check_patch_safety(a.patch)
-            if not safety.ok:
-                a.error = "rejected before execution: " + "; ".join(safety.problems)
-                await self._emit(EventKind.TERMINAL, {"attempt": a.id, "stream": "stderr", "line": a.error})
-                return
-            try:
-                res = await self.d.sandbox.try_patch(base.image_id, a.patch, test_cmd, self._terminal(a.id))
-            except SandboxError as exc:
-                a.error = str(exc)
-                return
-            a.applied, a.result_image, a.exit_code, a.report = (
-                res.applied,
-                res.image_id,
-                res.exit_code,
-                res.report,
-            )
-            a.report_output = res.output
-            if not res.applied:
-                a.error = "git apply failed"
-
-        await asyncio.gather(*(run_one(a) for a in attempts))
-        for a in attempts:
             score_attempt(base.report, a)
             await self.d.store.save_attempt(a)
             if a.report is not None:
@@ -460,7 +506,7 @@ class MissionRunner:
                         "total": 0,
                         "fail_to_pass": 0,
                         "pass_to_pass_broken": a.pass_to_pass_broken,
-                        "summary": a.error or "not applied",
+                        "summary": (a.error or "not applied")[:300],
                     },
                 )
         return attempts

@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from app.core.events import EventBus
 from app.core.models import Attempt, EngineerOutput, EventKind, MissionCreate, TestReport, validate_repo_url
-from app.core.patches import check_patch_safety, inspect_patch, normalize_patch
+from app.core.patches import EditError, apply_edits, check_patch_safety, inspect_patch, normalize_patch
 from app.core.pricing import PriceTable
 from app.core.router import ModelRouter, Task
 from app.core.scoring import best_attempt, is_resolved, score_attempt
@@ -291,3 +291,28 @@ async def test_event_bus_history_then_live_then_close() -> None:
     # late subscriber with Last-Event-ID replays only the tail
     late = [e.id async for e in bus.subscribe("m1", after_id=2)]
     assert late == [3]
+
+
+# ---- search/replace edits ------------------------------------------------------------------------
+
+
+def test_apply_edits_exact_and_sequential() -> None:
+    src = "a = 1\nb = 2\nc = 3\n"
+    out = apply_edits(src, [("b = 2\n", "b = 20\n"), ("c = 3\n", "c = 30\n")], "x.py")
+    assert out == "a = 1\nb = 20\nc = 30\n"
+
+
+def test_apply_edits_rejects_ambiguous_and_missing() -> None:
+    src = "x = 1\ny = 1\n"
+    with pytest.raises(EditError, match="matches 2 places"):
+        apply_edits(src, [("= 1\n", "= 2\n")], "x.py")
+    with pytest.raises(EditError, match="does not appear anywhere"):
+        apply_edits(src, [("z = 9\n", "z = 0\n")], "x.py")
+    with pytest.raises(EditError, match="appears at line 1; the following lines differ"):
+        apply_edits(src, [("x = 1\nq = 5\n", "x = 2\n")], "x.py")
+
+
+def test_apply_edits_tolerates_trailing_whitespace() -> None:
+    src = "def f():   \n    return 1\n"
+    out = apply_edits(src, [("def f():\n    return 1\n", "def f():\n    return 2\n")], "x.py")
+    assert out == "def f():\n    return 2\n"

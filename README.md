@@ -19,9 +19,9 @@ Submission to the **[Nebius x NVIDIA Global AI Hackathon](https://nebiusglobalai
 
 ## Status
 
-> **Alpha. The server and the repair loop exist and run end to end offline. Not yet verified against live Nebius inference or Token Factory Sandboxes.**
+> **Alpha, live on all four pillars.** On September 12, 2026 ARCHON resolved **SWE-bench Verified `psf__requests-1142` inside a Nebius Token Factory Sandbox**: the preloaded environment booted, the instance's test patch was applied, the baseline reproduced 1 failing and 5 passing tests, Nemotron 3 Super synthesized Tavily queries and a research brief, Nemotron 3 Ultra read the source and produced the fix as search-and-replace edits, the fix ran on a sandbox fork, 6 of 6 tests passed with 0 regressions, and the Super reviewer approved. One iteration, 49 seconds, $0.032 of inference. Every step is a span in LangSmith.
 >
-> What works today (September 11, 2026): FastAPI orchestrator, mission state machine, three sandbox backends (Token Factory Sandboxes via `contree-sdk`, a development-only local backend, a fake for tests), Tavily grounding, Nemotron role prompts, JUnit-based verification, replay mode, 44 unit tests, CI. A scripted end-to-end run on the local backend takes a repository with 4 failing tests to 6 passing on a forked workspace. The Next.js cockpit is being built. Live Nebius and Sandboxes runs are blocked on API keys and beta access.
+> Not yet done: the rest of the golden set, a hosted demo, the video.
 >
 > Progress log: [0.docs/build/SESSIONS.md](0.docs/build/SESSIONS.md). Plan: [0.docs/build/PLAN.md](0.docs/build/PLAN.md).
 
@@ -104,8 +104,8 @@ flowchart TD
 │       ├── TESTING.md          # Test strategy and golden dataset
 │       └── SESSIONS.md         # Session log and ADRs
 ├── 1.platform/
-│   ├── client/                 # Next.js 16 cockpit (not yet scaffolded)
-│   └── server/                 # FastAPI orchestrator (not yet scaffolded)
+│   ├── client/                 # Next.js 16 cockpit
+│   └── server/                 # FastAPI orchestrator
 ├── 2.submission/
 │   ├── README.md               # Devpost submission text (draft)
 │   └── FEEDBACK.md             # Running log of Nebius / NVIDIA developer feedback
@@ -116,8 +116,6 @@ flowchart TD
 ```
 
 ## Quickstart
-
-The commands below describe the intended setup. They will work once `1.platform/` is scaffolded.
 
 ### Prerequisites
 
@@ -133,7 +131,7 @@ cd 1.platform/server
 cp .env.example .env        # then fill in NEBIUS_API_KEY and TAVILY_API_KEY
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8010
 ```
 
 ### Client
@@ -163,10 +161,10 @@ ARCHON_MAX_MISSION_USD=3   # Hard per-mission spend cap
 
 Boxes are ticked only when the item exists and has been verified.
 
-- [ ] Runs on Nebius Token Factory: live inference calls to `api.tokenfactory.nebius.com`
-- [ ] Uses NVIDIA open models: Nemotron 3 Ultra, Super, and Nano
-- [ ] Executes code in Token Factory Sandboxes
-- [ ] Tavily Search API called at runtime inside the reasoning loop
+- [x] Runs on Nebius Token Factory: live inference calls to `api.tokenfactory.nebius.com` (verified September 12)
+- [x] Uses NVIDIA open models: Nemotron 3 Ultra, Super, and Nano (verified September 12)
+- [x] Executes code in Token Factory Sandboxes (gate test passed September 12)
+- [x] Tavily Search API called at runtime inside the reasoning loop (verified September 12)
 - [ ] Track chosen: Track 1, Coding and Agentic Engineering
 - [x] Open-source license: Apache 2.0 in `LICENSE.md`
 - [ ] Public demo URL, live through the judging window (Dec 1 to Dec 15, 2026)

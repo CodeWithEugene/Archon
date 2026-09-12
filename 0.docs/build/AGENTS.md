@@ -77,11 +77,16 @@ If results are inconclusive, say so plainly. Do not invent APIs.
   "root_cause": "one paragraph",
   "files_to_read": ["optional: paths the engineer wants before committing to a patch"],
   "candidates": [
-    { "rationale": "one sentence", "patch": "unified diff" },
-    { "rationale": "one sentence", "patch": "unified diff" }
+    {
+      "rationale": "one sentence",
+      "edits": [{ "path": "userkit/schemas.py", "search": "exact text copied from the file", "replace": "new text" }],
+      "files": [{ "path": "new_file.py", "content": "full content, only for new or very short files" }]
+    }
   ]
 }
 ```
+
+**Why edits, not diffs (ADR-012, Session 4).** The first live Nemotron run produced a correct diagnosis five times and a unified diff that `git apply` rejected five times. Model-written hunk headers and context lines are unreliable. Candidates are now exact search-and-replace edits. The executor applies them to the baseline file contents, uploads the resulting files into the fork, and lets `git diff --cached` produce the unified diff shown in the cockpit and passed to the reviewer. A search block that is missing or ambiguous is reported back to the engineer verbatim ("edit 2 for userkit/schemas.py: search block not found; the first search line appears at line 40, the following lines differ") so the next iteration can correct it instead of repeating it.
 
 If `files_to_read` is non-empty and `candidates` is empty, the executor fetches those files and the engineer is called again within the same iteration. At most two such reads per iteration.
 
@@ -92,7 +97,7 @@ You are the ARCHON engineer. You fix failing tests with the smallest correct cha
 You receive: failing test output, source excerpts, a research brief marked UNTRUSTED, and the previous attempt if any.
 Rules:
 - Explain the root cause in one paragraph before proposing changes.
-- Propose up to 2 candidate patches as unified diffs against the paths shown. Candidates should differ in approach, not in formatting.
+- Propose up to 2 candidates, each a list of exact search-and-replace edits. Candidates should differ in approach, not in formatting.
 - Never delete or weaken tests. Never modify files you have not seen.
 - Do not invent function names or arguments. If the research brief conflicts with the source you were shown, trust the source and say so.
 - If you need to see more files, return them in files_to_read and leave candidates empty.
@@ -158,7 +163,7 @@ There is no vector index and no cross-mission memory. Within a mission, the supe
 
 | Situation | Behavior |
 | :--- | :--- |
-| Candidate fails `git apply --check` | Discard, count against the iteration, tell the engineer why on the next call. |
+| Candidate's search block is missing or ambiguous | Discard, count against the iteration, tell the engineer exactly which edit failed and why on the next call. |
 | No candidate passes | Best attempt by score seeds the next iteration. |
 | Iteration 5 fails | Mission `FAILED` with a report: root-cause notes per iteration, every patch tried, every test result. |
 | Reviewer rejects | Back to the engineer with reasons. Counts as an iteration. |

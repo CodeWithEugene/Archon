@@ -1,1 +1,16 @@
-{"swe_bench_verified": [], "local_fixtures": ["broken_pydantic_v2", "openai_chat_service", "anthropic_summarizer"], "note": "SWE-bench Verified instance IDs are added in week 5 after Sandboxes beta access is confirmed."}
+{
+ "swe_bench_verified": [
+  "psf__requests-1142",
+  "psf__requests-2317",
+  "psf__requests-1921",
+  "psf__requests-5414",
+  "psf__requests-1766",
+  "psf__requests-2931"
+ ],
+ "local_fixtures": [
+  "broken_pydantic_v2",
+  "openai_chat_service",
+  "anthropic_summarizer"
+ ],
+ "note": "SWE-bench Verified instance IDs are added in week 5 after Sandboxes beta access is confirmed."
+}

@@ -150,7 +150,7 @@ async def test_unsafe_patch_rejected_before_execution(make_runner, backend: Fake
 
 async def test_git_apply_failure_feeds_next_iteration(make_runner, backend: FakeBackend) -> None:  # type: ignore[no-untyped-def]
     backend.on(r"pytest", stdout=BASELINE_FAIL, exit_code=1, once=True)
-    backend.on(r"git apply --check", exit_code=1, stderr="error: patch failed: app/core.py:1", once=True)
+    backend.on(r"git apply", exit_code=1, stderr="error: patch failed: app/core.py:1", once=True)
     backend.on(r"pytest", stdout=ALL_PASS, exit_code=0, when=good_applied)
     scripts = research_scripts()
     scripts[Task.DIAGNOSE_AND_PATCH] = [engineer_json(GOOD_PATCH), engineer_json(GOOD_PATCH)]
@@ -233,3 +233,53 @@ async def test_migration_requires_green_baseline(make_runner, backend: FakeBacke
     assert m.status == MissionStatus.FAILED
     assert "green baseline" in (m.failure_report or "")
     assert llm.calls == []
+
+
+def edits_json(search: str, replace: str, path: str = "app/core.py") -> str:
+    return json.dumps(
+        {
+            "root_cause": "c is undefined",
+            "files_to_read": [],
+            "candidates": [{"rationale": "drop c", "edits": [{"path": path, "search": search, "replace": replace}]}],
+        }
+    )
+
+
+def edited_core_present(_shell: str, files: dict[str, bytes]) -> bool:
+    return files.get("/work/repo/app/core.py", b"") == b"def add(a, b):\n    return a + b\n"
+
+
+async def test_resolves_with_search_replace_edits(make_runner, backend: FakeBackend) -> None:  # type: ignore[no-untyped-def]
+    backend.on(r"pytest", stdout=BASELINE_FAIL, exit_code=1, once=True)
+    backend.on(r"git add --", stdout=GOOD_PATCH)  # the diff git produces inside the fork
+    backend.on(r"pytest", stdout=ALL_PASS, exit_code=0, when=edited_core_present)
+    scripts = research_scripts()
+    scripts[Task.DIAGNOSE_AND_PATCH] = [edits_json("    return a + b + c\n", "    return a + b\n")]
+    scripts[Task.REVIEW] = [approve()]
+    runner, _, _ = make_runner(scripts=scripts)
+    m = await runner.run()
+    assert m.status == MissionStatus.VERIFIED, m.failure_report
+    attempts = await runner.d.store.attempts(m.id)
+    assert attempts[0].applied and attempts[0].selected
+    assert attempts[0].patch == GOOD_PATCH  # patch text comes from git, not from the model
+    assert m.diff[0].modified == "def add(a, b):\n    return a + b\n"
+    assert not any("git apply" in c.shell for c in backend.calls)
+
+
+async def test_bad_search_block_is_reported_to_next_iteration(make_runner, backend: FakeBackend) -> None:  # type: ignore[no-untyped-def]
+    backend.on(r"pytest", stdout=BASELINE_FAIL, exit_code=1, once=True)
+    backend.on(r"git add --", stdout=GOOD_PATCH)
+    backend.on(r"pytest", stdout=ALL_PASS, exit_code=0, when=edited_core_present)
+    scripts = research_scripts()
+    scripts[Task.DIAGNOSE_AND_PATCH] = [
+        edits_json("    return a + b + d\n", "    return a + b\n"),  # wrong search text
+        edits_json("    return a + b + c\n", "    return a + b\n"),
+    ]
+    scripts[Task.REVIEW] = [approve()]
+    runner, llm, _ = make_runner(scripts=scripts)
+    m = await runner.run()
+    assert m.status == MissionStatus.VERIFIED
+    assert m.iteration == 2
+    second = [msgs for t, msgs in llm.calls if t == Task.DIAGNOSE_AND_PATCH][1][1]["content"]
+    assert "search block not found" in second and "could not be applied" in second
+    assert sum("git add --" in c.shell for c in backend.calls) == 1

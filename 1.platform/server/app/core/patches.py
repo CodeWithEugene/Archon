@@ -25,6 +25,52 @@ WEAKENING = re.compile(
 DELETED_TEST_DEF = re.compile(r"^-\s*(?:def test_|async def test_|it\(|test\()", re.MULTILINE)
 
 
+class EditError(ValueError):
+    pass
+
+
+def apply_edits(original: str, edits: list[tuple[str, str]], path: str = "") -> str:
+    """Apply (search, replace) pairs in order. Each search must match exactly once.
+
+    A second pass tolerates trailing-whitespace differences per line, which is the most common
+    model transcription error. Anything looser than that is refused so the model gets a precise report.
+    """
+    text = original
+    for i, (search, replace) in enumerate(edits, 1):
+        if not search:
+            raise EditError(f"{path}: edit {i} has an empty search block")
+        count = text.count(search)
+        if count == 1:
+            text = text.replace(search, replace, 1)
+            continue
+        if count > 1:
+            raise EditError(
+                f"{path}: edit {i} search block matches {count} places; include more context to make it unique"
+            )
+        norm_text = "\n".join(line.rstrip() for line in text.split("\n"))
+        norm_search = "\n".join(line.rstrip() for line in search.split("\n"))
+        if norm_search and norm_text.count(norm_search) == 1:
+            start = norm_text.index(norm_search)
+            # Map the normalized span back to the original by line numbers.
+            pre_lines = norm_text[:start].count("\n")
+            n_lines = norm_search.count("\n") + 1
+            lines = text.split("\n")
+            lines[pre_lines : pre_lines + n_lines] = replace.split("\n")
+            text = "\n".join(lines)
+            continue
+        first = search.strip().split("\n")[0].strip()[:80]
+        hint = ""
+        if first:
+            for ln, line in enumerate(text.split("\n"), 1):
+                if first in line:
+                    hint = f" The first search line appears at line {ln}; the following lines differ from the file."
+                    break
+            else:
+                hint = " The first search line does not appear anywhere in the file."
+        raise EditError(f"{path}: edit {i} search block not found.{hint} Copy the text verbatim from the source shown.")
+    return text
+
+
 @dataclass
 class PatchInfo:
     files: list[str]

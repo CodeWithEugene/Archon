@@ -1,0 +1,23 @@
+{
+ "id": "psf__requests-1142",
+ "repo": "https://github.com/psf/requests",
+ "base_commit": "22623bd8c265b78b161542663ee980738441c307",
+ "image": "swebench/sweb.eval.x86_64.psf_1776_requests-1142:latest",
+ "workdir": "/testbed",
+ "test_command": "source /opt/miniconda3/bin/activate && conda activate testbed && pytest -q 'test_requests.py::RequestsTestCase::test_no_content_length' 'test_requests.py::RequestsTestCase::test_basic_building' 'test_requests.py::RequestsTestCase::test_entry_points' 'test_requests.py::RequestsTestCase::test_invalid_url' 'test_requests.py::RequestsTestCase::test_params_are_added_before_fragment' 'test_requests.py::RequestsTestCase::test_path_is_not_double_encoded'",
+ "fail_to_pass": [
+  "test_requests.py::RequestsTestCase::test_no_content_length"
+ ],
+ "pass_to_pass": [
+  "test_requests.py::RequestsTestCase::test_basic_building",
+  "test_requests.py::RequestsTestCase::test_entry_points",
+  "test_requests.py::RequestsTestCase::test_invalid_url",
+  "test_requests.py::RequestsTestCase::test_params_are_added_before_fragment",
+  "test_requests.py::RequestsTestCase::test_path_is_not_double_encoded"
+ ],
+ "test_patch": "diff --git a/test_requests.py b/test_requests.py\n--- a/test_requests.py\n+++ b/test_requests.py\n@@ -58,6 +58,13 @@ def test_basic_building(self):\n         assert pr.body == 'life=42'\n \n \n+    def test_no_content_length(self):\n+        get_req = requests.Request('GET', httpbin('get')).prepare()\n+        self.assertTrue('Content-Length' not in get_req.headers)\n+        head_req = requests.Request('HEAD', httpbin('head')).prepare()\n+        self.assertTrue('Content-Length' not in head_req.headers)\n+\n+\n     def test_path_is_not_double_encoded(self):\n         request = requests.Request('GET', \"http://0.0.0.0/get/test case\").prepare()\n \n",
+ "problem_statement": "requests.get is ALWAYS sending content length\nHi,\n\nIt seems like that request.get always adds 'content-length' header to the request.\nI think that the right behavior is not to add this header automatically in GET requests or add the possibility to not send it.\n\nFor example http://amazon.com returns 503 for every get request that contains 'content-length' header.\n\nThanks,\n\nOren\n\n",
+ "difficulty": "<15 min fix",
+ "short_problem": "requests.get is ALWAYS sending content length",
+ "gold_patch_chars": 743
+}

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import shlex
 import time
 from typing import Any
 
@@ -32,11 +33,12 @@ class ContreeBackend:
         return {"limits": getattr(info, "limits", {}), "expires": getattr(info, "token_expiration", None)}
 
     async def base_image(self, ref: str) -> str:
-        # oci() imports from the registry if the image is not already present; otherwise resolves it.
+        # Public catalog images (python:3.12-slim, swebench/...) and our own images resolve by tag.
+        # Anything else is imported from a registry.
         try:
-            image = await self._sdk.images.oci(ref if "://" in ref else f"docker://docker.io/library/{ref}")
-        except Exception:
             image = await self._sdk.images.use(ref, strict=True)
+        except Exception:
+            image = await self._sdk.images.oci(ref if "://" in ref else f"docker://docker.io/library/{ref}")
         uuid = await image.image_uuid() if hasattr(image, "image_uuid") else image.uuid
         if uuid is None:
             raise SandboxError(f"could not resolve base image {ref}")
@@ -48,8 +50,10 @@ class ContreeBackend:
             await on_output("cmd", f"$ {spec.shell}")
         # Files are uploaded into the new image before the command runs.
         files: dict[str, bytes] | None = dict(spec.files) if spec.files else None
-        # Ensure the working directory exists without requiring an extra round trip.
-        shell = f"mkdir -p {spec.cwd} && cd {spec.cwd} && ({spec.shell})"
+        # Ensure the working directory exists without requiring an extra round trip, and run under bash when
+        # the image has it: the Sandboxes default shell is /bin/sh, where conda activation and `source` do not work.
+        inner = f"mkdir -p {shlex.quote(spec.cwd)} && cd {shlex.quote(spec.cwd)} && ({spec.shell})"
+        shell = f"if command -v bash >/dev/null 2>&1; then exec bash -c {shlex.quote(inner)}; else {inner}; fi"
         started = time.monotonic()
         try:
             result_image = await image.run(

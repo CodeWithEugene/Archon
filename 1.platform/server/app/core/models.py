@@ -127,9 +127,36 @@ class TestReport(BaseModel):
         return set(self.failed) | set(self.errors)
 
 
+class FileEdit(BaseModel):
+    """Exact search-and-replace on one file. `search` must be copied verbatim from the source and be unique."""
+
+    path: str = Field(min_length=1, max_length=400)
+    search: str = Field(min_length=1, max_length=20_000)
+    replace: str = Field(max_length=40_000)
+
+
+class FileContent(BaseModel):
+    """Full replacement content for a small or new file."""
+
+    path: str = Field(min_length=1, max_length=400)
+    content: str = Field(max_length=200_000)
+
+
 class Candidate(BaseModel):
     rationale: str = Field(max_length=2000)
-    patch: str = Field(min_length=10, max_length=200_000)
+    edits: list[FileEdit] = Field(default_factory=list, max_length=40)
+    files: list[FileContent] = Field(default_factory=list, max_length=10)
+    patch: str = Field(default="", max_length=200_000)
+
+    @model_validator(mode="after")
+    def _has_change(self) -> Candidate:
+        if not self.edits and not self.files and len(self.patch.strip()) < 10:
+            raise ValueError("candidate needs edits, files, or a unified diff patch")
+        return self
+
+    @property
+    def uses_edits(self) -> bool:
+        return bool(self.edits or self.files)
 
 
 class EngineerOutput(BaseModel):

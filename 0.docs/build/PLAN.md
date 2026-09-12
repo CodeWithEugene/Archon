@@ -55,8 +55,8 @@ gantt
 - [x] Audit and correct all documentation. Remove false completion claims.
 - [x] Add `.gitignore`, remove stray directories, fill empty READMEs.
 - [x] Start `2.submission/FEEDBACK.md`.
-- [ ] Request Token Factory Sandboxes beta access. Email `contree@nebius.com` if self-serve stalls.
-- [ ] Claim both $25 credits. Run `GET /v1/models?verbose=true` and record the exact Nemotron IDs and prices in `pricing.json`.
+- [x] Request Token Factory Sandboxes beta access. Granted September 12.
+- [x] Run `GET /v1/models?verbose=true` and record the exact Nemotron IDs and prices in `pricing.json`. Done September 12.
 - [ ] Decide city affiliation for the submission form.
 
 ### Week 1 (Sep 14 to Sep 20): Spike
@@ -64,7 +64,7 @@ gantt
 - [x] Nebius client wrapper over the OpenAI SDK with per-call token and cost accounting.
 - [x] `contree-sdk` wrapper: spawn from a base image, run a shell command, read exit code and output, checkpoint, fork.
 - [x] End-to-end spike script: `tests/golden/run.py` clones a fixture, installs, runs pytest, streams output. Verified on the local backend; Sandboxes run pending beta access.
-- [ ] **Gate:** one Nemotron call and one sandbox test run succeed from the same process. If Sandboxes access is not granted by Sep 20, escalate on Discord and fall back to the SWE-bench preloaded images only.
+- [x] **Gate:** one Nemotron call and one sandbox test run succeed from the same process. Passed September 12: `tests/integration/test_live.py` clones, installs, and tests `psf/requests` inside a Token Factory Sandbox.
 
 ### Week 2 (Sep 21 to Sep 27): Loop v1
 - [x] Mission state machine with the states in `DESIGN.md` section 6.
@@ -72,7 +72,7 @@ gantt
 - [x] Tavily grounding: query synthesis, search with timeout, delimited context injection.
 - [x] Ultra diagnose-and-patch prompt returning structured JSON diffs.
 - [x] Apply on fork, re-test, iterate up to 5.
-- [ ] **Gate:** one SWE-bench Verified instance resolved end to end from the CLI.
+- [x] **Gate:** one SWE-bench Verified instance resolved end to end from the CLI. `psf__requests-1142`, September 12, inside a Token Factory Sandbox, 1 iteration, $0.032.
 
 ### Week 3 (Sep 28 to Oct 4): Loop v2
 - [x] Best-of-N: two candidate patches per iteration, each on its own fork, scored and selected.

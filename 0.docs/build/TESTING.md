@@ -129,9 +129,9 @@ The last test is also the week-1 gate: it proves outbound network, package insta
 
 ### 5.1 Bug healing: 10 SWE-bench Verified instances
 
-Chosen from the Sandboxes preloaded catalog. Selection criteria: Python, pytest, a single-file or two-file gold patch, and a fail-to-pass set of at most 10 tests. Instance IDs are listed in `tests/golden/instances.json` once selected.
+Chosen from the Sandboxes preloaded catalog (`swebench/sweb.eval.x86_64.<owner>_1776_<repo>-<n>:latest`). Selection criteria: Python, pytest, a single-file or two-file gold patch, and a fail-to-pass set of at most 10 tests. Instance metadata is fetched with `python -m tests.golden.fetch_swe <id>` into `tests/golden/swe/` and listed in `tests/golden/instances.json`. First six loaded September 12: `psf__requests-1142, 2317, 1921, 5414, 1766, 2931`. Missions follow the SWE-bench harness: apply the test patch, run only the instance's own test ids, judge on fail-to-pass and pass-to-pass.
 
-For each instance the harness records: the full SSE event log, every attempt's patch and test output, token usage per model, wall-clock time, and whether fail-to-pass and pass-to-pass criteria were met. Recordings live in `tests/golden/recordings/<instance>.jsonl` and power replay mode.
+For each instance the harness records: the full SSE event log, every attempt's patch and test output, token usage per model, wall-clock time, and whether fail-to-pass and pass-to-pass criteria were met. Recordings live in `tests/golden/recordings/*.json` and power replay mode.
 
 Target: at least 5 of 10 resolved. Report the actual number honestly in the README and the video.
 

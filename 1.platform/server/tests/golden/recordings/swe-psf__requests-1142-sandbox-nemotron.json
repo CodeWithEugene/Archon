@@ -1,0 +1,1243 @@
+{
+ "version": 1,
+ "recorded_at": "2026-09-12T13:03:19.021597+00:00",
+ "mission": {
+  "id": "m_1ede1482",
+  "type": "BUG_HEALING",
+  "repo_url": "https://github.com/psf/requests",
+  "git_ref": "main",
+  "test_command": "source /opt/miniconda3/bin/activate && conda activate testbed && pytest -q 'test_requests.py::RequestsTestCase::test_no_content_length' 'test_requests.py::RequestsTestCase::test_basic_building' 'test_requests.py::RequestsTestCase::test_entry_points' 'test_requests.py::RequestsTestCase::test_invalid_url' 'test_requests.py::RequestsTestCase::test_params_are_added_before_fragment' 'test_requests.py::RequestsTestCase::test_path_is_not_double_encoded'",
+  "install_command": null,
+  "swe_instance_id": "psf__requests-1142",
+  "hint": "requests.get is ALWAYS sending content length\nHi,\n\nIt seems like that request.get always adds 'content-length' header to the request.\nI think that the right behavior is not to add this header automatically in GET requests or add the possibility to not send it.\n\nFor example http://amazon.com returns 503 for every get request that contains 'content-length' header.\n\nThanks,\n\nOren\n\n",
+  "status": "VERIFIED",
+  "iteration": 1,
+  "spend_usd": 0.032301,
+  "baseline_image": "8251fb88-def1-4878-b948-753c1ed6287e",
+  "baseline_report": {
+   "exit_code": 1,
+   "passed": [
+    "test_requests.py::RequestsTestCase::test_basic_building",
+    "test_requests.py::RequestsTestCase::test_entry_points",
+    "test_requests.py::RequestsTestCase::test_invalid_url",
+    "test_requests.py::RequestsTestCase::test_params_are_added_before_fragment",
+    "test_requests.py::RequestsTestCase::test_path_is_not_double_encoded"
+   ],
+   "failed": [
+    "test_requests.py::RequestsTestCase::test_no_content_length"
+   ],
+   "errors": [],
+   "summary": "1 failed, 5 passed",
+   "parsed": true
+  },
+  "selected_attempt": "a_a08cb0af",
+  "failure_report": null,
+  "replay_of": null,
+  "diff": [
+   {
+    "path": "requests/models.py",
+    "original": "# -*- coding: utf-8 -*-\n\n\"\"\"\nrequests.models\n~~~~~~~~~~~~~~~\n\nThis module contains the primary objects that power Requests.\n\"\"\"\n\nimport collections\nimport logging\n\nfrom io import BytesIO\nfrom .hooks import default_hooks\nfrom .structures import CaseInsensitiveDict\nfrom .status_codes import codes\n\nfrom .auth import HTTPBasicAuth\nfrom .cookies import cookiejar_from_dict, get_cookie_header\nfrom .packages.urllib3.filepost import encode_multipart_formdata\nfrom .exceptions import HTTPError, RequestException, MissingSchema, InvalidURL\nfrom .utils import (\n    stream_untransfer, guess_filename, requote_uri,\n    stream_decode_response_unicode, to_key_val_list, parse_header_links,\n    iter_slices, guess_json_utf, super_len)\nfrom .compat import (\n    cookielib, urlparse, urlunparse, urlsplit, urlencode, str, bytes, StringIO,\n    is_py2, chardet, json, builtin_str, basestring)\n\nREDIRECT_STATI = (codes.moved, codes.found, codes.other, codes.temporary_moved)\nCONTENT_CHUNK_SIZE = 10 * 1024\nITER_CHUNK_SIZE = 512\n\nlog = logging.getLogger(__name__)\n\n\nclass RequestEncodingMixin(object):\n    @property\n    def path_url(self):\n        \"\"\"Build the path URL to use.\"\"\"\n\n        url = []\n\n        p = urlsplit(self.url)\n\n        path = p.path\n        if not path:\n            path = '/'\n\n        url.append(path)\n\n        query = p.query\n        if query:\n            url.append('?')\n            url.append(query)\n\n        return ''.join(url)\n\n    @staticmethod\n    def _encode_params(data):\n        \"\"\"Encode parameters in a piece of data.\n\n        Will successfully encode parameters when passed as a dict or a list of\n        2-tuples. Order is retained if data is a list of 2-tuples but abritrary\n        if parameters are supplied as a dict.\n        \"\"\"\n\n        if isinstance(data, (str, bytes)):\n            return data\n        elif hasattr(data, 'read'):\n            return data\n        elif hasattr(data, '__iter__'):\n            result = []\n            for k, vs in to_key_val_list(data):\n                if isinstance(vs, basestring) or not hasattr(vs, '__iter__'):\n                    vs = [vs]\n                for v in vs:\n                    if v is not None:\n                        result.append(\n                            (k.encode('utf-8') if isinstance(k, str) else k,\n                             v.encode('utf-8') if isinstance(v, str) else v))\n            return urlencode(result, doseq=True)\n        else:\n            return data\n\n    @staticmethod\n    def _encode_files(files, data):\n        \"\"\"Build the body for a multipart/form-data request.\n\n        Will successfully encode files when passed as a dict or a list of\n        2-tuples. Order is retained if data is a list of 2-tuples but abritrary\n        if parameters are supplied as a dict.\n\n        \"\"\"\n        if (not files) or isinstance(data, str):\n            return None\n\n        new_fields = []\n        fields = to_key_val_list(data or {})\n        files = to_key_val_list(files or {})\n\n        for field, val in fields:\n            if isinstance(val, list):\n                for v in val:\n                    new_fields.append((field, builtin_str(v)))\n            else:\n                new_fields.append((field, builtin_str(val)))\n\n        for (k, v) in files:\n            # support for explicit filename\n            ft = None\n            if isinstance(v, (tuple, list)):\n                if len(v) == 2:\n                    fn, fp = v\n                else:\n                    fn, fp, ft = v\n            else:\n                fn = guess_filename(v) or k\n                fp = v\n            if isinstance(fp, str):\n                fp = StringIO(fp)\n            if isinstance(fp, bytes):\n                fp = BytesIO(fp)\n\n            if ft:\n                new_v = (fn, fp.read(), ft)\n            else:\n                new_v = (fn, fp.read())\n            new_fields.append((k, new_v))\n\n        body, content_type = encode_multipart_formdata(new_fields)\n\n        return body, content_type\n\n\nclass RequestHooksMixin(object):\n    def register_hook(self, event, hook):\n        \"\"\"Properly register a hook.\"\"\"\n\n        if isinstance(hook, collections.Callable):\n            self.hooks[event].append(hook)\n        elif hasattr(hook, '__iter__'):\n            self.hooks[event].extend(h for h in hook if isinstance(h, collections.Callable))\n\n    def deregister_hook(self, event, hook):\n        \"\"\"Deregister a previously registered hook.\n        Returns True if the hook existed, False if not.\n        \"\"\"\n\n        try:\n            self.hooks[event].remove(hook)\n            return True\n        except ValueError:\n            return False\n\n\nclass Request(RequestHooksMixin):\n    \"\"\"A user-created :class:`Request <Request>` object.\n\n    Used to prepare a :class:`PreparedRequest <PreparedRequest>`, which is sent to the server.\n\n    :param method: HTTP method to use.\n    :param url: URL to send.\n    :param headers: dictionary of headers to send.\n    :param files: dictionary of {filename: fileobject} files to multipart upload.\n    :param data: the body to attach the request. If a dictionary is provided, form-encoding will take place.\n    :param params: dictionary of URL parameters to append to the URL.\n    :param auth: Auth handler or (user, pass) tuple.\n    :param cookies: dictionary or CookieJar of cookies to attach to this request.\n    :param hooks: dictionary of callback hooks, for internal usage.\n\n    Usage::\n\n      >>> import requests\n      >>> req = requests.Request('GET', 'http://httpbin.org/get')\n      >>> req.prepare()\n      <PreparedRequest [GET]>\n\n    \"\"\"\n    def __init__(self,\n        method=None,\n        url=None,\n        headers=None,\n        files=None,\n        data=dict(),\n        params=dict(),\n        auth=None,\n        cookies=None,\n        hooks=None):\n\n\n        # Default empty dicts for dict params.\n        data = [] if data is None else data\n        files = [] if files is None else files\n        headers = {} if headers is None else headers\n        params = {} if params is None else params\n        hooks = {} if hooks is None else hooks\n\n        self.hooks = default_hooks()\n        for (k, v) in list(hooks.items()):\n            self.register_hook(event=k, hook=v)\n\n        self.method = method\n        self.url = url\n        self.headers = headers\n        self.files = files\n        self.data = data\n        self.params = params\n        self.auth = auth\n        self.cookies = cookies\n        self.hooks = hooks\n\n    def __repr__(self):\n        return '<Request [%s]>' % (self.method)\n\n    def prepare(self):\n        \"\"\"Constructs a :class:`PreparedRequest <PreparedRequest>` for transmission and returns it.\"\"\"\n        p = PreparedRequest()\n\n        p.prepare_method(self.method)\n        p.prepare_url(self.url, self.params)\n        p.prepare_headers(self.headers)\n        p.prepare_cookies(self.cookies)\n        p.prepare_body(self.data, self.files)\n        # Note that prepare_auth must be last to enable authentication schemes\n        # such as OAuth to work on a fully prepared request.\n        p.prepare_auth(self.auth)\n        # This MUST go after prepare_auth. Authenticators could add a hook\n        p.prepare_hooks(self.hooks)\n\n        return p\n\n\nclass PreparedRequest(RequestEncodingMixin, RequestHooksMixin):\n    \"\"\"The fully mutable :class:`PreparedRequest <PreparedRequest>` object,\n    containing the exact bytes that will be sent to the server.\n\n    Generated from either a :class:`Request <Request>` object or manually.\n\n    Usage::\n\n      >>> import requests\n      >>> req = requests.Request('GET', 'http://httpbin.org/get')\n      >>> r = req.prepare()\n      <PreparedRequest [GET]>\n\n      >>> s = requests.Session()\n      >>> s.send(r)\n      <Response [200]>\n\n    \"\"\"\n\n    def __init__(self):\n        #: HTTP verb to send to the server.\n        self.method = None\n        #: HTTP URL to send the request to.\n        self.url = None\n        #: dictionary of HTTP headers.\n        self.headers = None\n        #: request body to send to the server.\n        self.body = None\n        #: dictionary of callback hooks, for internal usage.\n        self.hooks = default_hooks()\n\n    def __repr__(self):\n        return '<PreparedRequest [%s]>' % (self.method)\n\n    def prepare_method(self, method):\n        \"\"\"Prepares the given HTTP method.\"\"\"\n        self.method = method\n        if self.method is not None:\n            self.method = self.method.upper()\n\n    def prepare_url(self, url, params):\n        \"\"\"Prepares the given HTTP URL.\"\"\"\n        #: Accept objects that have string representations.\n        try:\n            url = unicode(url)\n        except NameError:\n            # We're on Python 3.\n            url = str(url)\n        except UnicodeDecodeError:\n            pass\n\n        # Support for unicode domain names and paths.\n        scheme, netloc, path, _params, query, fragment = urlparse(url)\n\n        if not (scheme and netloc):\n            raise MissingSchema(\"Invalid URL %r: No schema supplied\" % url)\n\n        try:\n            netloc = netloc.encode('idna').decode('utf-8')\n        except UnicodeError:\n            raise InvalidURL('URL has an invalid label.')\n\n        # Bare domains aren't valid URLs.\n        if not path:\n            path = '/'\n\n        if is_py2:\n            if isinstance(scheme, str):\n                scheme = scheme.encode('utf-8')\n            if isinstance(netloc, str):\n                netloc = netloc.encode('utf-8')\n            if isinstance(path, str):\n                path = path.encode('utf-8')\n            if isinstance(_params, str):\n                _params = _params.encode('utf-8')\n            if isinstance(query, str):\n                query = query.encode('utf-8')\n            if isinstance(fragment, str):\n                fragment = fragment.encode('utf-8')\n\n        enc_params = self._encode_params(params)\n        if enc_params:\n            if query:\n                query = '%s&%s' % (query, enc_params)\n            else:\n                query = enc_params\n\n        url = requote_uri(urlunparse([scheme, netloc, path, _params, query, fragment]))\n        self.url = url\n\n    def prepare_headers(self, headers):\n        \"\"\"Prepares the given HTTP headers.\"\"\"\n\n        if headers:\n            self.headers = CaseInsensitiveDict(headers)\n        else:\n            self.headers = CaseInsensitiveDict()\n\n    def prepare_body(self, data, files):\n        \"\"\"Prepares the given HTTP body data.\"\"\"\n\n        # Check if file, fo, generator, iterator.\n        # If not, run through normal process.\n\n        # Nottin' on you.\n        body = None\n        content_type = None\n        length = None\n        is_stream = False\n\n        is_stream = all([\n            hasattr(data, '__iter__'),\n            not isinstance(data, basestring),\n            not isinstance(data, dict)\n        ])\n\n        try:\n            length = str(super_len(data))\n        except (TypeError, AttributeError):\n            length = False\n\n        if is_stream:\n            body = data\n\n            if files:\n                raise NotImplementedError('Streamed bodies and files are mutually exclusive.')\n\n            if length:\n                self.headers['Content-Length'] = length\n            else:\n                self.headers['Transfer-Encoding'] = 'chunked'\n        # Check if file, fo, generator, iterator.\n        # If not, run through normal process.\n\n        else:\n            # Multi-part file uploads.\n            if files:\n                (body, content_type) = self._encode_files(files, data)\n            else:\n                if data:\n                    body = self._encode_params(data)\n                    if isinstance(data, str) or isinstance(data, builtin_str) or hasattr(data, 'read'):\n                        content_type = None\n                    else:\n                        content_type = 'application/x-www-form-urlencoded'\n\n            self.prepare_content_length(body)\n\n            # Add content-type if it wasn't explicitly provided.\n            if (content_type) and (not 'content-type' in self.headers):\n                self.headers['Content-Type'] = content_type\n\n        self.body = body\n\n    def prepare_content_length(self, body):\n        self.headers['Content-Length'] = '0'\n        if hasattr(body, 'seek') and hasattr(body, 'tell'):\n            body.seek(0, 2)\n            self.headers['Content-Length'] = str(body.tell())\n            body.seek(0, 0)\n        elif body is not None:\n            self.headers['Content-Length'] = str(len(body))\n\n    def prepare_auth(self, auth):\n        \"\"\"Prepares the given HTTP auth data.\"\"\"\n        if auth:\n            if isinstance(auth, tuple) and len(auth) == 2:\n                # special-case basic HTTP auth\n                auth = HTTPBasicAuth(*auth)\n\n            # Allow auth to make its changes.\n            r = auth(self)\n\n            # Update self to reflect the auth changes.\n            self.__dict__.update(r.__dict__)\n\n            # Recompute Content-Length\n            self.prepare_content_length(self.body)\n\n    def prepare_cookies(self, cookies):\n        \"\"\"Prepares the given HTTP cookie data.\"\"\"\n\n        if isinstance(cookies, cookielib.CookieJar):\n            cookies = cookies\n        else:\n            cookies = cookiejar_from_dict(cookies)\n\n        if 'cookie' not in self.headers:\n            cookie_header = get_cookie_header(cookies, self)\n            if cookie_header is not None:\n                self.headers['Cookie'] = cookie_header\n\n    def prepare_hooks(self, hooks):\n        \"\"\"Prepares the given hooks.\"\"\"\n        for event in hooks:\n            self.register_hook(event, hooks[event])\n\n\nclass Response(object):\n    \"\"\"The :class:`Response <Response>` object, which contains a\n    server's response to an HTTP request.\n    \"\"\"\n\n    def __init__(self):\n        super(Response, self).__init__()\n\n        self._content = False\n        self._content_consumed = False\n\n        #: Integer Code of responded HTTP Status.\n        self.status_code = None\n\n        #: Case-insensitive Dictionary of Response Headers.\n        #: For example, ``headers['content-encoding']`` will return the\n        #: value of a ``'Content-Encoding'`` response header.\n        self.headers = CaseInsensitiveDict()\n\n        #: File-like object representation of response (for advanced usage).\n        #: Requires that ``stream=True` on the request.\n        # This requirement does not apply for use internally to Requests.\n        self.raw = None\n\n        #: Final URL location of Response.\n        self.url = None\n\n        #: Encoding to decode with when accessing r.text.\n        self.encoding = None\n\n        #: A list of :class:`Response <Response>` objects from\n        #: the history of the Request. Any redirect responses will end\n        #: up here. The list is sorted from the oldest to the most recent request.\n        self.history = []\n\n        self.reason = None\n\n        #: A CookieJar of Cookies the server sent back.\n        self.cookies = cookiejar_from_dict({})\n\n    def __repr__(self):\n        return '<Response [%s]>' % (self.status_code)\n\n    def __bool__(self):\n        \"\"\"Returns true if :attr:`status_code` is 'OK'.\"\"\"\n        return self.ok\n\n    def __nonzero__(self):\n        \"\"\"Returns true if :attr:`status_code` is 'OK'.\"\"\"\n        return self.ok\n\n    @property\n    def ok(self):\n        try:\n            self.raise_for_status()\n        except RequestException:\n            return False\n        return True\n\n    @property\n    def apparent_encoding(self):\n        \"\"\"The apparent encoding, provided by the lovely Charade library\n        (Thanks, Ian!).\"\"\"\n        return chardet.detect(self.content)['encoding']\n\n    def iter_content(self, chunk_size=1, decode_unicode=False):\n        \"\"\"Iterates over the response data.  This avoids reading the content\n        at once into memory for large responses.  The chunk size is the number\n        of bytes it should read into memory.  This is not necessarily the\n        length of each item returned as decoding can take place.\n        \"\"\"\n        if self._content_consumed:\n            # simulate reading small chunks of the content\n            return iter_slices(self._content, chunk_size)\n\n        def generate():\n            while 1:\n                chunk = self.raw.read(chunk_size)\n                if not chunk:\n                    break\n                yield chunk\n            self._content_consumed = True\n\n        gen = stream_untransfer(generate(), self)\n\n        if decode_unicode:\n            gen = stream_decode_response_unicode(gen, self)\n\n        return gen\n\n    def iter_lines(self, chunk_size=ITER_CHUNK_SIZE, decode_unicode=None):\n        \"\"\"Iterates over the response data, one line at a time.  This\n        avoids reading the content at once into memory for large\n        responses.\n        \"\"\"\n\n        pending = None\n\n        for chunk in self.iter_content(\n            chunk_size=chunk_size,\n            decode_unicode=decode_unicode):\n\n            if pending is not None:\n                chunk = pending + chunk\n            lines = chunk.splitlines()\n\n            if lines and lines[-1] and chunk and lines[-1][-1] == chunk[-1]:\n                pending = lines.pop()\n            else:\n                pending = None\n\n            for line in lines:\n                yield line\n\n        if pending is not None:\n            yield pending\n\n    @property\n    def content(self):\n        \"\"\"Content of the response, in bytes.\"\"\"\n\n        if self._content is False:\n            # Read the contents.\n            try:\n                if self._content_consumed:\n                    raise RuntimeError(\n                        'The content for this response was already consumed')\n\n                if self.status_code is 0:\n                    self._content = None\n                else:\n                    self._content = bytes().join(self.iter_content(CONTENT_CHUNK_SIZE)) or bytes()\n\n            except AttributeError:\n                self._content = None\n\n        self._content_consumed = True\n        # don't need to release the connection; that's been handled by urllib3\n        # since we exhausted the data.\n        return self._content\n\n    @property\n    def text(self):\n        \"\"\"Content of the response, in unicode.\n\n        if Response.encoding is None and chardet module is available, encoding\n        will be guessed.\n        \"\"\"\n\n        # Try charset from content-type\n        content = None\n        encoding = self.encoding\n\n        if not self.content:\n            return str('')\n\n        # Fallback to auto-detected encoding.\n        if self.encoding is None:\n            encoding = self.apparent_encoding\n\n        # Decode unicode from given encoding.\n        try:\n            content = str(self.content, encoding, errors='replace')\n        except (LookupError, TypeError):\n            # A LookupError is raised if the encoding was not found which could\n            # indicate a misspelling or similar mistake.\n            #\n            # A TypeError can be raised if encoding is None\n            #\n            # So we try blindly encoding.\n            content = str(self.content, errors='replace')\n\n        return content\n\n    def json(self, **kwargs):\n        \"\"\"Returns the json-encoded content of a response, if any.\n\n        :param \\*\\*kwargs: Optional arguments that ``json.loads`` takes.\n        \"\"\"\n\n        if not self.encoding and len(self.content) > 3:\n            # No encoding set. JSON RFC 4627 section 3 states we should expect\n            # UTF-8, -16 or -32. Detect which one to use; If the detection or\n            # decoding fails, fall back to `self.text` (using chardet to make\n            # a best guess).\n            encoding = guess_json_utf(self.content)\n            if encoding is not None:\n                return json.loads(self.content.decode(encoding), **kwargs)\n        return json.loads(self.text or self.content, **kwargs)\n\n    @property\n    def links(self):\n        \"\"\"Returns the parsed header links of the response, if any.\"\"\"\n\n        header = self.headers['link']\n\n        # l = MultiDict()\n        l = {}\n\n        if header:\n            links = parse_header_links(header)\n\n            for link in links:\n                key = link.get('rel') or link.get('url')\n                l[key] = link\n\n        return l\n\n    def raise_for_status(self):\n        \"\"\"Raises stored :class:`HTTPError` or :class:`URLError`, if one occurred.\"\"\"\n\n        http_error_msg = ''\n\n        if 400 <= self.status_code < 500:\n            http_error_msg = '%s Client Error: %s' % (self.status_code, self.reason)\n\n        elif 500 <= self.status_code < 600:\n            http_error_msg = '%s Server Error: %s' % (self.status_code, self.reason)\n\n        if http_error_msg:\n            http_error = HTTPError(http_error_msg)\n            http_error.response = self\n            raise http_error\n\n    def close(self):\n        return self.raw.release_conn()\n",
+    "modified": "# -*- coding: utf-8 -*-\n\n\"\"\"\nrequests.models\n~~~~~~~~~~~~~~~\n\nThis module contains the primary objects that power Requests.\n\"\"\"\n\nimport collections\nimport logging\n\nfrom io import BytesIO\nfrom .hooks import default_hooks\nfrom .structures import CaseInsensitiveDict\nfrom .status_codes import codes\n\nfrom .auth import HTTPBasicAuth\nfrom .cookies import cookiejar_from_dict, get_cookie_header\nfrom .packages.urllib3.filepost import encode_multipart_formdata\nfrom .exceptions import HTTPError, RequestException, MissingSchema, InvalidURL\nfrom .utils import (\n    stream_untransfer, guess_filename, requote_uri,\n    stream_decode_response_unicode, to_key_val_list, parse_header_links,\n    iter_slices, guess_json_utf, super_len)\nfrom .compat import (\n    cookielib, urlparse, urlunparse, urlsplit, urlencode, str, bytes, StringIO,\n    is_py2, chardet, json, builtin_str, basestring)\n\nREDIRECT_STATI = (codes.moved, codes.found, codes.other, codes.temporary_moved)\nCONTENT_CHUNK_SIZE = 10 * 1024\nITER_CHUNK_SIZE = 512\n\nlog = logging.getLogger(__name__)\n\n\nclass RequestEncodingMixin(object):\n    @property\n    def path_url(self):\n        \"\"\"Build the path URL to use.\"\"\"\n\n        url = []\n\n        p = urlsplit(self.url)\n\n        path = p.path\n        if not path:\n            path = '/'\n\n        url.append(path)\n\n        query = p.query\n        if query:\n            url.append('?')\n            url.append(query)\n\n        return ''.join(url)\n\n    @staticmethod\n    def _encode_params(data):\n        \"\"\"Encode parameters in a piece of data.\n\n        Will successfully encode parameters when passed as a dict or a list of\n        2-tuples. Order is retained if data is a list of 2-tuples but abritrary\n        if parameters are supplied as a dict.\n        \"\"\"\n\n        if isinstance(data, (str, bytes)):\n            return data\n        elif hasattr(data, 'read'):\n            return data\n        elif hasattr(data, '__iter__'):\n            result = []\n            for k, vs in to_key_val_list(data):\n                if isinstance(vs, basestring) or not hasattr(vs, '__iter__'):\n                    vs = [vs]\n                for v in vs:\n                    if v is not None:\n                        result.append(\n                            (k.encode('utf-8') if isinstance(k, str) else k,\n                             v.encode('utf-8') if isinstance(v, str) else v))\n            return urlencode(result, doseq=True)\n        else:\n            return data\n\n    @staticmethod\n    def _encode_files(files, data):\n        \"\"\"Build the body for a multipart/form-data request.\n\n        Will successfully encode files when passed as a dict or a list of\n        2-tuples. Order is retained if data is a list of 2-tuples but abritrary\n        if parameters are supplied as a dict.\n\n        \"\"\"\n        if (not files) or isinstance(data, str):\n            return None\n\n        new_fields = []\n        fields = to_key_val_list(data or {})\n        files = to_key_val_list(files or {})\n\n        for field, val in fields:\n            if isinstance(val, list):\n                for v in val:\n                    new_fields.append((field, builtin_str(v)))\n            else:\n                new_fields.append((field, builtin_str(val)))\n\n        for (k, v) in files:\n            # support for explicit filename\n            ft = None\n            if isinstance(v, (tuple, list)):\n                if len(v) == 2:\n                    fn, fp = v\n                else:\n                    fn, fp, ft = v\n            else:\n                fn = guess_filename(v) or k\n                fp = v\n            if isinstance(fp, str):\n                fp = StringIO(fp)\n            if isinstance(fp, bytes):\n                fp = BytesIO(fp)\n\n            if ft:\n                new_v = (fn, fp.read(), ft)\n            else:\n                new_v = (fn, fp.read())\n            new_fields.append((k, new_v))\n\n        body, content_type = encode_multipart_formdata(new_fields)\n\n        return body, content_type\n\n\nclass RequestHooksMixin(object):\n    def register_hook(self, event, hook):\n        \"\"\"Properly register a hook.\"\"\"\n\n        if isinstance(hook, collections.Callable):\n            self.hooks[event].append(hook)\n        elif hasattr(hook, '__iter__'):\n            self.hooks[event].extend(h for h in hook if isinstance(h, collections.Callable))\n\n    def deregister_hook(self, event, hook):\n        \"\"\"Deregister a previously registered hook.\n        Returns True if the hook existed, False if not.\n        \"\"\"\n\n        try:\n            self.hooks[event].remove(hook)\n            return True\n        except ValueError:\n            return False\n\n\nclass Request(RequestHooksMixin):\n    \"\"\"A user-created :class:`Request <Request>` object.\n\n    Used to prepare a :class:`PreparedRequest <PreparedRequest>`, which is sent to the server.\n\n    :param method: HTTP method to use.\n    :param url: URL to send.\n    :param headers: dictionary of headers to send.\n    :param files: dictionary of {filename: fileobject} files to multipart upload.\n    :param data: the body to attach the request. If a dictionary is provided, form-encoding will take place.\n    :param params: dictionary of URL parameters to append to the URL.\n    :param auth: Auth handler or (user, pass) tuple.\n    :param cookies: dictionary or CookieJar of cookies to attach to this request.\n    :param hooks: dictionary of callback hooks, for internal usage.\n\n    Usage::\n\n      >>> import requests\n      >>> req = requests.Request('GET', 'http://httpbin.org/get')\n      >>> req.prepare()\n      <PreparedRequest [GET]>\n\n    \"\"\"\n    def __init__(self,\n        method=None,\n        url=None,\n        headers=None,\n        files=None,\n        data=dict(),\n        params=dict(),\n        auth=None,\n        cookies=None,\n        hooks=None):\n\n\n        # Default empty dicts for dict params.\n        data = [] if data is None else data\n        files = [] if files is None else files\n        headers = {} if headers is None else headers\n        params = {} if params is None else params\n        hooks = {} if hooks is None else hooks\n\n        self.hooks = default_hooks()\n        for (k, v) in list(hooks.items()):\n            self.register_hook(event=k, hook=v)\n\n        self.method = method\n        self.url = url\n        self.headers = headers\n        self.files = files\n        self.data = data\n        self.params = params\n        self.auth = auth\n        self.cookies = cookies\n        self.hooks = hooks\n\n    def __repr__(self):\n        return '<Request [%s]>' % (self.method)\n\n    def prepare(self):\n        \"\"\"Constructs a :class:`PreparedRequest <PreparedRequest>` for transmission and returns it.\"\"\"\n        p = PreparedRequest()\n\n        p.prepare_method(self.method)\n        p.prepare_url(self.url, self.params)\n        p.prepare_headers(self.headers)\n        p.prepare_cookies(self.cookies)\n        p.prepare_body(self.data, self.files)\n        # Note that prepare_auth must be last to enable authentication schemes\n        # such as OAuth to work on a fully prepared request.\n        p.prepare_auth(self.auth)\n        # This MUST go after prepare_auth. Authenticators could add a hook\n        p.prepare_hooks(self.hooks)\n\n        return p\n\n\nclass PreparedRequest(RequestEncodingMixin, RequestHooksMixin):\n    \"\"\"The fully mutable :class:`PreparedRequest <PreparedRequest>` object,\n    containing the exact bytes that will be sent to the server.\n\n    Generated from either a :class:`Request <Request>` object or manually.\n\n    Usage::\n\n      >>> import requests\n      >>> req = requests.Request('GET', 'http://httpbin.org/get')\n      >>> r = req.prepare()\n      <PreparedRequest [GET]>\n\n      >>> s = requests.Session()\n      >>> s.send(r)\n      <Response [200]>\n\n    \"\"\"\n\n    def __init__(self):\n        #: HTTP verb to send to the server.\n        self.method = None\n        #: HTTP URL to send the request to.\n        self.url = None\n        #: dictionary of HTTP headers.\n        self.headers = None\n        #: request body to send to the server.\n        self.body = None\n        #: dictionary of callback hooks, for internal usage.\n        self.hooks = default_hooks()\n\n    def __repr__(self):\n        return '<PreparedRequest [%s]>' % (self.method)\n\n    def prepare_method(self, method):\n        \"\"\"Prepares the given HTTP method.\"\"\"\n        self.method = method\n        if self.method is not None:\n            self.method = self.method.upper()\n\n    def prepare_url(self, url, params):\n        \"\"\"Prepares the given HTTP URL.\"\"\"\n        #: Accept objects that have string representations.\n        try:\n            url = unicode(url)\n        except NameError:\n            # We're on Python 3.\n            url = str(url)\n        except UnicodeDecodeError:\n            pass\n\n        # Support for unicode domain names and paths.\n        scheme, netloc, path, _params, query, fragment = urlparse(url)\n\n        if not (scheme and netloc):\n            raise MissingSchema(\"Invalid URL %r: No schema supplied\" % url)\n\n        try:\n            netloc = netloc.encode('idna').decode('utf-8')\n        except UnicodeError:\n            raise InvalidURL('URL has an invalid label.')\n\n        # Bare domains aren't valid URLs.\n        if not path:\n            path = '/'\n\n        if is_py2:\n            if isinstance(scheme, str):\n                scheme = scheme.encode('utf-8')\n            if isinstance(netloc, str):\n                netloc = netloc.encode('utf-8')\n            if isinstance(path, str):\n                path = path.encode('utf-8')\n            if isinstance(_params, str):\n                _params = _params.encode('utf-8')\n            if isinstance(query, str):\n                query = query.encode('utf-8')\n            if isinstance(fragment, str):\n                fragment = fragment.encode('utf-8')\n\n        enc_params = self._encode_params(params)\n        if enc_params:\n            if query:\n                query = '%s&%s' % (query, enc_params)\n            else:\n                query = enc_params\n\n        url = requote_uri(urlunparse([scheme, netloc, path, _params, query, fragment]))\n        self.url = url\n\n    def prepare_headers(self, headers):\n        \"\"\"Prepares the given HTTP headers.\"\"\"\n\n        if headers:\n            self.headers = CaseInsensitiveDict(headers)\n        else:\n            self.headers = CaseInsensitiveDict()\n\n    def prepare_body(self, data, files):\n        \"\"\"Prepares the given HTTP body data.\"\"\"\n\n        # Check if file, fo, generator, iterator.\n        # If not, run through normal process.\n\n        # Nottin' on you.\n        body = None\n        content_type = None\n        length = None\n        is_stream = False\n\n        is_stream = all([\n            hasattr(data, '__iter__'),\n            not isinstance(data, basestring),\n            not isinstance(data, dict)\n        ])\n\n        try:\n            length = str(super_len(data))\n        except (TypeError, AttributeError):\n            length = False\n\n        if is_stream:\n            body = data\n\n            if files:\n                raise NotImplementedError('Streamed bodies and files are mutually exclusive.')\n\n            if length:\n                self.headers['Content-Length'] = length\n            else:\n                self.headers['Transfer-Encoding'] = 'chunked'\n        # Check if file, fo, generator, iterator.\n        # If not, run through normal process.\n\n        else:\n            # Multi-part file uploads.\n            if files:\n                (body, content_type) = self._encode_files(files, data)\n            else:\n                if data:\n                    body = self._encode_params(data)\n                    if isinstance(data, str) or isinstance(data, builtin_str) or hasattr(data, 'read'):\n                        content_type = None\n                    else:\n                        content_type = 'application/x-www-form-urlencoded'\n\n            self.prepare_content_length(body)\n\n            # Add content-type if it wasn't explicitly provided.\n            if (content_type) and (not 'content-type' in self.headers):\n                self.headers['Content-Type'] = content_type\n\n        self.body = body\n\n    def prepare_content_length(self, body):\n        if self.method in ('GET', 'HEAD'):\n            return\n        if body is None:\n            return\n        if hasattr(body, 'seek') and hasattr(body, 'tell'):\n            body.seek(0, 2)\n            self.headers['Content-Length'] = str(body.tell())\n            body.seek(0, 0)\n        else:\n            self.headers['Content-Length'] = str(len(body))\n\n    def prepare_auth(self, auth):\n        \"\"\"Prepares the given HTTP auth data.\"\"\"\n        if auth:\n            if isinstance(auth, tuple) and len(auth) == 2:\n                # special-case basic HTTP auth\n                auth = HTTPBasicAuth(*auth)\n\n            # Allow auth to make its changes.\n            r = auth(self)\n\n            # Update self to reflect the auth changes.\n            self.__dict__.update(r.__dict__)\n\n            # Recompute Content-Length\n            self.prepare_content_length(self.body)\n\n    def prepare_cookies(self, cookies):\n        \"\"\"Prepares the given HTTP cookie data.\"\"\"\n\n        if isinstance(cookies, cookielib.CookieJar):\n            cookies = cookies\n        else:\n            cookies = cookiejar_from_dict(cookies)\n\n        if 'cookie' not in self.headers:\n            cookie_header = get_cookie_header(cookies, self)\n            if cookie_header is not None:\n                self.headers['Cookie'] = cookie_header\n\n    def prepare_hooks(self, hooks):\n        \"\"\"Prepares the given hooks.\"\"\"\n        for event in hooks:\n            self.register_hook(event, hooks[event])\n\n\nclass Response(object):\n    \"\"\"The :class:`Response <Response>` object, which contains a\n    server's response to an HTTP request.\n    \"\"\"\n\n    def __init__(self):\n        super(Response, self).__init__()\n\n        self._content = False\n        self._content_consumed = False\n\n        #: Integer Code of responded HTTP Status.\n        self.status_code = None\n\n        #: Case-insensitive Dictionary of Response Headers.\n        #: For example, ``headers['content-encoding']`` will return the\n        #: value of a ``'Content-Encoding'`` response header.\n        self.headers = CaseInsensitiveDict()\n\n        #: File-like object representation of response (for advanced usage).\n        #: Requires that ``stream=True` on the request.\n        # This requirement does not apply for use internally to Requests.\n        self.raw = None\n\n        #: Final URL location of Response.\n        self.url = None\n\n        #: Encoding to decode with when accessing r.text.\n        self.encoding = None\n\n        #: A list of :class:`Response <Response>` objects from\n        #: the history of the Request. Any redirect responses will end\n        #: up here. The list is sorted from the oldest to the most recent request.\n        self.history = []\n\n        self.reason = None\n\n        #: A CookieJar of Cookies the server sent back.\n        self.cookies = cookiejar_from_dict({})\n\n    def __repr__(self):\n        return '<Response [%s]>' % (self.status_code)\n\n    def __bool__(self):\n        \"\"\"Returns true if :attr:`status_code` is 'OK'.\"\"\"\n        return self.ok\n\n    def __nonzero__(self):\n        \"\"\"Returns true if :attr:`status_code` is 'OK'.\"\"\"\n        return self.ok\n\n    @property\n    def ok(self):\n        try:\n            self.raise_for_status()\n        except RequestException:\n            return False\n        return True\n\n    @property\n    def apparent_encoding(self):\n        \"\"\"The apparent encoding, provided by the lovely Charade library\n        (Thanks, Ian!).\"\"\"\n        return chardet.detect(self.content)['encoding']\n\n    def iter_content(self, chunk_size=1, decode_unicode=False):\n        \"\"\"Iterates over the response data.  This avoids reading the content\n        at once into memory for large responses.  The chunk size is the number\n        of bytes it should read into memory.  This is not necessarily the\n        length of each item returned as decoding can take place.\n        \"\"\"\n        if self._content_consumed:\n            # simulate reading small chunks of the content\n            return iter_slices(self._content, chunk_size)\n\n        def generate():\n            while 1:\n                chunk = self.raw.read(chunk_size)\n                if not chunk:\n                    break\n                yield chunk\n            self._content_consumed = True\n\n        gen = stream_untransfer(generate(), self)\n\n        if decode_unicode:\n            gen = stream_decode_response_unicode(gen, self)\n\n        return gen\n\n    def iter_lines(self, chunk_size=ITER_CHUNK_SIZE, decode_unicode=None):\n        \"\"\"Iterates over the response data, one line at a time.  This\n        avoids reading the content at once into memory for large\n        responses.\n        \"\"\"\n\n        pending = None\n\n        for chunk in self.iter_content(\n            chunk_size=chunk_size,\n            decode_unicode=decode_unicode):\n\n            if pending is not None:\n                chunk = pending + chunk\n            lines = chunk.splitlines()\n\n            if lines and lines[-1] and chunk and lines[-1][-1] == chunk[-1]:\n                pending = lines.pop()\n            else:\n                pending = None\n\n            for line in lines:\n                yield line\n\n        if pending is not None:\n            yield pending\n\n    @property\n    def content(self):\n        \"\"\"Content of the response, in bytes.\"\"\"\n\n        if self._content is False:\n            # Read the contents.\n            try:\n                if self._content_consumed:\n                    raise RuntimeError(\n                        'The content for this response was already consumed')\n\n                if self.status_code is 0:\n                    self._content = None\n                else:\n                    self._content = bytes().join(self.iter_content(CONTENT_CHUNK_SIZE)) or bytes()\n\n            except AttributeError:\n                self._content = None\n\n        self._content_consumed = True\n        # don't need to release the connection; that's been handled by urllib3\n        # since we exhausted the data.\n        return self._content\n\n    @property\n    def text(self):\n        \"\"\"Content of the response, in unicode.\n\n        if Response.encoding is None and chardet module is available, encoding\n        will be guessed.\n        \"\"\"\n\n        # Try charset from content-type\n        content = None\n        encoding = self.encoding\n\n        if not self.content:\n            return str('')\n\n        # Fallback to auto-detected encoding.\n        if self.encoding is None:\n            encoding = self.apparent_encoding\n\n        # Decode unicode from given encoding.\n        try:\n            content = str(self.content, encoding, errors='replace')\n        except (LookupError, TypeError):\n            # A LookupError is raised if the encoding was not found which could\n            # indicate a misspelling or similar mistake.\n            #\n            # A TypeError can be raised if encoding is None\n            #\n            # So we try blindly encoding.\n            content = str(self.content, errors='replace')\n\n        return content\n\n    def json(self, **kwargs):\n        \"\"\"Returns the json-encoded content of a response, if any.\n\n        :param \\*\\*kwargs: Optional arguments that ``json.loads`` takes.\n        \"\"\"\n\n        if not self.encoding and len(self.content) > 3:\n            # No encoding set. JSON RFC 4627 section 3 states we should expect\n            # UTF-8, -16 or -32. Detect which one to use; If the detection or\n            # decoding fails, fall back to `self.text` (using chardet to make\n            # a best guess).\n            encoding = guess_json_utf(self.content)\n            if encoding is not None:\n                return json.loads(self.content.decode(encoding), **kwargs)\n        return json.loads(self.text or self.content, **kwargs)\n\n    @property\n    def links(self):\n        \"\"\"Returns the parsed header links of the response, if any.\"\"\"\n\n        header = self.headers['link']\n\n        # l = MultiDict()\n        l = {}\n\n        if header:\n            links = parse_header_links(header)\n\n            for link in links:\n                key = link.get('rel') or link.get('url')\n                l[key] = link\n\n        return l\n\n    def raise_for_status(self):\n        \"\"\"Raises stored :class:`HTTPError` or :class:`URLError`, if one occurred.\"\"\"\n\n        http_error_msg = ''\n\n        if 400 <= self.status_code < 500:\n            http_error_msg = '%s Client Error: %s' % (self.status_code, self.reason)\n\n        elif 500 <= self.status_code < 600:\n            http_error_msg = '%s Server Error: %s' % (self.status_code, self.reason)\n\n        if http_error_msg:\n            http_error = HTTPError(http_error_msg)\n            http_error.response = self\n            raise http_error\n\n    def close(self):\n        return self.raw.release_conn()\n",
+    "language": "python"
+   }
+  ],
+  "summary": {
+   "trace_url": "https://smith.langchain.com/o/ed80d820-b9cd-4bf6-9272-8f173cc1e037/projects/p/2ae55e09-4894-487d-ae0d-ae0b31eef736/trace/01a095b6-5849-7671-8957-c9de5ddf5383/run/01a095b6-5849-7671-8957-c9de5ddf5383?start_time=2026-09-12T13%3A02%3A30.473271%2B00%3A00",
+   "swe": {
+    "instance": "psf__requests-1142",
+    "difficulty": "<15 min fix",
+    "fail_to_pass": [
+     "test_requests.py::RequestsTestCase::test_no_content_length"
+    ],
+    "pass_to_pass": 5,
+    "image": "swebench/sweb.eval.x86_64.psf_1776_requests-1142:latest"
+   },
+   "root_cause": "The `prepare_content_length` method in `PreparedRequest` unconditionally sets a `Content-Length` header (defaulting to '0') for all requests, including GET and HEAD requests which should not have a body or Content-Length header per HTTP specifications. The test `test_no_content_length` expects GET and HEAD prepared requests to lack this header."
+  },
+  "created_at": "2026-09-12T13:02:30.115262Z",
+  "finished_at": "2026-09-12T13:03:19.014689Z"
+ },
+ "attempts": [
+  {
+   "id": "a_a08cb0af",
+   "mission_id": "m_1ede1482",
+   "iteration": 1,
+   "parent_image": "8251fb88-def1-4878-b948-753c1ed6287e",
+   "result_image": "e3a4430e-f43d-47ff-8148-53fc7f1393e4",
+   "patch": "diff --git a/requests/models.py b/requests/models.py\nindex 9926045..5b97e97 100644\n--- a/requests/models.py\n+++ b/requests/models.py\n@@ -386,12 +386,15 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):\n         self.body = body\n \n     def prepare_content_length(self, body):\n-        self.headers['Content-Length'] = '0'\n+        if self.method in ('GET', 'HEAD'):\n+            return\n+        if body is None:\n+            return\n         if hasattr(body, 'seek') and hasattr(body, 'tell'):\n             body.seek(0, 2)\n             self.headers['Content-Length'] = str(body.tell())\n             body.seek(0, 0)\n-        elif body is not None:\n+        else:\n             self.headers['Content-Length'] = str(len(body))\n \n     def prepare_auth(self, auth):\n",
+   "rationale": "Modify `prepare_content_length` to skip setting the header for GET and HEAD methods, and only set it when a body actually exists. This matches HTTP semantics where GET/HEAD requests have no body.",
+   "exit_code": 0,
+   "fail_to_pass": 1,
+   "pass_to_pass_broken": 0,
+   "patch_lines": 7,
+   "applied": true,
+   "selected": true,
+   "report": {
+    "exit_code": 0,
+    "passed": [
+     "test_requests.py::RequestsTestCase::test_basic_building",
+     "test_requests.py::RequestsTestCase::test_entry_points",
+     "test_requests.py::RequestsTestCase::test_invalid_url",
+     "test_requests.py::RequestsTestCase::test_no_content_length",
+     "test_requests.py::RequestsTestCase::test_params_are_added_before_fragment",
+     "test_requests.py::RequestsTestCase::test_path_is_not_double_encoded"
+    ],
+    "failed": [],
+    "errors": [],
+    "summary": "0 failed, 6 passed",
+    "parsed": true
+   },
+   "report_output": "......                                                                   [100%]\n=============================== warnings summary ===============================\nrequests/packages/urllib3/_collections.py:7\n  /testbed/requests/packages/urllib3/_collections.py:7: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working\n    from collections import MutableMapping\n\nrequests/models.py:610\n  /testbed/requests/models.py:610: DeprecationWarning: invalid escape sequence \\*\n    \"\"\"Returns the json-encoded content of a response, if any.\n\nrequests/models.py:563\n  /testbed/requests/models.py:563: SyntaxWarning: \"is\" with a literal. Did you mean \"==\"?\n    if self.status_code is 0:\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n==================================== PASSES ====================================\n-------------------- generated xml file: /archon-junit.xml ---------------------\n=========================== short test summary info ============================\nPASSED test_requests.py::RequestsTestCase::test_no_content_length\nPASSED test_requests.py::RequestsTestCase::test_basic_building\nPASSED test_requests.py::RequestsTestCase::test_entry_points\nPASSED test_requests.py::RequestsTestCase::test_invalid_url\nPASSED test_requests.py::RequestsTestCase::test_params_are_added_before_fragment\nPASSED test_requests.py::RequestsTestCase::test_path_is_not_double_encoded\n6 passed, 3 warnings in 0.11s\n",
+   "error": null
+  }
+ ],
+ "usage": [
+  {
+   "mission_id": "m_1ede1482",
+   "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+   "prompt_tokens": 17567,
+   "completion_tokens": 4220,
+   "cost_usd": 0.030226999999999997,
+   "task": ""
+  },
+  {
+   "mission_id": "m_1ede1482",
+   "model": "nvidia/nemotron-3-super-120b-a12b",
+   "prompt_tokens": 5657,
+   "completion_tokens": 419,
+   "cost_usd": 0.0020742,
+   "task": ""
+  }
+ ],
+ "events": [
+  {
+   "id": 1,
+   "kind": "status",
+   "payload": {
+    "status": "PROVISIONING",
+    "iteration": 0
+   },
+   "ts": "2026-09-12T13:02:32.065681+00:00"
+  },
+  {
+   "id": 2,
+   "kind": "thought",
+   "payload": {
+    "stage": "PROVISIONING",
+    "model": "archon",
+    "text": "Cloning the repository and installing dependencies in a fresh sandbox."
+   },
+   "ts": "2026-09-12T13:02:32.066476+00:00"
+  },
+  {
+   "id": 3,
+   "kind": "thought",
+   "payload": {
+    "stage": "PROVISIONING",
+    "model": "archon",
+    "text": "SWE-bench Verified psf__requests-1142 (<15 min fix): starting from the preloaded sandbox image and applying the instance's test patch."
+   },
+   "ts": "2026-09-12T13:02:32.067472+00:00"
+  },
+  {
+   "id": 4,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "cmd",
+    "line": "$ git apply --whitespace=nowarn /archon.patch && git status --short | head -20"
+   },
+   "ts": "2026-09-12T13:02:33.082876+00:00"
+  },
+  {
+   "id": 5,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": " M test_requests.py"
+   },
+   "ts": "2026-09-12T13:02:34.727342+00:00"
+  },
+  {
+   "id": 6,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "?? build/"
+   },
+   "ts": "2026-09-12T13:02:34.729116+00:00"
+  },
+  {
+   "id": 7,
+   "kind": "status",
+   "payload": {
+    "status": "REPRODUCING",
+    "iteration": 0
+   },
+   "ts": "2026-09-12T13:02:34.731114+00:00"
+  },
+  {
+   "id": 8,
+   "kind": "thought",
+   "payload": {
+    "stage": "REPRODUCING",
+    "model": "archon",
+    "text": "Running the test suite on the untouched checkout to record the baseline."
+   },
+   "ts": "2026-09-12T13:02:34.731725+00:00"
+  },
+  {
+   "id": 9,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "cmd",
+    "line": "$ source /opt/miniconda3/bin/activate && conda activate testbed && pytest -q 'test_requests.py::RequestsTestCase::test_no_content_length' 'test_requests.py::RequestsTestCase::test_basic_building' 'test_requests.py::RequestsTestCase::test_entry_points' 'test_requests.py::RequestsTestCase::test_invalid_url' 'test_requests.py::RequestsTestCase::test_params_are_added_before_fragment' 'test_requests.py::RequestsTestCase::test_path_is_not_double_encoded' -rA --junitxml=../archon-junit.xml"
+   },
+   "ts": "2026-09-12T13:02:34.735753+00:00"
+  },
+  {
+   "id": 10,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "F.....                                                                   [100%]"
+   },
+   "ts": "2026-09-12T13:02:36.498253+00:00"
+  },
+  {
+   "id": 11,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "=================================== FAILURES ==================================="
+   },
+   "ts": "2026-09-12T13:02:36.500635+00:00"
+  },
+  {
+   "id": 12,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "___________________ RequestsTestCase.test_no_content_length ____________________"
+   },
+   "ts": "2026-09-12T13:02:36.501723+00:00"
+  },
+  {
+   "id": 13,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-12T13:02:36.502400+00:00"
+  },
+  {
+   "id": 14,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "self = <test_requests.RequestsTestCase testMethod=test_no_content_length>"
+   },
+   "ts": "2026-09-12T13:02:36.502997+00:00"
+  },
+  {
+   "id": 15,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-12T13:02:36.503411+00:00"
+  },
+  {
+   "id": 16,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    def test_no_content_length(self):"
+   },
+   "ts": "2026-09-12T13:02:36.503843+00:00"
+  },
+  {
+   "id": 17,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "        get_req = requests.Request('GET', httpbin('get')).prepare()"
+   },
+   "ts": "2026-09-12T13:02:36.504179+00:00"
+  },
+  {
+   "id": 18,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ">       self.assertTrue('Content-Length' not in get_req.headers)"
+   },
+   "ts": "2026-09-12T13:02:36.504525+00:00"
+  },
+  {
+   "id": 19,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "E       AssertionError: False is not true"
+   },
+   "ts": "2026-09-12T13:02:36.504892+00:00"
+  },
+  {
+   "id": 20,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-12T13:02:36.505240+00:00"
+  },
+  {
+   "id": 21,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "test_requests.py:63: AssertionError"
+   },
+   "ts": "2026-09-12T13:02:36.506067+00:00"
+  },
+  {
+   "id": 22,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "=============================== warnings summary ==============================="
+   },
+   "ts": "2026-09-12T13:02:36.506474+00:00"
+  },
+  {
+   "id": 23,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "requests/packages/urllib3/_collections.py:7"
+   },
+   "ts": "2026-09-12T13:02:36.506948+00:00"
+  },
+  {
+   "id": 24,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "  /testbed/requests/packages/urllib3/_collections.py:7: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working"
+   },
+   "ts": "2026-09-12T13:02:36.507587+00:00"
+  },
+  {
+   "id": 25,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "    from collections import MutableMapping"
+   },
+   "ts": "2026-09-12T13:02:36.508208+00:00"
+  },
+  {
+   "id": 26,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-12T13:02:36.508841+00:00"
+  },
+  {
+   "id": 27,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html"
+   },
+   "ts": "2026-09-12T13:02:36.509425+00:00"
+  },
+  {
+   "id": 28,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "==================================== PASSES ===================================="
+   },
+   "ts": "2026-09-12T13:02:36.510062+00:00"
+  },
+  {
+   "id": 29,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "-------------------- generated xml file: /archon-junit.xml ---------------------"
+   },
+   "ts": "2026-09-12T13:02:36.510812+00:00"
+  },
+  {
+   "id": 30,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "=========================== short test summary info ============================"
+   },
+   "ts": "2026-09-12T13:02:36.511128+00:00"
+  },
+  {
+   "id": 31,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_basic_building"
+   },
+   "ts": "2026-09-12T13:02:36.511431+00:00"
+  },
+  {
+   "id": 32,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_entry_points"
+   },
+   "ts": "2026-09-12T13:02:36.511920+00:00"
+  },
+  {
+   "id": 33,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_invalid_url"
+   },
+   "ts": "2026-09-12T13:02:36.512292+00:00"
+  },
+  {
+   "id": 34,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_params_are_added_before_fragment"
+   },
+   "ts": "2026-09-12T13:02:36.512726+00:00"
+  },
+  {
+   "id": 35,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_path_is_not_double_encoded"
+   },
+   "ts": "2026-09-12T13:02:36.513160+00:00"
+  },
+  {
+   "id": 36,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "FAILED test_requests.py::RequestsTestCase::test_no_content_length - Assertion..."
+   },
+   "ts": "2026-09-12T13:02:36.513877+00:00"
+  },
+  {
+   "id": 37,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "baseline",
+    "stream": "stdout",
+    "line": "1 failed, 5 passed, 1 warning in 0.12s"
+   },
+   "ts": "2026-09-12T13:02:36.514571+00:00"
+  },
+  {
+   "id": 38,
+   "kind": "tests",
+   "payload": {
+    "attempt": "baseline",
+    "exit_code": 1,
+    "passed": 5,
+    "failed": 1,
+    "total": 6,
+    "fail_to_pass": 0,
+    "pass_to_pass_broken": 0,
+    "summary": "1 failed, 5 passed"
+   },
+   "ts": "2026-09-12T13:02:36.807047+00:00"
+  },
+  {
+   "id": 39,
+   "kind": "status",
+   "payload": {
+    "status": "GROUNDING",
+    "iteration": 0
+   },
+   "ts": "2026-09-12T13:02:36.808820+00:00"
+  },
+  {
+   "id": 40,
+   "kind": "thought",
+   "payload": {
+    "stage": "GROUNDING",
+    "model": "archon",
+    "text": "Searching current documentation and issue threads for the failure signature."
+   },
+   "ts": "2026-09-12T13:02:36.809143+00:00"
+  },
+  {
+   "id": 41,
+   "kind": "usage",
+   "payload": {
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "task": "research_queries",
+    "prompt_tokens": 533,
+    "completion_tokens": 58,
+    "cost_usd": 0.000212
+   },
+   "ts": "2026-09-12T13:02:38.380904+00:00"
+  },
+  {
+   "id": 42,
+   "kind": "tavily",
+   "payload": {
+    "query": "requests.Request.prepare() Content-Length header automatically added",
+    "results": 5,
+    "ms": 4729,
+    "error": null,
+    "cached": false
+   },
+   "ts": "2026-09-12T13:02:43.113016+00:00"
+  },
+  {
+   "id": 43,
+   "kind": "tavily",
+   "payload": {
+    "query": "test_no_content_length AssertionError: False is not true requests library",
+    "results": 5,
+    "ms": 2993,
+    "error": null,
+    "cached": false
+   },
+   "ts": "2026-09-12T13:02:46.111132+00:00"
+  },
+  {
+   "id": 44,
+   "kind": "tavily",
+   "payload": {
+    "query": "requests library changelog version when Content-Length header behavior changed",
+    "results": 5,
+    "ms": 2785,
+    "error": null,
+    "cached": false
+   },
+   "ts": "2026-09-12T13:02:48.900707+00:00"
+  },
+  {
+   "id": 45,
+   "kind": "usage",
+   "payload": {
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "task": "research_brief",
+    "prompt_tokens": 4593,
+    "completion_tokens": 260,
+    "cost_usd": 0.001612
+   },
+   "ts": "2026-09-12T13:02:51.167925+00:00"
+  },
+  {
+   "id": 46,
+   "kind": "thought",
+   "payload": {
+    "stage": "GROUNDING",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "text": "Research brief: The likely breaking change is in requests 3.0, where the `enforce_content_length` parameter will be introduced with a default value of `True`, causing the library to raise an `IncompleteRead` exception if the response body is shorter than the Content-Length header indicates. In requests 2.x, this behavior is not enforced by default, and users must manually check for incomplete reads. The replacement pattern is to either upgrade to requests 3.x and rely on the built-in enforcement, or manually validate response length in 2.x using `len(response.content)` vs. `int(response.headers.get('Content-Length', 0))`. Caveat: This change only affects response handling, not request sending\u2014Requests still automatically calculates and sets Content-Length for requests when possible, and does not enforce it on outgoing requests."
+   },
+   "ts": "2026-09-12T13:02:51.170007+00:00"
+  },
+  {
+   "id": 47,
+   "kind": "status",
+   "payload": {
+    "status": "REASONING",
+    "iteration": 1
+   },
+   "ts": "2026-09-12T13:02:53.107070+00:00"
+  },
+  {
+   "id": 48,
+   "kind": "thought",
+   "payload": {
+    "stage": "REASONING",
+    "model": "archon",
+    "text": "Asking Nemotron 3 Ultra for a root cause and candidate patches. Iteration 1 of 5."
+   },
+   "ts": "2026-09-12T13:02:53.107972+00:00"
+  },
+  {
+   "id": 49,
+   "kind": "usage",
+   "payload": {
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "task": "diagnose_and_patch",
+    "prompt_tokens": 4371,
+    "completion_tokens": 380,
+    "cost_usd": 0.005511
+   },
+   "ts": "2026-09-12T13:02:55.726769+00:00"
+  },
+  {
+   "id": 50,
+   "kind": "usage",
+   "payload": {
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "task": "diagnose_and_patch",
+    "prompt_tokens": 13196,
+    "completion_tokens": 3840,
+    "cost_usd": 0.024716
+   },
+   "ts": "2026-09-12T13:03:09.986827+00:00"
+  },
+  {
+   "id": 51,
+   "kind": "thought",
+   "payload": {
+    "stage": "REASONING",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "text": "Root cause: The `prepare_content_length` method in `PreparedRequest` unconditionally sets a `Content-Length` header (defaulting to '0') for all requests, including GET and HEAD requests which should not have a body or Content-Length header per HTTP specifications. The test `test_no_content_length` expects GET and HEAD prepared requests to lack this header."
+   },
+   "ts": "2026-09-12T13:03:09.988944+00:00"
+  },
+  {
+   "id": 52,
+   "kind": "status",
+   "payload": {
+    "status": "TESTING",
+    "iteration": 1
+   },
+   "ts": "2026-09-12T13:03:09.990757+00:00"
+  },
+  {
+   "id": 53,
+   "kind": "thought",
+   "payload": {
+    "stage": "TESTING",
+    "model": "archon",
+    "text": "Applying each candidate on its own sandbox fork and re-running the tests. 1 candidate(s)."
+   },
+   "ts": "2026-09-12T13:03:09.991552+00:00"
+  },
+  {
+   "id": 54,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "cmd",
+    "line": "$ git add -- requests/models.py && git diff --cached --no-color -- requests/models.py"
+   },
+   "ts": "2026-09-12T13:03:11.189102+00:00"
+  },
+  {
+   "id": 55,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "diff --git a/requests/models.py b/requests/models.py"
+   },
+   "ts": "2026-09-12T13:03:13.452227+00:00"
+  },
+  {
+   "id": 56,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "index 9926045..5b97e97 100644"
+   },
+   "ts": "2026-09-12T13:03:13.513747+00:00"
+  },
+  {
+   "id": 57,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "--- a/requests/models.py"
+   },
+   "ts": "2026-09-12T13:03:13.521929+00:00"
+  },
+  {
+   "id": 58,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "+++ b/requests/models.py"
+   },
+   "ts": "2026-09-12T13:03:13.528559+00:00"
+  },
+  {
+   "id": 59,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "@@ -386,12 +386,15 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):"
+   },
+   "ts": "2026-09-12T13:03:13.540957+00:00"
+  },
+  {
+   "id": 60,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "         self.body = body"
+   },
+   "ts": "2026-09-12T13:03:13.545870+00:00"
+  },
+  {
+   "id": 61,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": " "
+   },
+   "ts": "2026-09-12T13:03:13.552523+00:00"
+  },
+  {
+   "id": 62,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "     def prepare_content_length(self, body):"
+   },
+   "ts": "2026-09-12T13:03:13.562303+00:00"
+  },
+  {
+   "id": 63,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "-        self.headers['Content-Length'] = '0'"
+   },
+   "ts": "2026-09-12T13:03:13.567250+00:00"
+  },
+  {
+   "id": 64,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "+        if self.method in ('GET', 'HEAD'):"
+   },
+   "ts": "2026-09-12T13:03:13.573819+00:00"
+  },
+  {
+   "id": 65,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "+            return"
+   },
+   "ts": "2026-09-12T13:03:13.578984+00:00"
+  },
+  {
+   "id": 66,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "+        if body is None:"
+   },
+   "ts": "2026-09-12T13:03:13.580411+00:00"
+  },
+  {
+   "id": 67,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "+            return"
+   },
+   "ts": "2026-09-12T13:03:13.583228+00:00"
+  },
+  {
+   "id": 68,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "         if hasattr(body, 'seek') and hasattr(body, 'tell'):"
+   },
+   "ts": "2026-09-12T13:03:13.588750+00:00"
+  },
+  {
+   "id": 69,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "             body.seek(0, 2)"
+   },
+   "ts": "2026-09-12T13:03:13.590530+00:00"
+  },
+  {
+   "id": 70,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "             self.headers['Content-Length'] = str(body.tell())"
+   },
+   "ts": "2026-09-12T13:03:13.591267+00:00"
+  },
+  {
+   "id": 71,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "             body.seek(0, 0)"
+   },
+   "ts": "2026-09-12T13:03:13.592446+00:00"
+  },
+  {
+   "id": 72,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "-        elif body is not None:"
+   },
+   "ts": "2026-09-12T13:03:13.593923+00:00"
+  },
+  {
+   "id": 73,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "+        else:"
+   },
+   "ts": "2026-09-12T13:03:13.594736+00:00"
+  },
+  {
+   "id": 74,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "             self.headers['Content-Length'] = str(len(body))"
+   },
+   "ts": "2026-09-12T13:03:13.595596+00:00"
+  },
+  {
+   "id": 75,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": " "
+   },
+   "ts": "2026-09-12T13:03:13.596341+00:00"
+  },
+  {
+   "id": 76,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "     def prepare_auth(self, auth):"
+   },
+   "ts": "2026-09-12T13:03:13.598583+00:00"
+  },
+  {
+   "id": 77,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "cmd",
+    "line": "$ source /opt/miniconda3/bin/activate && conda activate testbed && pytest -q 'test_requests.py::RequestsTestCase::test_no_content_length' 'test_requests.py::RequestsTestCase::test_basic_building' 'test_requests.py::RequestsTestCase::test_entry_points' 'test_requests.py::RequestsTestCase::test_invalid_url' 'test_requests.py::RequestsTestCase::test_params_are_added_before_fragment' 'test_requests.py::RequestsTestCase::test_path_is_not_double_encoded' -rA --junitxml=../archon-junit.xml"
+   },
+   "ts": "2026-09-12T13:03:13.609716+00:00"
+  },
+  {
+   "id": 78,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "......                                                                   [100%]"
+   },
+   "ts": "2026-09-12T13:03:15.812038+00:00"
+  },
+  {
+   "id": 79,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "=============================== warnings summary ==============================="
+   },
+   "ts": "2026-09-12T13:03:15.827232+00:00"
+  },
+  {
+   "id": 80,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "requests/packages/urllib3/_collections.py:7"
+   },
+   "ts": "2026-09-12T13:03:15.830457+00:00"
+  },
+  {
+   "id": 81,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "  /testbed/requests/packages/urllib3/_collections.py:7: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working"
+   },
+   "ts": "2026-09-12T13:03:15.834512+00:00"
+  },
+  {
+   "id": 82,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "    from collections import MutableMapping"
+   },
+   "ts": "2026-09-12T13:03:15.836372+00:00"
+  },
+  {
+   "id": 83,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-12T13:03:15.837376+00:00"
+  },
+  {
+   "id": 84,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "requests/models.py:610"
+   },
+   "ts": "2026-09-12T13:03:15.837960+00:00"
+  },
+  {
+   "id": 85,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "  /testbed/requests/models.py:610: DeprecationWarning: invalid escape sequence \\*"
+   },
+   "ts": "2026-09-12T13:03:15.838650+00:00"
+  },
+  {
+   "id": 86,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "    \"\"\"Returns the json-encoded content of a response, if any."
+   },
+   "ts": "2026-09-12T13:03:15.840501+00:00"
+  },
+  {
+   "id": 87,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-12T13:03:15.842020+00:00"
+  },
+  {
+   "id": 88,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "requests/models.py:563"
+   },
+   "ts": "2026-09-12T13:03:15.843139+00:00"
+  },
+  {
+   "id": 89,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "  /testbed/requests/models.py:563: SyntaxWarning: \"is\" with a literal. Did you mean \"==\"?"
+   },
+   "ts": "2026-09-12T13:03:15.843908+00:00"
+  },
+  {
+   "id": 90,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "    if self.status_code is 0:"
+   },
+   "ts": "2026-09-12T13:03:15.845152+00:00"
+  },
+  {
+   "id": 91,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": ""
+   },
+   "ts": "2026-09-12T13:03:15.846102+00:00"
+  },
+  {
+   "id": 92,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html"
+   },
+   "ts": "2026-09-12T13:03:15.847777+00:00"
+  },
+  {
+   "id": 93,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "==================================== PASSES ===================================="
+   },
+   "ts": "2026-09-12T13:03:15.850036+00:00"
+  },
+  {
+   "id": 94,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "-------------------- generated xml file: /archon-junit.xml ---------------------"
+   },
+   "ts": "2026-09-12T13:03:15.851759+00:00"
+  },
+  {
+   "id": 95,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "=========================== short test summary info ============================"
+   },
+   "ts": "2026-09-12T13:03:15.853430+00:00"
+  },
+  {
+   "id": 96,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_no_content_length"
+   },
+   "ts": "2026-09-12T13:03:15.854589+00:00"
+  },
+  {
+   "id": 97,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_basic_building"
+   },
+   "ts": "2026-09-12T13:03:15.861766+00:00"
+  },
+  {
+   "id": 98,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_entry_points"
+   },
+   "ts": "2026-09-12T13:03:15.864983+00:00"
+  },
+  {
+   "id": 99,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_invalid_url"
+   },
+   "ts": "2026-09-12T13:03:15.866005+00:00"
+  },
+  {
+   "id": 100,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_params_are_added_before_fragment"
+   },
+   "ts": "2026-09-12T13:03:15.867087+00:00"
+  },
+  {
+   "id": 101,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "PASSED test_requests.py::RequestsTestCase::test_path_is_not_double_encoded"
+   },
+   "ts": "2026-09-12T13:03:15.868274+00:00"
+  },
+  {
+   "id": 102,
+   "kind": "terminal",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "stream": "stdout",
+    "line": "6 passed, 3 warnings in 0.11s"
+   },
+   "ts": "2026-09-12T13:03:15.868833+00:00"
+  },
+  {
+   "id": 103,
+   "kind": "patch",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "iteration": 1,
+    "rationale": "Modify `prepare_content_length` to skip setting the header for GET and HEAD methods, and only set it when a body actually exists. This matches HTTP semantics where GET/HEAD requests have no body.",
+    "applied": true,
+    "error": "",
+    "files": [
+     {
+      "path": "requests/models.py",
+      "added": 5,
+      "removed": 2
+     }
+    ]
+   },
+   "ts": "2026-09-12T13:03:16.209817+00:00"
+  },
+  {
+   "id": 104,
+   "kind": "tests",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "exit_code": 0,
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "fail_to_pass": 1,
+    "pass_to_pass_broken": 0,
+    "summary": "0 failed, 6 passed"
+   },
+   "ts": "2026-09-12T13:03:16.262824+00:00"
+  },
+  {
+   "id": 105,
+   "kind": "status",
+   "payload": {
+    "status": "REVIEWING",
+    "iteration": 1
+   },
+   "ts": "2026-09-12T13:03:16.275554+00:00"
+  },
+  {
+   "id": 106,
+   "kind": "thought",
+   "payload": {
+    "stage": "REVIEWING",
+    "model": "archon",
+    "text": "Checking the winning patch for deleted tests, unrelated changes, and secrets."
+   },
+   "ts": "2026-09-12T13:03:16.283770+00:00"
+  },
+  {
+   "id": 107,
+   "kind": "usage",
+   "payload": {
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "task": "review",
+    "prompt_tokens": 531,
+    "completion_tokens": 101,
+    "cost_usd": 0.00025
+   },
+   "ts": "2026-09-12T13:03:17.983286+00:00"
+  },
+  {
+   "id": 108,
+   "kind": "review",
+   "payload": {
+    "attempt": "a_a08cb0af",
+    "verdict": "APPROVE",
+    "reasons": [
+     "The patch correctly addresses the root cause by conditionally skipping Content-Length for GET/HEAD requests and None body.",
+     "It preserves existing logic for seekable and non-seekable bodies.",
+     "No unrelated files are modified, no credentials present, and the change is proportional.",
+     "Tests now pass (0 failed, 6 passed), indicating the fix aligns with expectations."
+    ]
+   },
+   "ts": "2026-09-12T13:03:17.983970+00:00"
+  },
+  {
+   "id": 109,
+   "kind": "done",
+   "payload": {
+    "status": "VERIFIED",
+    "selected_attempt": "a_a08cb0af",
+    "iterations": 1,
+    "spend_usd": 0.0323,
+    "trace_url": "https://smith.langchain.com/o/ed80d820-b9cd-4bf6-9272-8f173cc1e037/projects/p/2ae55e09-4894-487d-ae0d-ae0b31eef736/trace/01a095b6-5849-7671-8957-c9de5ddf5383/run/01a095b6-5849-7671-8957-c9de5ddf5383?start_time=2026-09-12T13%3A02%3A30.473271%2B00%3A00",
+    "fail_to_pass": 1,
+    "pass_to_pass_broken": 0
+   },
+   "ts": "2026-09-12T13:03:19.016430+00:00"
+  }
+ ],
+ "note": "Live run 2026-09-12: SWE-bench Verified psf__requests-1142 resolved inside a Nebius Token Factory Sandbox by Nemotron 3 Ultra (patch), Super (research, review), Nano; Tavily grounding; LangSmith trace. VERIFIED in 1 iteration, 49 s, $0.032."
+}

@@ -20,7 +20,7 @@ uvicorn app.main:app --reload --port 8000
 | `ARCHON_LLM_BACKEND` | `nebius` (default), `fake` | `fake` returns scripted responses; used in tests. |
 | `ARCHON_SANDBOX_BACKEND` | `contree` (default), `local`, `fake` | `contree` is Token Factory Sandboxes via `contree-sdk` and needs `NEBIUS_API_KEY` plus `NEBIUS_PROJECT_ID`. `local` runs repository code on this machine in copy-on-fork directories; development only, refused in production. |
 
-Development without credits: `ARCHON_ULTRA_MODEL=nvidia/nemotron-3-super-120b-a12b` routes patch generation to Super.
+Development without credits: `ARCHON_ULTRA_MODEL=nvidia/nemotron-3-super-120b-a12b` routes patch generation to Super. Real IDs and prices (verified September 12): Ultra `nvidia/Nemotron-3-Ultra-550b-a55b` $1/$3, Super `nvidia/nemotron-3-super-120b-a12b` $0.30/$0.90, Nano `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` $0.06/$0.24 per 1M tokens.
 
 ## Layout
 
@@ -43,6 +43,17 @@ tests/
   integration/     live Nebius, Tavily, Sandboxes; skipped without keys
   golden/          fixtures, instances.json, recordings for replay mode
 ```
+
+## SWE-bench Verified instances
+
+Instances come from the Sandboxes public catalog (`swebench/sweb.eval.x86_64.<owner>_1776_<repo>-<n>:latest`). Add one:
+
+```bash
+python -m tests.golden.fetch_swe psf__requests-2317        # writes tests/golden/swe/<id>.json, updates instances.json
+python -m tests.golden.run --swe psf__requests-2317 --llm nebius --backend contree --record
+```
+
+The runner boots the preloaded image, applies the instance's test patch, runs only its FAIL_TO_PASS and PASS_TO_PASS ids under `conda activate testbed`, and gives the engineer the problem statement, the failing test source, and the repository file list. Recordings land in `tests/golden/recordings/` and appear in the cockpit's replay list.
 
 ## Tests
 

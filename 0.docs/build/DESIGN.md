@@ -337,13 +337,13 @@ Output, strict JSON validated by Pydantic:
 {
   "root_cause": "one paragraph",
   "candidates": [
-    { "rationale": "one sentence", "patch": "unified diff text" },
-    { "rationale": "one sentence", "patch": "unified diff text" }
+    { "rationale": "one sentence", "edits": [{ "path": "...", "search": "verbatim source text", "replace": "new text" }] },
+    { "rationale": "one sentence", "edits": [ ... ] }
   ]
 }
 ```
 
-Patches are checked with `git apply --check` in the sandbox before tests run. A candidate that fails the check is discarded and counted against the iteration.
+Edits are applied server-side to the baseline file contents (each `search` must match exactly once; trailing whitespace differences are tolerated), the resulting files are uploaded into a fork, and `git diff --cached` inside the fork produces the unified diff. A candidate whose search block does not match is discarded, counted against the iteration, and the exact mismatch is fed to the next engineer call. Unified diffs from the model are still accepted as a fallback and applied with `git apply`, then `git apply --3way`.
 
 ---
 

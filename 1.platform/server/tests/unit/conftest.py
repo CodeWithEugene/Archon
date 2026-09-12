@@ -178,6 +178,8 @@ def make_runner(
         cost_per_call: float = 0.01,
         grounder_hits: bool = True,
         settings_override: Settings | None = None,
+        swe: SweCatalog | None = None,
+        swe_instance_id: str | None = None,
     ) -> tuple[MissionRunner, FakeLLM, FakeGrounder]:
         s = settings_override or settings
         holder: dict[str, FakeLLM] = {}
@@ -195,10 +197,10 @@ def make_runner(
         mission = Mission(
             id=new_id("m"),
             type=mission_type,
-            repo_url="https://github.com/acme/demo",
+            repo_url=None if swe_instance_id else "https://github.com/acme/demo",
             git_ref="main",
-            test_command="pytest -q",
-            swe_instance_id=None,
+            test_command=None if swe_instance_id else "pytest -q",
+            swe_instance_id=swe_instance_id,
         )
         deps = RunnerDeps(
             store=store,
@@ -208,7 +210,7 @@ def make_runner(
             grounder=grounder,
             prices=prices,
             settings=s,
-            swe=SweCatalog([]),
+            swe=swe or SweCatalog([]),
         )
         runner = MissionRunner(mission, deps)
         return runner, holder["llm"], grounder

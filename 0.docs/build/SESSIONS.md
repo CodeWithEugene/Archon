@@ -89,6 +89,26 @@
 
 ---
 
+## Session 4 — September 12, 2026 (afternoon): Sandboxes live, first real Nemotron mission
+
+**Done**
+1. Sandboxes beta enabled. Week-1 gate passed against the real API: spawn `python:3.12-slim`, fork isolation, `apt-get install git`, `git clone psf/requests`, `pip install -e .`, pytest exit 0 inside the VM, about 30 seconds end to end.
+2. Provisioning installs git first when the base image lacks it.
+3. First real Nemotron mission (Ultra + Super + Nano, Tavily, LangSmith) on `broken_pydantic_v2` via the local backend: FAILED after 5 iterations, $0.07. Ultra's diagnosis and fix description were right every time; its unified diffs never applied, and the loop fed back only "git apply failed", so it repeated itself.
+4. ADR-012: candidates are exact search-and-replace edits applied by the executor; git produces the diff. Precise apply errors are fed back to the engineer. 8 new unit tests.
+5. Confirmed the Sandboxes `whoami` expiry is a derived session token, not the API key.
+6. Reran the mission with edit-based candidates: **VERIFIED in 1 iteration, 35 s, $0.017.** Three Tavily queries synthesized by Super from the real error signatures, Ultra's edits applied first time, 6/6 tests, reviewer approved. Recording kept as `live-broken_pydantic_v2-nemotron-local.json`.
+
+7. SWE-bench Verified support: `tests/golden/fetch_swe.py` pulls instance metadata from Hugging Face; the runner starts from the preloaded `swebench/...` catalog image, applies the instance test patch, runs only the instance's FAIL_TO_PASS and PASS_TO_PASS ids under `conda activate testbed`, and hands the problem statement to the engineer. Six `psf/requests` instances loaded.
+8. Two more real-API findings fixed: the Sandboxes shell is `/bin/sh` (conda activation silently no-ops there, so the backend now runs through bash when present), and the engineer had been constructed before the per-instance `/testbed` sandbox service was swapped in, so its file reads went to `/work/repo`. The engineer now also receives the repository file list, the failing test source, and close-match hints for wrong paths.
+9. **`psf__requests-1142` RESOLVED in a Token Factory Sandbox: 1 iteration, 49 s, $0.032.** Recording kept as `swe-psf__requests-1142-sandbox-nemotron.json`.
+
+**Decisions**
+- ADR-012: no model-written unified diffs. Edits in, `git diff` out.
+- ADR-013: SWE-bench missions follow the harness exactly: apply the test patch first, run only the instance's own test ids, judge on fail-to-pass and pass-to-pass.
+
+---
+
 ## Architectural Decision Records
 
 ### ADR-001: Track selection

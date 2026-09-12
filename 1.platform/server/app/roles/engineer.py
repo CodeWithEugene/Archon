@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from difflib import get_close_matches
 from typing import cast
 
 from pydantic import ValidationError
@@ -15,7 +16,7 @@ from app.llm.prompts import engineer_messages, migration_messages
 from app.observability.tracing import traced
 from app.sandbox.service import SandboxService
 
-MAX_READ_ROUNDS = 2
+MAX_READ_ROUNDS = 3
 
 
 @dataclass
@@ -29,6 +30,7 @@ class EngineerRequest:
     hint: str | None
     n_candidates: int
     migration: dict[str, object] | None = None  # {"base_url", "locations", "mapping"}
+    file_listing: list[str] = field(default_factory=list)
 
 
 class Engineer:
@@ -54,17 +56,23 @@ class Engineer:
                 continue
             if out.candidates:
                 for c in out.candidates:
-                    c.patch = normalize_patch(c.patch)
+                    if c.patch and not c.uses_edits:
+                        c.patch = normalize_patch(c.patch)
                 return out
             wanted = [p for p in out.files_to_read if p not in excerpts]
             if not wanted:
                 last_error = "you asked to read files you already have; propose candidates now"
                 continue
             more = await self.sandbox.read_many(req.image_id, wanted)
-            missing = [p for p in wanted if p not in more]
+            found = {self.sandbox.normalize_path(p) for p in more}
+            missing = [p for p in wanted if self.sandbox.normalize_path(p) not in found and p not in more]
             excerpts.update(more)
             if missing:
-                excerpts[f"(missing) {', '.join(missing)}"] = "These paths do not exist in the repository."
+                notes = []
+                for m in missing:
+                    close = get_close_matches(self.sandbox.normalize_path(m), req.file_listing, n=3, cutoff=0.5)
+                    notes.append(f"{m}: not found" + (f"; did you mean {', '.join(close)}?" if close else ""))
+                excerpts["(missing files)"] = "\n".join(notes) + "\nUse exact paths from the repository file list."
         raise LLMError(f"engineer did not produce candidates after {MAX_READ_ROUNDS + 1} rounds: {last_error}")
 
     def _task(self, req: EngineerRequest) -> Task:
@@ -77,6 +85,7 @@ class Engineer:
                 locations=str(req.migration["locations"]),
                 mapping=cast(dict[str, str], req.migration["mapping"]),
                 excerpts=excerpts,
+                file_listing=req.file_listing,
                 previous=req.previous,
                 previous_output=req.previous_output,
                 hint=req.hint,
@@ -85,6 +94,7 @@ class Engineer:
             n_candidates=req.n_candidates,
             failing_output=req.failing_output,
             excerpts=excerpts,
+            file_listing=req.file_listing,
             brief=req.brief,
             previous=req.previous,
             previous_output=req.previous_output,
