@@ -208,7 +208,7 @@ async def test_migration_mission(make_runner, backend: FakeBackend) -> None:  # 
 -client = OpenAI()
 -MODEL = "gpt-5.4"
 +client = OpenAI(base_url=os.environ.get("NEBIUS_BASE_URL", "https://api.tokenfactory.nebius.com/v1/"), api_key=os.environ["NEBIUS_API_KEY"])
-+MODEL = "nvidia/nemotron-3-ultra-550b-a55b"
++MODEL = "nvidia/Nemotron-3-Ultra-550b-a55b"
 """
     scripts = {
         Task.MIGRATE: [engineer_json(mig_patch, root_cause="migrated client and model")],
@@ -219,10 +219,10 @@ async def test_migration_mission(make_runner, backend: FakeBackend) -> None:  # 
     assert m.status == MissionStatus.VERIFIED
     assert grounder.queries == []  # migration does not web-search
     scan = m.summary["migration_scan"]
-    assert scan["mapping"] == {"gpt-5.4": "nvidia/nemotron-3-ultra-550b-a55b"}
+    assert scan["mapping"] == {"gpt-5.4": "nvidia/Nemotron-3-Ultra-550b-a55b"}
     assert scan["estimates"][0]["reduction_pct"] > 50
     mig_call = [msgs for t, msgs in llm.calls if t == Task.MIGRATE][0]
-    assert "gpt-5.4 -> nvidia/nemotron-3-ultra-550b-a55b" in mig_call[1]["content"]
+    assert "gpt-5.4 -> nvidia/Nemotron-3-Ultra-550b-a55b" in mig_call[1]["content"]
     assert "source: svc/client.py" in mig_call[1]["content"]
 
 

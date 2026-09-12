@@ -71,9 +71,9 @@ A `MIGRATION` mission locates `openai` and `anthropic` client construction and m
 ## 4. Model routing
 
 ```python
-ULTRA = "nvidia/nemotron-3-ultra-550b-a55b"
+ULTRA = "nvidia/Nemotron-3-Ultra-550b-a55b"
 SUPER = "nvidia/nemotron-3-super-120b-a12b"
-NANO  = "nvidia/nemotron-3-nano-30b-a3b"   # confirm exact ID with GET /v1/models
+NANO  = "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"   # IDs verified against GET /v1/models on 2026-09-12
 
 ROUTES = {
     "diagnose_and_patch": ULTRA,
@@ -99,7 +99,7 @@ The cost card in the UI computes from `pricing.json`, a table of current list pr
 | GPT-5.4 | $2.50 | $15.00 | $5.63 | 73% lower |
 | GPT-5.6 Sol | $5.00 | $30.00 | $11.25 | 87% lower |
 
-Sources: [OpenAI pricing](https://developers.openai.com/api/docs/pricing), [Anthropic pricing](https://platform.claude.com/docs/en/about-claude/pricing), Nebius Ultra price as listed by [third-party catalogs](https://www.requesty.ai/models/nebius/nvidia-nemotron-3-ultra-550b-a55b). Verify the Nebius figure against the Token Factory pricing page before the submission and update `pricing.json`.
+Sources: [OpenAI pricing](https://developers.openai.com/api/docs/pricing), [Anthropic pricing](https://platform.claude.com/docs/en/about-claude/pricing), Nebius prices verified on 2026-09-12 from `GET https://api.tokenfactory.nebius.com/v1/models?verbose=true`.
 
 The cost claim is only part of the migration story. Data residency in the EU and open weights matter to some teams more than price. ARCHON reports the estimate and lets the user decide.
 

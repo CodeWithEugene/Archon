@@ -81,11 +81,12 @@ flowchart TD
 | Component | What ARCHON uses it for |
 | :--- | :--- |
 | **Nebius Token Factory inference** (`https://api.tokenfactory.nebius.com/v1/`) | Every model call, through the OpenAI-compatible API. |
-| **Nemotron 3 Ultra** (`nvidia/nemotron-3-ultra-550b-a55b`) | Root-cause analysis and patch generation. |
+| **Nemotron 3 Ultra** (`nvidia/Nemotron-3-Ultra-550b-a55b`) | Root-cause analysis and patch generation. |
 | **Nemotron 3 Super** (`nvidia/nemotron-3-super-120b-a12b`) | Mission supervisor, patch review, Tavily query synthesis. |
-| **Nemotron 3 Nano** (`nvidia/nemotron-3-nano-30b-a3b`) | Compacting test logs and parsing pass/fail counts. Confirm the exact ID with `GET /v1/models` before use. |
+| **Nemotron 3 Nano** (`nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`) | Compacting test logs and parsing pass/fail counts. |
 | **Token Factory Sandboxes** (`contree-sdk`) | Clone, install, run tests, and fork one sandbox per candidate patch. Currently in beta. |
 | **Tavily Search API** | Fetches current documentation and upstream issue threads for the failing library before the model reasons about a fix. |
+| **LangSmith** (optional) | One trace per mission: roles, sandbox runs, Tavily queries, and every Nemotron call with token usage. |
 
 ## Repository layout
 
@@ -152,6 +153,8 @@ NEBIUS_API_KEY=            # Token Factory inference and Sandboxes
 NEBIUS_BASE_URL=https://api.tokenfactory.nebius.com/v1/
 NEBIUS_SANDBOX_URL=https://api.tokenfactory.nebius.com/sandboxes
 TAVILY_API_KEY=
+LANGSMITH_API_KEY=         # Optional. Enables LangSmith tracing of every mission
+LANGSMITH_PROJECT=archon
 ARCHON_DEMO_TOKEN=         # Required for live mode on the public demo
 ARCHON_MAX_MISSION_USD=3   # Hard per-mission spend cap
 ```

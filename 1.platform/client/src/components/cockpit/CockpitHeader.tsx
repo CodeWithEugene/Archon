@@ -29,6 +29,7 @@ export function CockpitHeader({
   status,
   iteration,
   spend,
+  traceUrl,
   connection,
 }: {
   missionId: string;
@@ -36,6 +37,7 @@ export function CockpitHeader({
   status: MissionStatus;
   iteration: number;
   spend: number;
+  traceUrl: string | null;
   connection: ConnectionState;
 }) {
   const target =
@@ -64,6 +66,17 @@ export function CockpitHeader({
       <Stat label="Iteration" value={`${iteration}/${MAX_ITERATIONS}`} />
       <Stat label="Spend" value={formatUsd(spend)} />
       <Stat label="Mission" value={missionId} />
+      {traceUrl ? (
+        <a
+          href={traceUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="border border-info/60 bg-info/10 px-2 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-info hover:bg-info/20"
+          title="Open this mission's trace in LangSmith"
+        >
+          View trace
+        </a>
+      ) : null}
 
       <span
         className="ml-auto flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-faint"

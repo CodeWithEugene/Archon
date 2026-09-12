@@ -77,6 +77,7 @@ gantt
 ### Week 3 (Sep 28 to Oct 4): Loop v2
 - [x] Best-of-N: two candidate patches per iteration, each on its own fork, scored and selected.
 - [x] Reviewer step on Super: checks the diff for secrets, unrelated changes, and test deletions.
+- [x] LangSmith tracing across the loop (optional, key-gated).
 - [x] Spend cap and iteration cap enforced with a readable failure report.
 - [x] Migration mission type: ripgrep locators, rewrite prompt, `pricing.json`, parity harness.
 - [ ] **Gate:** 3 of 5 tried SWE-bench instances resolve; one migration fixture passes.
@@ -113,7 +114,8 @@ gantt
 | Token Factory Sandboxes | Free during beta | Use freely, but 50 concurrent operations is the published ceiling. |
 | Tavily | $25 credit | Roughly 1,000 advanced searches. Cache results per query hash during development. |
 | Hosting | Vercel free tier for the client; Railway or Nebius Serverless for the server | Must remain up through Dec 15. Budget for a paid tier if free tiers sleep. |
-| LangSmith, Toloka, Tandem credits | Available | Not used. Removed from scope. |
+| LangSmith | $100 credit | Tracing of every mission: root span per mission, child spans per role, sandbox tool run, Tavily query, and Nemotron call with token usage. Used for debugging prompts during the golden runs. |
+| Toloka, Tandem credits | Available | Not used. |
 
 Estimated Ultra cost per mission at current list prices: a 5-iteration mission with roughly 400K input and 40K output tokens is about $0.50 to $0.60. The $3 cap gives headroom for long repositories.
 

@@ -19,9 +19,9 @@ import type {
 export const MOCK_MISSION_ID = "m_9c41ab";
 export const MOCK_REPO = "https://github.com/archon-demo/billing-api";
 
-export const MODEL_ULTRA = "nvidia/nemotron-3-ultra-550b-a55b";
+export const MODEL_ULTRA = "nvidia/Nemotron-3-Ultra-550b-a55b";
 export const MODEL_SUPER = "nvidia/nemotron-3-super-120b-a12b";
-export const MODEL_NANO = "nvidia/nemotron-3-nano-30b-a3b";
+export const MODEL_NANO = "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B";
 
 export const mockHealthPayload: Health = {
   ok: true,

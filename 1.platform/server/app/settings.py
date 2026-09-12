@@ -9,9 +9,9 @@ from typing import Literal
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-ULTRA_DEFAULT = "nvidia/nemotron-3-ultra-550b-a55b"
+ULTRA_DEFAULT = "nvidia/Nemotron-3-Ultra-550b-a55b"
 SUPER_DEFAULT = "nvidia/nemotron-3-super-120b-a12b"
-NANO_DEFAULT = "nvidia/nemotron-3-nano-30b-a3b"
+NANO_DEFAULT = "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
 
 
 class Settings(BaseSettings):
@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     )
     nebius_project_id: str = Field(default="", alias="NEBIUS_PROJECT_ID")
     tavily_api_key: str = Field(default="", alias="TAVILY_API_KEY")
+    langsmith_api_key: str = Field(default="", alias="LANGSMITH_API_KEY")
+    langsmith_project: str = Field(default="archon", alias="LANGSMITH_PROJECT")
+    langsmith_endpoint: str = Field(default="", alias="LANGSMITH_ENDPOINT")
 
     # Behaviour
     env: Literal["development", "production"] = Field(default="development", alias="ARCHON_ENV")

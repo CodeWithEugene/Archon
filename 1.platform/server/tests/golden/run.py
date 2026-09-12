@@ -30,6 +30,7 @@ from app.core.runner import MissionRunner, RunnerDeps
 from app.llm.client import FakeLLM, UsageHook
 from app.main import build_grounder, build_llm_factory, build_sandbox_backend
 from app.missions.swe import SweCatalog
+from app.observability import tracing
 from app.replay.recorder import Recorder
 from app.sandbox.service import SandboxService
 from app.settings import Settings
@@ -140,6 +141,8 @@ async def main(argv: list[str]) -> int:
         print("config problems:", *problems, sep="\n  ")
         return 2
 
+    if tracing.configure(settings.langsmith_api_key, settings.langsmith_project, settings.langsmith_endpoint or None):
+        print(f"tracing -> LangSmith project {settings.langsmith_project!r}")
     store = Store(settings.db_path)
     await store.open()
     bus = EventBus()

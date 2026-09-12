@@ -227,6 +227,7 @@ export function decodeMissionEvent(
           selected_attempt: nullableStr(r.selected_attempt),
           iterations: num(r.iterations),
           spend_usd: num(r.spend_usd),
+          trace_url: nullableStr(r.trace_url),
         },
       };
     default:

@@ -23,6 +23,18 @@ from app.store.db import Store
 
 SERVER_ROOT = Path(__file__).resolve().parents[2]
 
+
+@pytest.fixture(autouse=True, scope="session")
+def _no_langsmith_uploads() -> None:  # type: ignore[misc]
+    """Unit tests must never reach LangSmith, whatever the developer's shell or .env contains."""
+    import os
+
+    for key in ("LANGSMITH_API_KEY", "LANGCHAIN_API_KEY", "LANGCHAIN_TRACING_V2"):
+        os.environ.pop(key, None)
+    os.environ["LANGSMITH_TRACING"] = "false"
+    os.environ["LANGSMITH_ENDPOINT"] = "http://127.0.0.1:9"  # unroutable, belt and braces
+
+
 BASELINE_FAIL = """============================= test session starts ==============================
 collected 3 items
 

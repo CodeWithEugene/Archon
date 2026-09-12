@@ -7,6 +7,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.deps import AppState, get_state
+from app.observability import tracing
 
 router = APIRouter(tags=["misc"])
 
@@ -21,6 +22,8 @@ async def healthz(state: AppState = Depends(get_state)) -> dict[str, Any]:
         "models": state.router.as_dict(),
         "live_mode_requires_token": state.settings.live_mode_requires_token,
         "running_missions": state.registry.running,
+        "tracing": tracing.enabled(),
+        "tracing_project": state.settings.langsmith_project if tracing.enabled() else None,
         "max_iterations": state.settings.max_iterations,
         "candidates_per_iteration": state.settings.candidates_per_iteration,
         "config_problems": state.settings.validate_for_runtime(),

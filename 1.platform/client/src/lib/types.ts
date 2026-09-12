@@ -175,6 +175,8 @@ export interface DoneEventData {
   selected_attempt: string | null;
   iterations: number;
   spend_usd: number;
+  /** LangSmith trace link when tracing is enabled server-side. */
+  trace_url: string | null;
 }
 
 export type MissionEvent =

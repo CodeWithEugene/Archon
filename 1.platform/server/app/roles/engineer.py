@@ -12,6 +12,7 @@ from app.core.patches import normalize_patch
 from app.core.router import Task
 from app.llm.client import LLM, LLMError
 from app.llm.prompts import engineer_messages, migration_messages
+from app.observability.tracing import traced
 from app.sandbox.service import SandboxService
 
 MAX_READ_ROUNDS = 2
@@ -35,6 +36,7 @@ class Engineer:
         self.llm = llm
         self.sandbox = sandbox
 
+    @traced("engineer.propose")
     async def propose(self, req: EngineerRequest) -> EngineerOutput:
         excerpts = dict(req.excerpts)
         last_error: str | None = None

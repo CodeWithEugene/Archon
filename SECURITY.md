@@ -12,7 +12,7 @@ ARCHON runs model-generated code against untrusted repositories, calls third-par
 
 ### 1. Credentials
 
-- `NEBIUS_API_KEY`, `TAVILY_API_KEY`, and `ARCHON_DEMO_TOKEN` live only in server-side environment variables. They are never sent to the browser, logged, or committed.
+- `NEBIUS_API_KEY`, `NEBIUS_PROJECT_ID`, `TAVILY_API_KEY`, `LANGSMITH_API_KEY`, and `ARCHON_DEMO_TOKEN` live only in server-side environment variables. They are never sent to the browser, logged, or committed.
 - `.env*` files are ignored by `.gitignore`. Only `.env.example`, with empty values, is tracked.
 - ARCHON does not accept or store GitHub personal access tokens. Verified patches are delivered as downloadable `.patch` files with `git apply` instructions rather than pushed on the user's behalf.
 
@@ -29,7 +29,11 @@ ARCHON runs model-generated code against untrusted repositories, calls third-par
 - Model outputs that request tool calls are validated against strict Pydantic schemas before execution. Unknown tools or malformed arguments are rejected.
 - Patches are applied only inside a sandbox, only after syntax validation, and only surfaced to the user after the reviewer step and a passing test run.
 
-### 4. Public demo
+### 4. Tracing
+
+- LangSmith tracing is off unless `LANGSMITH_API_KEY` is set. When on, prompts, model outputs, and scrubbed sandbox results are sent to LangSmith. Do not enable it for missions on repositories whose contents must not leave the deployment.
+
+### 5. Public demo
 
 - The public demo defaults to **replay mode**, which streams recorded mission traces and makes no paid API calls.
 - **Live mode** requires `ARCHON_DEMO_TOKEN`, is rate-limited per IP, and is bounded by `ARCHON_MAX_MISSION_USD`.

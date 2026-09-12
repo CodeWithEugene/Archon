@@ -252,6 +252,7 @@ export const MOCK_FRAMES: MockFrame[] = [
       selected_attempt: "a_02",
       iterations: 2,
       spend_usd: 0.412,
+      trace_url: "https://smith.langchain.com/",
     },
   },
 ];

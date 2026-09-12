@@ -66,6 +66,29 @@
 
 ---
 
+## Session 3 — September 12, 2026: Keys, Tavily CLI, LangSmith tracing
+
+**Done**
+1. Nebius Builders application accepted. `.env` populated with `TAVILY_API_KEY` and `LANGSMITH_API_KEY` (Nebius key and project id still pending).
+2. Followed Tavily's agent-setup skill: Tavily CLI 0.1.8 installed and authenticated with the project key, eight Tavily agent skills installed globally for Claude Code, live search verified through the CLI and through `tests/integration/test_live.py::test_tavily_search`.
+3. Installed the LangSmith skills (`langsmith-trace`, `langsmith-dataset`, `langsmith-evaluator`) and the `langsmith` CLI globally. Verified the key against the LangSmith API.
+4. Added tracing per the `langsmith-trace` skill: `wrap_openai` on the Nebius client, `@traceable` spans on every role, sandbox operation, Tavily search, and the mission root, with input/output scrubbing. Key-gated; six unit tests.
+
+5. First live Nebius calls. Verified the real model IDs and prices from `GET /v1/models?verbose=true`: Ultra `nvidia/Nemotron-3-Ultra-550b-a55b` $1/$3, Super `nvidia/nemotron-3-super-120b-a12b` $0.30/$0.90, Nano `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` $0.06/$0.24, plus `nvidia/Nemotron-3_5-Lightning` at Nano prices with 1M context. Corrected every ID in code and docs; `pricing.json` now marks Nebius prices verified.
+6. Found that Nemotron 3 reasons before answering and can return empty `content` when the budget is small. Added `enable_thinking` control per task (on for patch synthesis, off elsewhere) and a retry that doubles the budget when reasoning is truncated.
+7. Sandboxes: authentication works, but the key has no Sandboxes permissions yet (all `false` in `whoami`). Beta access still needs to be granted for the project.
+8. The pasted `NEBIUS_API_KEY` was a short-lived IAM token (expiry within hours). A long-lived Token Factory API key is required.
+
+**Decisions**
+- ADR-011: thinking is a per-task routing decision, not a global switch. Ultra thinks for patches; Super and Nano answer directly for research, review, and compaction.
+- ADR-010: LangSmith tracing is in scope after all, as an optional key-gated layer. ADR-005's cut still applies to LangSmith as a required dependency: without the key nothing changes.
+
+**Blockers**
+- Need a long-lived Token Factory API key in `.env` (the current value is a short-lived IAM token).
+- Sandboxes beta permissions not yet granted for `NEBIUS_PROJECT_ID`.
+
+---
+
 ## Architectural Decision Records
 
 ### ADR-001: Track selection
@@ -74,9 +97,9 @@
 
 ### ADR-002: Model routing by tier (revised in Session 1)
 - **Decision:**
-  - `nvidia/nemotron-3-ultra-550b-a55b`: diagnosis and patch generation, once per iteration.
+  - `nvidia/Nemotron-3-Ultra-550b-a55b`: diagnosis and patch generation, once per iteration.
   - `nvidia/nemotron-3-super-120b-a12b`: supervisor, researcher, reviewer.
-  - `nvidia/nemotron-3-nano-30b-a3b`: log compaction and test-output parsing. Confirm ID.
+  - `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`: log compaction and test-output parsing. Confirm ID.
 - **Rationale:** Super is positioned by NVIDIA for orchestration and tool use; putting the supervisor on Ultra contradicted that and quadrupled cost. Development runs override Ultra to Super.
 - **Supersedes:** the Session 0 version that placed four roles on Ultra and referenced Llama-3.1-Nemotron-70B.
 

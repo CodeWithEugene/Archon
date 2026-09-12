@@ -58,7 +58,7 @@ Show that an open model on open infrastructure can run a complete, verified soft
 - Dependency modernization as a separate mission type. It is covered by bug healing when the upgrade breaks tests.
 - Tree-sitter indexing, a vector index, or any persistent memory. Ripgrep plus targeted file reads is sufficient for the loop.
 - Pushing branches or opening pull requests on the user's behalf. Patches are downloaded and applied with `git apply`.
-- LangSmith or other third-party tracing. Traces are stored in SQLite and shown in the cockpit.
+- Any observability beyond the cockpit event log and optional LangSmith tracing (added September 12; on only when `LANGSMITH_API_KEY` is set).
 - Bedrock, Cohere, or LangChain provider adapters for migration.
 - Replacing human code review. ARCHON produces a verified patch; a human merges it.
 
@@ -90,7 +90,7 @@ Show that an open model on open infrastructure can run a complete, verified soft
 ### FR-4 Migration loop
 - **FR-4.1** Locate `openai` and `anthropic` client construction, model-name literals, and tool or function-calling definitions using ripgrep and file reads.
 - **FR-4.2** Rewrite client construction to `base_url=https://api.tokenfactory.nebius.com/v1/` with `NEBIUS_API_KEY`. For the Anthropic Messages API, rewrite to the OpenAI-compatible chat completions shape.
-- **FR-4.3** Map model names using a table in the repo: reasoning-tier names to `nvidia/nemotron-3-ultra-550b-a55b`, mid-tier to `nvidia/nemotron-3-super-120b-a12b`, small-tier to `nvidia/nemotron-3-nano-30b-a3b`.
+- **FR-4.3** Map model names using a table in the repo: reasoning-tier names to `nvidia/Nemotron-3-Ultra-550b-a55b`, mid-tier to `nvidia/nemotron-3-super-120b-a12b`, small-tier to `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`.
 - **FR-4.4** Run the repository's tests in the sandbox. Additionally run a parity harness of 5 to 10 prompts against the original provider's recorded responses and the new Nemotron responses, reporting a similarity score. State clearly in the UI that mocked tests do not prove parity.
 - **FR-4.5** Produce a cost estimate from `pricing.json`, a maintained table of current list prices with a last-updated date, using a stated input-to-output ratio. Never present it as a guarantee.
 

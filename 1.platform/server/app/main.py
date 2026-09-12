@@ -19,6 +19,7 @@ from app.core.runner import LLMFactory
 from app.grounding.tavily import DisabledGrounder, Grounder, TavilyGrounder
 from app.llm.client import LLM, FakeLLM, NebiusLLM, UsageHook
 from app.missions.swe import SweCatalog
+from app.observability import tracing
 from app.replay.recorder import Recorder
 from app.sandbox.base import SandboxBackend
 from app.sandbox.contree import ContreeBackend
@@ -99,6 +100,7 @@ def create_app(settings: Settings | None = None, backend: SandboxBackend | None 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     for problem in settings.validate_for_runtime():
         logger.warning("config: %s", problem)
+    tracing.configure(settings.langsmith_api_key, settings.langsmith_project, settings.langsmith_endpoint or None)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:

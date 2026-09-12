@@ -19,6 +19,9 @@ class Task(StrEnum):
     PARITY = "parity"
 
 
+THINKING_TASKS = {Task.DIAGNOSE_AND_PATCH, Task.MIGRATE}
+
+
 class ModelRouter:
     """Maps a task to a model id. Ultra is used only for patch synthesis."""
 
@@ -40,6 +43,10 @@ class ModelRouter:
 
     def model_for(self, task: Task) -> str:
         return self._table[task]
+
+    def thinking_for(self, task: Task) -> bool:
+        """Nemotron 3 reasons before answering. Keep that for patch synthesis; switch it off for cheap tasks."""
+        return task in THINKING_TASKS
 
     def fallback_for(self, model: str) -> str | None:
         """If Ultra is unavailable, degrade to Super for that call. Nothing falls back further."""

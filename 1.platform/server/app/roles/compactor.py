@@ -5,6 +5,7 @@ from __future__ import annotations
 from app.core.router import Task
 from app.llm.client import LLM, LLMError
 from app.llm.prompts import compact_messages, narrate_messages
+from app.observability.tracing import traced
 from app.sandbox.pytest_parser import failing_excerpt
 
 COMPACT_THRESHOLD_CHARS = 16_000
@@ -15,6 +16,7 @@ class Compactor:
         self.llm = llm
         self.threshold = threshold
 
+    @traced("compactor.compact")
     async def compact(self, output: str) -> str:
         excerpt = failing_excerpt(output)
         if len(excerpt) <= self.threshold:

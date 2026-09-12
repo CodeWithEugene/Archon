@@ -10,8 +10,12 @@ Format per entry: date, surface, what happened, what you expected, suggestion.
 
 | Date | Observation | Expected | Suggestion |
 | :--- | :--- | :--- | :--- |
-| 2026-09-11 | Documentation pages for Nemotron models list display names but not the API model IDs. The IDs (`nvidia/nemotron-3-ultra-550b-a55b`, `nvidia/nemotron-3-super-120b-a12b`) only appear in one code sample and third-party catalogs. | A models table with copyable IDs, context length, and price on the Nemotron page. | Add an ID column to the Nemotron page and link to `GET /v1/models?verbose=true`. |
+| 2026-09-11 | Documentation pages for Nemotron models list display names but not the API model IDs. The IDs (`nvidia/Nemotron-3-Ultra-550b-a55b`, `nvidia/nemotron-3-super-120b-a12b`) only appear in one code sample and third-party catalogs. | A models table with copyable IDs, context length, and price on the Nemotron page. | Add an ID column to the Nemotron page and link to `GET /v1/models?verbose=true`. |
 | 2026-09-11 | Two base URLs appear in official material: `api.tokenfactory.nebius.com/v1/` and the regional `api.tokenfactory.us-central1.nebius.com/v1/`. Unclear which to prefer and whether model availability differs. | One sentence explaining regional vs global endpoints and any tradeoffs. | Document endpoint selection in the quickstart. |
+
+| 2026-09-12 | Nemotron model IDs on Token Factory have inconsistent casing: `nvidia/Nemotron-3-Ultra-550b-a55b`, `nvidia/nemotron-3-super-120b-a12b`, `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`. Every public catalog and blog post lowercases them, so copy-pasted IDs 404. | Consistent lowercase IDs, or case-insensitive matching on the API. | Normalize IDs or accept case-insensitive model names. |
+| 2026-09-12 | Nemotron 3 thinks by default and reasoning tokens count against `max_tokens`. A 16-token request returns `content=""` with `finish_reason=length` and the answer only in `reasoning_content`. `chat_template_kwargs.enable_thinking=false` fixes it but is not mentioned in the Token Factory docs. | Documentation of thinking control and the `reasoning_content` field on the Nemotron page. | Add a "reasoning models" section with the `enable_thinking` switch and budget guidance. |
+| 2026-09-12 | `GET /v1/models?verbose=true` is excellent: it returns IDs, context length, and per-token prices. It is the only place I found the real prices. | Link to it from the pricing page. | Surface the verbose models endpoint prominently. |
 
 ## Token Factory Sandboxes
 
@@ -22,6 +26,9 @@ Format per entry: date, surface, what happened, what you expected, suggestion.
 | 2026-09-11 | No published per-run CPU, memory, or wall-clock limits. Only "50 concurrent operations" and "180-day checkpoint retention". | Resource limits so agents can budget commands. | Publish the limits table. |
 | 2026-09-11 | `contree-sdk` 0.3.6 differs from the docs: the constructor is `Contree(config=None, *, base_url=None, token=None)` and `IAMAuth` also requires `NEBIUS_PROJECT_ID`, which the getting-started page never mentions. `ContreeImage` has no `iter_output`, although the reference page lists it. | Docs generated from the shipped version. | Pin doc pages to SDK releases and add the project-id requirement to the first example. |
 | 2026-09-11 | Fork semantics are excellent for best-of-N repair: `image.run(..., disposable=False)` gives a parent, and N children can run from it. But this is documented under "branching" with no mention of running children concurrently with `asyncio.gather`. | A short "parallel attempts" recipe. | Add a concurrency example to the branching page; it is the killer feature for SWE agents. |
+
+| 2026-09-12 | With a freshly issued key, `whoami` on the Sandboxes API succeeds but every permission (`spawn`, `import`, `list`, `cancel`, `set_image_tag`) is `false`, and every operation returns a bare "You do not have permission to perform this action". Nothing in the console or the error says how to get access. | A 403 body that says "Sandboxes beta access is not enabled for project X; request it at ...". | Link the access request from the error and from the console. |
+| 2026-09-12 | An IAM access token pasted as `NEBIUS_API_KEY` works for inference but expires within hours; the Sandboxes SDK warns "Token expires in 0 hours" while the inference docs never distinguish IAM tokens from long-lived API keys. | Clear guidance on which credential type to use for a server. | Add a "credentials" section: API key for services, IAM token for CLI sessions. |
 
 ## NVIDIA Nemotron models
 

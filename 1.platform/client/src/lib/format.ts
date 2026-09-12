@@ -7,7 +7,7 @@ import {
 
 /**
  * Model badge tier, derived from the Token Factory model id — the server sends
- * ids like `nvidia/nemotron-3-ultra-550b-a55b`, never a tier field.
+ * ids like `nvidia/Nemotron-3-Ultra-550b-a55b`, never a tier field.
  */
 export function modelTier(modelId: string): ModelTier {
   const id = modelId.toLowerCase();

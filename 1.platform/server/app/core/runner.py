@@ -29,6 +29,7 @@ from app.grounding.tavily import Grounder, SearchResult
 from app.llm.client import LLM, LLMError, UsageHook
 from app.missions.migration import run_parity_sample, scan_repository
 from app.missions.swe import SweCatalog
+from app.observability.tracing import annotate, current_trace_url, traced
 from app.roles.compactor import Compactor, Narrator
 from app.roles.engineer import Engineer, EngineerRequest
 from app.roles.researcher import Researcher
@@ -155,6 +156,7 @@ class MissionRunner:
                 "selected_attempt": self.m.selected_attempt,
                 "iterations": self.m.iteration,
                 "spend_usd": round(self.spend, 4),
+                "trace_url": self.m.summary.get("trace_url"),
                 **payload,
             },
         )
@@ -163,7 +165,17 @@ class MissionRunner:
 
     # ---- main -----------------------------------------------------------------------------------
 
+    @traced("archon.mission", run_type="chain")
     async def run(self) -> Mission:
+        annotate(
+            metadata={
+                "mission_id": self.m.id,
+                "mission_type": self.m.type.value,
+                "target": self.m.repo_url or self.m.swe_instance_id or "",
+            },
+            tags=[self.m.type.value.lower()],
+        )
+        self.m.summary["trace_url"] = current_trace_url()
         try:
             await self._run()
         except Aborted as exc:

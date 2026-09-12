@@ -44,6 +44,7 @@ export function Cockpit({ missionId }: { missionId: string }) {
   const usageByModel = useMissionStore((s) => s.usageByModel);
   const usageOrder = useMissionStore((s) => s.usageOrder);
   const reportedSpend = useMissionStore((s) => s.reportedSpend);
+  const traceUrl = useMissionStore((s) => s.traceUrl);
 
   const [attempt, setAttempt] = useState(0);
 
@@ -145,6 +146,7 @@ export function Cockpit({ missionId }: { missionId: string }) {
           status={status}
           iteration={iteration}
           spend={spend}
+          traceUrl={traceUrl}
           connection={connection}
         />
       </AppHeader>

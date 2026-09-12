@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from app.core.pricing import CostEstimate, PriceTable
 from app.core.router import Task
 from app.llm.client import LLM, LLMError
+from app.observability.tracing import traced
 from app.sandbox.service import SandboxService
 
 CALL_SITE_PATTERNS = [
@@ -42,6 +43,7 @@ class MigrationScan:
         }
 
 
+@traced("migration.scan", run_type="tool")
 async def scan_repository(sandbox: SandboxService, image_id: str, prices: PriceTable) -> MigrationScan:
     locations = await sandbox.search(image_id, CALL_SITE_PATTERNS)
     files: dict[str, None] = {}
@@ -80,6 +82,7 @@ class ParityResult:
     note: str
 
 
+@traced("migration.parity_sample")
 async def run_parity_sample(sandbox: SandboxService, image_id: str, llm: LLM, *, limit: int = 8) -> ParityResult | None:
     """Model-level parity sample. Uses parity_prompts.json from the repository if present.
 

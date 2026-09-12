@@ -9,6 +9,8 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
+from app.observability.tracing import traced
+
 logger = logging.getLogger(__name__)
 
 
@@ -53,6 +55,7 @@ class TavilyGrounder:
 
         self._client = AsyncTavilyClient(api_key=self.api_key)
 
+    @traced("tavily.search", run_type="retriever")
     async def search(self, query: str) -> SearchResult:
         key = hashlib.sha256(query.encode()).hexdigest()
         if key in self._cache:

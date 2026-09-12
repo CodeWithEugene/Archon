@@ -149,7 +149,7 @@ async def test_live_mode_requires_token(tmp_path: Path) -> None:
 async def test_pricing_endpoints(client_and_backend) -> None:  # type: ignore[no-untyped-def]
     client, _ = client_and_backend
     p = await client.get("/api/v1/pricing")
-    assert p.status_code == 200 and "nvidia/nemotron-3-ultra-550b-a55b" in p.json()["models"]
+    assert p.status_code == 200 and "nvidia/Nemotron-3-Ultra-550b-a55b" in p.json()["models"]
     e = await client.get("/api/v1/pricing/estimate", params={"source_model": "claude-sonnet-5"})
     assert e.status_code == 200 and e.json()["target_model"] == "nvidia/nemotron-3-super-120b-a12b"
     assert (await client.get("/api/v1/pricing/estimate", params={"source_model": "nope"})).status_code == 404

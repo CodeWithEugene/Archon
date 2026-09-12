@@ -14,11 +14,13 @@ from openai import APIConnectionError, APIStatusError, AsyncOpenAI, RateLimitErr
 
 from app.core.pricing import PriceTable
 from app.core.router import ModelRouter, Task
+from app.observability.tracing import wrap_openai_client
 
 logger = logging.getLogger(__name__)
 
 UsageHook = Callable[[str, str, int, int, float], Awaitable[None]]
 THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
+MAX_THINKING_TOKENS = 24_000
 
 
 class LLMError(RuntimeError):
@@ -89,7 +91,9 @@ class NebiusLLM:
         usage_hook: UsageHook | None = None,
         max_retries: int = 3,
     ) -> None:
-        self._client = AsyncOpenAI(api_key=api_key, base_url=base_url, max_retries=0, timeout=180.0)
+        self._client = wrap_openai_client(
+            AsyncOpenAI(api_key=api_key, base_url=base_url, max_retries=0, timeout=180.0), chat_name="nemotron"
+        )
         self._router = router
         self._prices = prices
         self._usage_hook = usage_hook
@@ -150,19 +154,33 @@ class NebiusLLM:
     ) -> Completion:
         delay = 1.0
         last: Exception | None = None
+        think = self._router.thinking_for(task)
         for attempt in range(self._max_retries + 1):
             try:
-                kwargs: dict[str, Any] = {}
+                kwargs: dict[str, Any] = {
+                    # Nemotron 3 reasons before answering. Reasoning tokens count against max_tokens and can
+                    # leave `content` empty, so thinking is enabled only for tasks that need it.
+                    "extra_body": {"chat_template_kwargs": {"enable_thinking": think}},
+                }
                 if json_mode:
                     kwargs["response_format"] = {"type": "json_object"}
                 resp = await self._client.chat.completions.create(
                     model=model,
-                    messages=messages,  # type: ignore[arg-type]
+                    messages=messages,
                     max_tokens=max_tokens,
                     temperature=temperature,
                     **kwargs,
                 )
-                text = resp.choices[0].message.content or ""
+                choice = resp.choices[0]
+                text = (choice.message.content or "").strip()
+                if not text and choice.finish_reason == "length":
+                    if think and max_tokens < MAX_THINKING_TOKENS:
+                        max_tokens = min(max_tokens * 2, MAX_THINKING_TOKENS)
+                        logger.warning(
+                            "%s spent the whole budget reasoning; retrying with max_tokens=%d", model, max_tokens
+                        )
+                        continue
+                    raise LLMError(f"{model}: empty answer, reasoning hit max_tokens={max_tokens}")
                 pt = resp.usage.prompt_tokens if resp.usage else 0
                 ct = resp.usage.completion_tokens if resp.usage else 0
                 cost = self._prices.cost(model, pt, ct)

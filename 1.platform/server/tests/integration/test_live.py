@@ -19,9 +19,9 @@ async def test_models_endpoint_lists_nemotron() -> None:
 
     client = AsyncOpenAI(api_key=NEBIUS, base_url=BASE)
     ids = {m.id for m in (await client.models.list()).data}
-    assert "nvidia/nemotron-3-super-120b-a12b" in ids, sorted(i for i in ids if "nemotron" in i)
-    assert "nvidia/nemotron-3-ultra-550b-a55b" in ids, sorted(i for i in ids if "nemotron" in i)
-    nano = sorted(i for i in ids if "nemotron-3-nano" in i)
+    assert "nvidia/nemotron-3-super-120b-a12b" in ids, sorted(i for i in ids if "nemotron" in i.lower())
+    assert "nvidia/Nemotron-3-Ultra-550b-a55b" in ids, sorted(i for i in ids if "nemotron" in i.lower())
+    nano = sorted(i for i in ids if "nemotron-3-nano" in i.lower())
     assert nano, "no Nemotron 3 Nano id found; update ARCHON_NANO_MODEL"
     print("NANO IDS:", nano)
 

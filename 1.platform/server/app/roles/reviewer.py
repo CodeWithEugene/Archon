@@ -9,6 +9,7 @@ from app.core.patches import check_patch_safety
 from app.core.router import Task
 from app.llm.client import LLM, LLMError
 from app.llm.prompts import review_messages
+from app.observability.tracing import traced
 
 
 class Reviewer:
@@ -16,6 +17,7 @@ class Reviewer:
         self.llm = llm
         self.allow_test_edits = allow_test_edits
 
+    @traced("reviewer.review")
     async def review(self, patch: str, root_cause: str, test_summary: str) -> ReviewOutput:
         safety = check_patch_safety(patch, allow_test_edits=self.allow_test_edits)
         if not safety.ok:

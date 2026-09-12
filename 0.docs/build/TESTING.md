@@ -88,7 +88,7 @@ async def test_super_responds():
 async def test_models_endpoint_lists_nemotron_ids():
     client = AsyncOpenAI(base_url=os.environ["NEBIUS_BASE_URL"], api_key=os.environ["NEBIUS_API_KEY"])
     ids = {m.id for m in (await client.models.list()).data}
-    assert "nvidia/nemotron-3-ultra-550b-a55b" in ids
+    assert "nvidia/Nemotron-3-Ultra-550b-a55b" in ids
     assert "nvidia/nemotron-3-super-120b-a12b" in ids
 ```
 

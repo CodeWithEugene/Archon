@@ -9,6 +9,7 @@ from app.core.router import Task
 from app.grounding.tavily import Grounder, SearchResult
 from app.llm.client import LLM, LLMError
 from app.llm.prompts import research_brief_messages, research_query_messages
+from app.observability.tracing import traced
 
 TavilyHook = Callable[[SearchResult], Awaitable[None]]
 
@@ -27,6 +28,7 @@ class Researcher:
         self.grounder = grounder
         self.max_queries = max_queries
 
+    @traced("researcher.research")
     async def research(self, failing_output: str, libraries: list[str], on_search: TavilyHook | None) -> ResearchBrief:
         try:
             obj, _ = await self.llm.complete_json(

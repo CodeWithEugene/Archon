@@ -129,6 +129,7 @@ export function mockOpenStream(
               selected_attempt: null,
               iterations: 2,
               spend_usd: 0.412,
+              trace_url: null,
             },
           },
           index + 1,

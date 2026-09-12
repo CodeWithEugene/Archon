@@ -6,6 +6,7 @@ import shlex
 from dataclasses import dataclass
 
 from app.core.models import TestReport
+from app.observability.tracing import traced
 from app.sandbox.base import REPO_DIR, WORKDIR, OutputHook, RunResult, RunSpec, SandboxBackend, SandboxError
 from app.sandbox.pytest_parser import JUNIT_ABSOLUTE, ensure_pytest_flags, parse_junit, parse_pytest
 
@@ -37,6 +38,7 @@ class SandboxService:
 
     # ---- provisioning -------------------------------------------------------------------------
 
+    @traced("sandbox.provision_repo", run_type="tool")
     async def provision_repo(
         self,
         repo_url: str,
@@ -97,10 +99,12 @@ class SandboxService:
             report = parse_pytest(res.combined, res.exit_code)
         return res, report
 
+    @traced("sandbox.baseline", run_type="tool")
     async def baseline(self, image_id: str, test_command: str, on_output: OutputHook | None) -> Baseline:
         res, report = await self.run_tests(image_id, test_command, on_output)
         return Baseline(image_id=image_id, report=report, output=res.combined)
 
+    @traced("sandbox.try_patch", run_type="tool")
     async def try_patch(
         self, base_image: str, patch: str, test_command: str, on_output: OutputHook | None
     ) -> AttemptRun:

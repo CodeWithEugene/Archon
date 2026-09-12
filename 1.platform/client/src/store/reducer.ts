@@ -8,6 +8,7 @@ export const EMPTY_MISSION_DATA: MissionData = {
   status: "PENDING" as MissionStatus,
   iteration: 0,
   reportedSpend: 0,
+  traceUrl: null,
   connection: "idle",
   timeline: [],
   terminals: {},
@@ -148,6 +149,7 @@ export function applyEventToState(
         status: event.data.status,
         iteration: event.data.iterations,
         reportedSpend: Math.max(state.reportedSpend, event.data.spend_usd),
+        traceUrl: event.data.trace_url ?? state.traceUrl,
         finished: true,
         selectedAttempt:
           event.data.selected_attempt ?? state.selectedAttempt,

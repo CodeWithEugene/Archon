@@ -248,7 +248,7 @@ event: status
 data: {"status":"REPRODUCING","iteration":0}
 
 event: thought
-data: {"stage":"REASONING","model":"nvidia/nemotron-3-ultra-550b-a55b","text":"The failing test imports ... which was removed in 2.0. ..."}
+data: {"stage":"REASONING","model":"nvidia/Nemotron-3-Ultra-550b-a55b","text":"The failing test imports ... which was removed in 2.0. ..."}
 
 event: tavily
 data: {"query":"pydantic 2 field_validator replaces validator","results":5,"ms":812}
@@ -263,7 +263,7 @@ event: patch
 data: {"attempt":"a_02","files":[{"path":"app/schemas/user.py","added":6,"removed":4}]}
 
 event: usage
-data: {"model":"nvidia/nemotron-3-ultra-550b-a55b","prompt_tokens":61234,"completion_tokens":2210,"cost_usd":0.068}
+data: {"model":"nvidia/Nemotron-3-Ultra-550b-a55b","prompt_tokens":61234,"completion_tokens":2210,"cost_usd":0.068}
 
 event: done
 data: {"status":"VERIFIED","selected_attempt":"a_02","iterations":2,"spend_usd":0.41}
@@ -321,9 +321,9 @@ The best attempt's test output seeds the next iteration if nothing passed. Becau
 
 | Task | Model | Notes |
 | :--- | :--- | :--- |
-| Root-cause note and candidate patches | `nvidia/nemotron-3-ultra-550b-a55b` | The only place Ultra is used. Called once per iteration. |
+| Root-cause note and candidate patches | `nvidia/Nemotron-3-Ultra-550b-a55b` | The only place Ultra is used. Called once per iteration. |
 | Mission supervision, tool-call formatting, Tavily query synthesis, patch review | `nvidia/nemotron-3-super-120b-a12b` | NVIDIA positions Super for multi-agent orchestration and tool use. |
-| Test-log compaction, pass/fail extraction for non-pytest runners, commit-message style summaries | `nvidia/nemotron-3-nano-30b-a3b` | Confirm the exact ID with `GET /v1/models`. |
+| Test-log compaction, pass/fail extraction for non-pytest runners, commit-message style summaries | `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` | Confirm the exact ID with `GET /v1/models`. |
 
 Development runs set `ARCHON_ULTRA_MODEL` to the Super ID so the loop can be exercised cheaply.
 
@@ -347,7 +347,11 @@ Patches are checked with `git apply --check` in the sandbox before tests run. A 
 
 ---
 
-## 8. Security
+## 8. Observability
+
+Every mission is a LangSmith trace when `LANGSMITH_API_KEY` is set (project `archon` by default). The root span is `archon.mission`, tagged with the mission type and carrying the mission id, repository or SWE-bench instance in metadata. Child spans: `sandbox.provision_repo`, `sandbox.baseline`, `sandbox.try_patch` (tool runs, one per candidate), `researcher.research` with `tavily.search` retriever runs, `engineer.propose`, `reviewer.review`, `compactor.compact`, and `migration.scan` / `migration.parity_sample`. Every Nemotron call is an LLM run with token usage, produced by `wrap_openai` on the Nebius client. Inputs and outputs are scrubbed before upload: `self` and callbacks are dropped, strings are capped at 6,000 characters, and terminal output never leaves the process in full. The trace URL is attached to the `done` event and the mission summary. Without the key every helper is a no-op.
+
+## 9. Security
 
 - The server never executes repository code. All execution is inside Nebius-hosted VMs.
 - Mission input is validated: `https://github.com/` URLs only, or a SWE-bench Verified instance ID from the known list. Filesystem paths are rejected.
@@ -359,7 +363,7 @@ Patches are checked with `git apply --check` in the sandbox before tests run. A 
 
 ---
 
-## 9. Cockpit layout
+## 10. Cockpit layout
 
 1. **Header:** mission type, repository, status pill, iteration counter, spend so far.
 2. **Left column, reasoning stream:** chronological `thought`, `tavily`, and `status` events with the model badge on each.

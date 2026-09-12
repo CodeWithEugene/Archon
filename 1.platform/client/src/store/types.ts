@@ -36,6 +36,8 @@ export interface MissionData {
   status: MissionStatus;
   iteration: number;
   reportedSpend: number;
+  /** LangSmith trace URL from the done event, when the server has tracing on. */
+  traceUrl: string | null;
   connection: ConnectionState;
 
   timeline: TimelineEntry[];

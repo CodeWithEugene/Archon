@@ -232,7 +232,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="nvidia/nemotron-3-ultra-550b-a55b",
+    model="nvidia/Nemotron-3-Ultra-550b-a55b",
     messages=[
         {"role": "system", "content": "You are an autonomous engineering agent."},
         {"role": "user", "content": "Design an optimal system architecture for real-time video RAG."}
@@ -247,13 +247,14 @@ for chunk in response:
     print(content, end="", flush=True)
 ```
 
-**Nemotron model IDs on Token Factory** (confirm with `GET /v1/models?verbose=true`, which also returns context length and price):
+**Nemotron model IDs on Token Factory** (verified 2026-09-12 via `GET /v1/models?verbose=true`, which also returns context length and price; note the inconsistent casing):
 
 | Model | ID |
 | :--- | :--- |
-| Nemotron 3 Ultra 550B-A55B | `nvidia/nemotron-3-ultra-550b-a55b` |
+| Nemotron 3 Ultra 550B-A55B | `nvidia/Nemotron-3-Ultra-550b-a55b` |
 | Nemotron 3 Super 120B-A12B | `nvidia/nemotron-3-super-120b-a12b` |
-| Nemotron 3 Nano 30B-A3B | `nvidia/nemotron-3-nano-30b-a3b` (verify) |
+| Nemotron 3 Nano 30B-A3B | `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` |
+| Nemotron 3.5 Lightning | `nvidia/Nemotron-3_5-Lightning` (1M context, Nano pricing) |
 
 A regional endpoint also appears in official samples: `https://api.tokenfactory.us-central1.nebius.com/v1/`.
 

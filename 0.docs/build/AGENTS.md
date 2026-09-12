@@ -67,7 +67,7 @@ If results are inconclusive, say so plainly. Do not invent APIs.
 
 ### 2.3 Engineer
 
-- **Model:** `nvidia/nemotron-3-ultra-550b-a55b`
+- **Model:** `nvidia/Nemotron-3-Ultra-550b-a55b`
 - **Owns:** root-cause analysis and candidate patches.
 - **Inputs:** failing test names and compacted output, source excerpts the executor fetched with `rg` and `sed -n`, the researcher's brief inside an untrusted-context block, and the previous iteration's best attempt with its output.
 - **Output:** strict JSON, validated by Pydantic, rejected and retried once on parse failure.
@@ -118,7 +118,7 @@ For `MIGRATION` missions the same role receives a different task block: the loca
 
 ### 2.6 Log compactor
 
-- **Model:** `nvidia/nemotron-3-nano-30b-a3b` (confirm ID with `GET /v1/models`)
+- **Model:** `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` (confirm ID with `GET /v1/models`)
 - **Owns:** shrinking long test output to the failing tests, their tracebacks, and the summary line, and extracting pass and fail counts for runners other than pytest.
 - **Skipped:** when the raw output is under 4,000 tokens or the runner is pytest with `-q`, which the executor parses directly.
 

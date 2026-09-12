@@ -30,15 +30,17 @@ from tests.unit.conftest import ALL_PASS, BASELINE_FAIL, GOOD_PATCH, REGRESSION
 
 
 def test_router_tiers(router: ModelRouter) -> None:
-    assert router.model_for(Task.DIAGNOSE_AND_PATCH) == "nvidia/nemotron-3-ultra-550b-a55b"
-    assert router.model_for(Task.MIGRATE) == "nvidia/nemotron-3-ultra-550b-a55b"
+    assert router.model_for(Task.DIAGNOSE_AND_PATCH) == "nvidia/Nemotron-3-Ultra-550b-a55b"
+    assert router.model_for(Task.MIGRATE) == "nvidia/Nemotron-3-Ultra-550b-a55b"
     for t in (Task.RESEARCH_QUERIES, Task.RESEARCH_BRIEF, Task.REVIEW, Task.NARRATE):
         assert router.model_for(t) == "nvidia/nemotron-3-super-120b-a12b"
     for t in (Task.COMPACT_LOGS, Task.PARSE_TESTS):
-        assert router.model_for(t) == "nvidia/nemotron-3-nano-30b-a3b"
+        assert router.model_for(t) == "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
     assert router.fallback_for(router.ultra) == router.super_
     assert router.fallback_for(router.super_) is None
     assert router.tier_of(router.nano) == "NANO"
+    assert router.thinking_for(Task.DIAGNOSE_AND_PATCH) and router.thinking_for(Task.MIGRATE)
+    assert not router.thinking_for(Task.REVIEW) and not router.thinking_for(Task.COMPACT_LOGS)
 
 
 def test_router_dev_override(tmp_path) -> None:  # type: ignore[no-untyped-def]
@@ -52,8 +54,8 @@ def test_router_dev_override(tmp_path) -> None:  # type: ignore[no-untyped-def]
 
 
 def test_pricing_loads_and_costs(prices: PriceTable) -> None:
-    assert prices.updated == "2026-09-11"
-    assert prices.cost("nvidia/nemotron-3-ultra-550b-a55b", 1_000_000, 1_000_000) == pytest.approx(4.0)
+    assert prices.updated == "2026-09-12"
+    assert prices.cost("nvidia/Nemotron-3-Ultra-550b-a55b", 1_000_000, 1_000_000) == pytest.approx(4.0)
     assert prices.cost("unknown/model", 1000, 1000) == 0.0
     assert prices.blended_per_m("claude-sonnet-5") == pytest.approx(4.0)
 
@@ -67,12 +69,12 @@ def test_pricing_resolves_aliases_and_dates(prices: PriceTable) -> None:
 def test_pricing_estimate(prices: PriceTable) -> None:
     est = prices.estimate("gpt-5.4", monthly_tokens=100_000_000)
     assert est is not None
-    assert est.target_model == "nvidia/nemotron-3-ultra-550b-a55b"
+    assert est.target_model == "nvidia/Nemotron-3-Ultra-550b-a55b"
     assert est.source_monthly_usd == pytest.approx(562.5)
     assert est.target_monthly_usd == pytest.approx(150.0)
     assert 70 < est.reduction_pct < 75
     assert prices.estimate("totally-unknown") is None
-    assert prices.target_for("claude-haiku-4-5") == "nvidia/nemotron-3-nano-30b-a3b"
+    assert prices.target_for("claude-haiku-4-5") == "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
 
 
 # ---- pytest parser --------------------------------------------------------------------------------
