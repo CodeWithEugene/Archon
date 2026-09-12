@@ -86,9 +86,12 @@ class SandboxService:
         on_output: OutputHook | None,
     ) -> str:
         base = await self.backend.base_image(self.base_image_ref)
+        # Command paths stay relative to the working directory: the development local backend maps only the
+        # working directory into its copy-on-fork tree, while real sandboxes accept either form.
+        target = shlex.quote(PurePosixPath(self.repo_dir).name)
         clone = (
-            f"{ENSURE_GIT} && git clone --quiet --depth 200 {shlex.quote(repo_url)} {shlex.quote(self.repo_dir)} "
-            f"&& cd {shlex.quote(self.repo_dir)} && git checkout --quiet {shlex.quote(git_ref)} && git log --oneline -1"
+            f"{ENSURE_GIT} && git clone --quiet --depth 200 {shlex.quote(repo_url)} {target} "
+            f"&& cd {target} && git checkout --quiet {shlex.quote(git_ref)} && git log --oneline -1"
         )
         res = await self.backend.run(
             base,
@@ -124,7 +127,7 @@ class SandboxService:
         res = await self.backend.run(
             image,
             RunSpec(
-                shell=f"git apply --whitespace=nowarn {shlex.quote(self.patch_path)} && git status --short | head -20",
+                shell="git apply --whitespace=nowarn ../archon.patch && git status --short | head -20",
                 cwd=self.repo_dir,
                 timeout_s=120,
                 files={self.patch_path: test_patch.encode("utf-8")},
@@ -225,7 +228,7 @@ class SandboxService:
         return Applied(res.image_id, patch_text, None, res.combined)
 
     async def _apply_patch(self, base_image: str, patch: str, on_output: OutputHook | None) -> Applied:
-        pp = shlex.quote(self.patch_path)
+        pp = "../archon.patch"  # relative to the repo dir; the file is uploaded at self.patch_path
         apply_cmd = (
             f"(git apply --whitespace=nowarn {pp} || git apply --3way --whitespace=nowarn {pp}) "
             "&& git add -A -- . ':!.venv' && git diff --cached --no-color"

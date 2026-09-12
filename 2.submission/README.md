@@ -9,7 +9,7 @@ Working draft of the text that will be pasted into the Devpost form. Keep it in 
 - **Tagline:** Autonomous, sandbox-verified software repair and AI-stack migration on Nebius Token Factory and NVIDIA Nemotron.
 - **Demo URL:** _to be added_
 - **Video URL (YouTube, under 3 minutes):** _to be added_
-- **Repository:** https://github.com/CodeWithEugene/Nebius-x-NVIDIA-Global-AI-Hackathon
+- **Repository:** https://github.com/CodeWithEugene/Archon
 - **License:** Apache 2.0
 - **City affiliation:** _to be decided; none of the 20 Builders & Brews cities is in East Africa_
 

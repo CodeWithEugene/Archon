@@ -4,7 +4,7 @@
  "mission": {
   "id": "m_6bc26c42",
   "type": "BUG_HEALING",
-  "repo_url": "https://github.com/CodeWithEugene/Nebius-x-NVIDIA-Global-AI-Hackathon/tree/main/1.platform/server/tests/golden/fixtures/broken_pydantic_v2",
+  "repo_url": "https://github.com/CodeWithEugene/Archon/tree/main/1.platform/server/tests/golden/fixtures/broken_pydantic_v2",
   "git_ref": "main",
   "test_command": ". .venv/bin/activate && pytest -q",
   "install_command": "python3 -m venv .venv && . .venv/bin/activate && pip install -q -e . pytest",

@@ -160,7 +160,7 @@ class Candidate(BaseModel):
 
 
 class EngineerOutput(BaseModel):
-    root_cause: str = Field(max_length=6000)
+    root_cause: str = Field(default="", max_length=6000)
     files_to_read: list[str] = Field(default_factory=list, max_length=8)
     candidates: list[Candidate] = Field(default_factory=list, max_length=4)
 
